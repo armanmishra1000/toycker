@@ -5,18 +5,13 @@ builder = "NIXPACKS"
 nixPkgs = ["nodejs"]
 
 [build.nixpacksPlan.phases.install]
-workingDir = "backend"
-cmds=["npm install --legacy-peer-deps"]
+cmds=["cd backend && npm install --legacy-peer-deps"]
 
 [build.nixpacksPlan.phases.build]
-workingDir = "backend"
-cmds=["npm run build"]
+cmds=["cd backend && npm run build"]
 
 [deploy]
-# Railway will automatically use npm start command from package.json
-# No need to specify start command if package.json is correct
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
-startCommand = "npm run start"
-workingDir = "backend"
+startCommand = "cd backend && npm run start"
