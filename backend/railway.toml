@@ -5,9 +5,11 @@ builder = "NIXPACKS"
 nixPkgs = ["nodejs"]
 
 [build.nixpacksPlan.phases.install]
+workingDir = "backend"
 cmds=["npm install --legacy-peer-deps"]
 
 [build.nixpacksPlan.phases.build]
+workingDir = "backend"
 cmds=["npm run build"]
 
 [deploy]
@@ -17,3 +19,4 @@ healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 startCommand = "npm run start"
+workingDir = "backend"
