@@ -4,11 +4,13 @@ loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
 module.exports = defineConfig({
   admin: {
-    disable: process.env.NODE_ENV === 'production',
+    disable: process.env.DISABLE_MEDUSA_ADMIN === 'true',
+    autoRebuild: process.env.NODE_ENV !== 'production',
   },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL,
+    workerMode: process.env.MEDUSA_WORKER_MODE as "worker" | "server",
     http: {
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
