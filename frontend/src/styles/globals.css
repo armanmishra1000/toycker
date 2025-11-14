@@ -1,6 +1,11 @@
+@import './fonts.css';
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
+body {
+  font-family: var(--font-Grandstander), sans-serif;
+}
 
 @layer utilities {
   /* Chrome, Safari and Opera */
