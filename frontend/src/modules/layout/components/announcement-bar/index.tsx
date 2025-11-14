@@ -2,7 +2,6 @@
 
 import { 
   TruckIcon, 
-  EnvelopeIcon, 
   MapPinIcon, 
   QuestionMarkCircleIcon 
 } from "@heroicons/react/24/outline"
@@ -17,19 +16,13 @@ interface AnnouncementItem {
 }
 
 const AnnouncementBar = () => {
-  // Left section items - Delivery and Contact Info
+  // Left section items - Delivery only
   const leftItems: AnnouncementItem[] = [
     { 
       id: "delivery", 
       text: "Get free home delivery (Order More than $300)",
       icon: TruckIcon,
       ariaLabel: "Free home delivery offer"
-    },
-    { 
-      id: "email", 
-      text: "info@gmail.com",
-      icon: EnvelopeIcon,
-      ariaLabel: "Contact email"
     }
   ]
 
@@ -84,7 +77,7 @@ const AnnouncementBar = () => {
       role="region"
       aria-label="Announcement bar"
       aria-live="polite"
-      className="hidden lg:block bg-primary text-white py-3"
+      className="hidden lg:block bg-foreground text-white py-3"
     >
       <div className="mx-auto px-4 max-w-[1440px]">
         <div className="flex flex-row justify-between items-center gap-6">

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { usePathname } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 interface DropdownProps {
@@ -20,6 +21,13 @@ const ageCategories = [
 
 const ShopByAgeDropdown = ({ isOpen, onClose }: DropdownProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
+
+  const isActive = (href: string) => {
+    // Remove locale prefix if present (e.g., /en, /in)
+    const cleanPathname = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/')
+    return cleanPathname.startsWith(href)
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -48,7 +56,7 @@ const ShopByAgeDropdown = ({ isOpen, onClose }: DropdownProps) => {
   return (
     <div
       ref={dropdownRef}
-      className={`absolute top-full left-0 mt-0 bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 ease-out origin-top z-40 ${
+      className={`absolute top-10 left-0 mt-0.5 bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 ease-out origin-top z-40 ${
         isOpen
           ? "opacity-100 scale-y-100 visible"
           : "opacity-0 scale-y-95 invisible"
@@ -57,13 +65,17 @@ const ShopByAgeDropdown = ({ isOpen, onClose }: DropdownProps) => {
         transformOrigin: "top left",
       }}
     >
-      <div className="min-w-max py-2">
+      <div className="w-60 py-2">
         {ageCategories.map((category) => (
           <LocalizedClientLink
             key={category.id}
             href={category.href}
             onClick={onClose}
-            className="block px-6 py-3 text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors text-sm font-medium"
+            className={`block px-6 py-3 text-sm font-medium transition-colors ${
+              isActive(category.href)
+                ? "bg-primary text-white"
+                : "text-gray-700 hover:bg-gray-50 hover:text-primary"
+            }`}
           >
             {category.label}
           </LocalizedClientLink>

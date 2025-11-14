@@ -26,8 +26,11 @@ const MainNavigation = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const isActive = (href: string) => {
-    if (href === "/" && pathname === "/") return true
-    if (href !== "/" && pathname.startsWith(href)) return true
+    // Remove locale prefix if present (e.g., /en, /in)
+    const cleanPathname = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/')
+    
+    if (href === "/" && cleanPathname === "/") return true
+    if (href !== "/" && cleanPathname.startsWith(href)) return true
     return false
   }
 
@@ -40,8 +43,11 @@ const MainNavigation = () => {
           return (
             <div key={link.id} className="relative group">
               <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary ${
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsDropdownOpen(!isDropdownOpen)
+                }}
+                className={`flex items-center gap-1 font-medium transition-colors hover:text-primary ${
                   active ? "text-primary" : "text-black"
                 }`}
               >
@@ -64,7 +70,7 @@ const MainNavigation = () => {
           <LocalizedClientLink
             key={link.id}
             href={link.href}
-            className={`text-sm font-medium transition-colors hover:text-primary ${
+            className={`font-medium transition-colors hover:text-primary ${
               active ? "text-primary" : "text-black"
             }`}
           >
