@@ -2,9 +2,10 @@
 
 import { useRef, useState } from "react"
 import { XMark } from "@medusajs/icons"
-import { Button } from "@medusajs/ui"
+import { ChevronDownIcon } from "@heroicons/react/24/outline"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useOnClickOutside } from "@modules/layout/hooks/useOnClickOutside"
+import { navLinks, ageCategories } from "@modules/layout/config/navigation"
 
 type MobileMenuProps = {
   isOpen: boolean
@@ -13,19 +14,38 @@ type MobileMenuProps = {
 
 const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null)
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   
   useOnClickOutside(menuRef, onClose)
+
+  const toggleDropdown = (id: string) => {
+    setOpenDropdownId((prev) => (prev === id ? null : id))
+  }
+
+  const isDropdownOpen = (id: string) => openDropdownId === id
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div 
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      />
+
+      {/* Mobile Menu - Left Slide */}
+      <div
         ref={menuRef}
-        className="relative bg-white w-full max-w-md h-full shadow-xl overflow-y-auto"
+        className={`fixed left-0 top-0 h-screen w-80 bg-white z-50 transform transition-transform duration-300 ease-out will-change-transform ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } flex flex-col overflow-hidden`}
+        style={{ backfaceVisibility: "hidden" }}
       >
+        {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold font-grandstander">Menu</h2>
+          <h2 className="text-lg font-semibold font-grandstander">Menu</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -35,83 +55,72 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
           </button>
         </div>
 
-        <nav className="p-4">
-          <ul className="space-y-4">
-            <li>
-              <LocalizedClientLink
-                href="/"
-                className="block py-3 px-4 text-lg font-medium hover:bg-primary hover:text-white rounded-lg transition-colors font-grandstander"
-                onClick={onClose}
-              >
-                Home
-              </LocalizedClientLink>
-            </li>
-            <li>
-              <LocalizedClientLink
-                href="/store"
-                className="block py-3 px-4 text-lg font-medium hover:bg-primary hover:text-white rounded-lg transition-colors font-grandstander"
-                onClick={onClose}
-              >
-                Shop
-              </LocalizedClientLink>
-            </li>
-            <li>
-              <LocalizedClientLink
-                href="/categories"
-                className="block py-3 px-4 text-lg font-medium hover:bg-primary hover:text-white rounded-lg transition-colors font-grandstander"
-                onClick={onClose}
-              >
-                Categories
-              </LocalizedClientLink>
-            </li>
-            <li>
-              <LocalizedClientLink
-                href="/deals"
-                className="block py-3 px-4 text-lg font-medium hover:bg-primary hover:text-white rounded-lg transition-colors font-grandstander"
-                onClick={onClose}
-              >
-                Deals
-              </LocalizedClientLink>
-            </li>
-            <li>
-              <LocalizedClientLink
-                href="/blog"
-                className="block py-3 px-4 text-lg font-medium hover:bg-primary hover:text-white rounded-lg transition-colors font-grandstander"
-                onClick={onClose}
-              >
-                Blog
-              </LocalizedClientLink>
-            </li>
-            <li>
-              <LocalizedClientLink
-                href="/contact"
-                className="block py-3 px-4 text-lg font-medium hover:bg-primary hover:text-white rounded-lg transition-colors font-grandstander"
-                onClick={onClose}
-              >
-                Contact
-              </LocalizedClientLink>
-            </li>
-            <li>
-              <LocalizedClientLink
-                href="/account"
-                className="block py-3 px-4 text-lg font-medium hover:bg-primary hover:text-white rounded-lg transition-colors font-grandstander"
-                onClick={onClose}
-              >
-                My Account
-              </LocalizedClientLink>
-            </li>
+        {/* Navigation - Scrollable */}
+        <nav className="flex-1 overflow-y-auto">
+          <ul className="divide-y divide-gray-200">
+            {navLinks.map((link) => (
+              <li key={link.id}>
+                {link.hasDropdown ? (
+                  <div>
+                    <button
+                      onClick={() => toggleDropdown(link.id)}
+                      className="w-full flex items-center justify-between py-3 px-4 text-base font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      <span>{link.label}</span>
+                      <ChevronDownIcon
+                        className={`w-4 h-4 transition-transform duration-300 ${
+                          isDropdownOpen(link.id) ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {/* Dropdown Items */}
+                    {isDropdownOpen(link.id) && (
+                      <div className="bg-gray-50 divide-y divide-gray-200">
+                        {ageCategories.map((category) => (
+                          <LocalizedClientLink
+                            key={category.id}
+                            href={category.href}
+                            onClick={onClose}
+                            className="block py-2 px-8 text-sm hover:bg-primary hover:text-white transition-colors"
+                          >
+                            {category.label}
+                          </LocalizedClientLink>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <LocalizedClientLink
+                    href={link.href}
+                    onClick={onClose}
+                    className="block py-3 px-4 text-base font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    {link.label}
+                  </LocalizedClientLink>
+                )}
+              </li>
+            ))}
           </ul>
         </nav>
 
+        {/* Login Button */}
         <div className="p-4 border-t border-gray-200">
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>📧 info@toycker.com</p>
-            <p>📞 +1-888-TOYCKER</p>
-            <p>📍 123 Toy Street, Play City</p>
-          </div>
+          <LocalizedClientLink href="/account/login" onClick={onClose}>
+            <button className="w-full py-3 px-4 bg-primary text-white rounded-lg font-medium hover:bg-opacity-90 transition-all">
+              Login / Sign Up
+            </button>
+          </LocalizedClientLink>
+        </div>
+
+        {/* Contact Info */}
+        <div className="p-4 border-t border-gray-200 bg-gray-50 text-sm text-gray-600 space-y-2">
+          <p>📧 info@toycker.com</p>
+          <p>📞 +1-888-TOYCKER</p>
+          <p>📍 123 Toy Street, Play City</p>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

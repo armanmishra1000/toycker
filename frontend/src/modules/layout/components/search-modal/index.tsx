@@ -16,6 +16,7 @@ interface SearchModalProps {
   isOpen: boolean
   onClose: () => void
   searchQuery?: string
+  onSearchChange?: (query: string) => void
 }
 
 const mockProducts: Product[] = [
@@ -49,20 +50,37 @@ const mockProducts: Product[] = [
   },
 ]
 
-const SearchModal = ({ isOpen, onClose, searchQuery = "" }: SearchModalProps) => {
+const SearchModal = ({ isOpen, onClose, searchQuery = "", onSearchChange }: SearchModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([])
 
   useEffect(() => {
-    if (searchQuery.trim()) {
+    if (isOpen && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    const query = localSearchQuery || searchQuery
+    if (query.trim()) {
       const filtered = mockProducts.filter((p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(query.toLowerCase())
       )
       setDisplayedProducts(filtered.length > 0 ? filtered : mockProducts)
     } else {
       setDisplayedProducts(mockProducts)
     }
-  }, [searchQuery])
+  }, [localSearchQuery, searchQuery])
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setLocalSearchQuery(value)
+    if (onSearchChange) {
+      onSearchChange(value)
+    }
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -95,25 +113,58 @@ const SearchModal = ({ isOpen, onClose, searchQuery = "" }: SearchModalProps) =>
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300" />
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      />
 
       {/* Modal */}
       <div
         ref={modalRef}
-        className={`fixed left-0 top-0 h-screen w-full max-w-md bg-white z-50 transform transition-transform duration-300 ease-out ${
+        className={`fixed left-0 top-0 h-screen w-full max-w-md bg-white z-50 transform transition-transform duration-300 ease-out will-change-transform ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } flex flex-col overflow-hidden`}
+        style={{ backfaceVisibility: "hidden" }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Search Results</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Close search modal"
-          >
-            <XMarkIcon className="w-6 h-6 text-gray-600" />
-          </button>
+        {/* Header with Search Input */}
+        <div className="flex flex-col gap-3 p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Search</h2>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Close search modal"
+            >
+              <XMarkIcon className="w-6 h-6 text-gray-600" />
+            </button>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative flex items-center">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={localSearchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search products..."
+              className="w-full py-2 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              aria-label="Search products"
+            />
+            <svg
+              className="absolute left-3 w-4 h-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
         </div>
 
         {/* Products List */}

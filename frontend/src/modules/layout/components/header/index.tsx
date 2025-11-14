@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@medusajs/ui"
-import { Bars3Icon, ArrowPathIcon, HeartIcon, ShoppingBagIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
+import { Bars3Icon, HeartIcon, ShoppingBagIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { HttpTypes } from "@medusajs/types"
 
 import AnnouncementBar from "@modules/layout/components/announcement-bar"
@@ -35,19 +34,21 @@ const Header = ({ regions, cart }: HeaderProps) => {
         {/* Row 1 - Main Header with Primary Background */}
         <div className="mx-auto px-4 max-w-[1440px]">
           <div className="flex items-center justify-between h-20 gap-4">
-            {/* Mobile Menu Button */}
-            <Button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              variant="transparent"
-              className="lg:hidden p-2 hover:bg-white/10"
-              aria-label="Toggle mobile menu"
-            >
-              <Bars3Icon className="w-6 h-6 text-white" />
-            </Button>
+            {/* Menu Button & Logo - Left Side */}
+            <div className="flex items-center gap-3 lg:gap-0">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden p-2 bg-foreground rounded-full transition-colors hover:bg-opacity-90"
+                aria-label="Toggle mobile menu"
+              >
+                <Bars3Icon className="w-6 h-6 text-white" />
+              </button>
 
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Logo />
+              {/* Logo */}
+              <div className="flex-shrink-0">
+                <Logo />
+              </div>
             </div>
 
             {/* Search Bar - Desktop */}
@@ -63,23 +64,13 @@ const Header = ({ regions, cart }: HeaderProps) => {
             {/* Action Icons */}
             <div className="flex items-center gap-2">
               {/* Mobile Search Icon */}
-              <Button
+              <button
                 onClick={() => setIsMobileSearchOpen(true)}
-                variant="transparent"
-                className="lg:hidden p-2 hover:bg-white/10"
+                className="lg:hidden p-2 bg-foreground rounded-full transition-colors hover:bg-opacity-90"
                 aria-label="Open search"
               >
-                <MagnifyingGlassIcon className="w-6 h-6 text-white" />
-              </Button>
-
-              {/* Compare */}
-              <IconButton
-                icon={ArrowPathIcon}
-                label="Compare"
-                count={0}
-                href="/compare"
-                ariaLabel="Compare products (0 items)"
-              />
+                <MagnifyingGlassIcon className="w-5 h-5 text-white" />
+              </button>
 
               {/* Wishlist */}
               <IconButton
