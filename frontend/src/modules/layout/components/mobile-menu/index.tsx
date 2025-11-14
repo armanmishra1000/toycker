@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { XMarkIcon, ChevronDownIcon } from "@heroicons/react/24/outline"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useOnClickOutside } from "@modules/layout/hooks/useOnClickOutside"
@@ -16,6 +16,15 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   
   useOnClickOutside(menuRef, onClose)
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden"
+    }
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [isOpen])
 
   const toggleDropdown = (id: string) => {
     setOpenDropdownId((prev) => (prev === id ? null : id))
