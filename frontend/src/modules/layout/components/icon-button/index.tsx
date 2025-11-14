@@ -22,7 +22,7 @@ const IconButton = ({
   return (
     <LocalizedClientLink href={href} className="group relative">
       <div
-        className="p-2 hover:bg-white/10 rounded-lg transition-colors relative"
+        className="p-2 bg-foreground rounded-full transition-colors relative"
         aria-label={ariaLabel || label}
       >
         <Icon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />

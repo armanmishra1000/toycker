@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@medusajs/ui"
-import { Bars3Icon, ArrowPathIcon, HeartIcon, ShoppingBagIcon } from "@heroicons/react/24/outline"
+import { Bars3Icon, ArrowPathIcon, HeartIcon, ShoppingBagIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { HttpTypes } from "@medusajs/types"
 
 import AnnouncementBar from "@modules/layout/components/announcement-bar"
@@ -14,6 +14,7 @@ import MainNavigation from "@modules/layout/components/main-navigation"
 import SuperDealsBadge from "@modules/layout/components/super-deals-badge"
 import CartButton from "@modules/layout/components/cart-button"
 import MobileMenu from "@modules/layout/components/mobile-menu"
+import SearchModal from "@modules/layout/components/search-modal"
 
 type HeaderProps = {
   regions?: Record<string, unknown>
@@ -22,6 +23,7 @@ type HeaderProps = {
 
 const Header = ({ regions, cart }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
 
   const cartItemCount = cart?.items?.length || 0
 
@@ -49,17 +51,27 @@ const Header = ({ regions, cart }: HeaderProps) => {
             </div>
 
             {/* Search Bar - Desktop */}
-            <div className="hidden lg:block flex-1 max-w-md">
+            <div className="hidden lg:flex flex-1 max-w-md">
               <Search placeholder="Search for toys..." />
             </div>
 
             {/* Contact Info - Desktop Only */}
-            <div className="hidden lg:block">
+            <div className="hidden lg:flex">
               <ContactInfo phone="+1-888-0000-000" showIcon={true} />
             </div>
 
             {/* Action Icons */}
             <div className="flex items-center gap-2">
+              {/* Mobile Search Icon */}
+              <Button
+                onClick={() => setIsMobileSearchOpen(true)}
+                variant="transparent"
+                className="lg:hidden p-2 hover:bg-white/10"
+                aria-label="Open search"
+              >
+                <MagnifyingGlassIcon className="w-6 h-6 text-white" />
+              </Button>
+
               {/* Compare */}
               <IconButton
                 icon={ArrowPathIcon}
@@ -78,24 +90,29 @@ const Header = ({ regions, cart }: HeaderProps) => {
                 ariaLabel="Wishlist (0 items)"
               />
 
-              {/* Cart */}
-              <div className="relative">
-                <CartButton cart={cart} />
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-white text-primary text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {cartItemCount > 99 ? "99+" : cartItemCount}
-                  </span>
-                )}
-              </div>
+              {/* Shopping Bag / Cart */}
+              <IconButton
+                icon={ShoppingBagIcon}
+                label="Shopping Bag"
+                count={cartItemCount}
+                href="/cart"
+                ariaLabel={`Shopping bag (${cartItemCount} items)`}
+              />
             </div>
           </div>
         </div>
 
         {/* Mobile Search - Expandable */}
-        <div className="lg:hidden mx-auto px-4 max-w-[1440px] pb-3">
+        <div className="lg:hidden hidden mx-auto px-4 max-w-[1440px] pb-3">
           <Search placeholder="Search toys..." />
         </div>
       </header>
+
+      {/* Mobile Search Modal */}
+      <SearchModal
+        isOpen={isMobileSearchOpen}
+        onClose={() => setIsMobileSearchOpen(false)}
+      />
 
       {/* Row 2 - Navigation with White Background */}
       <div className="bg-white border-b border-gray-200">
