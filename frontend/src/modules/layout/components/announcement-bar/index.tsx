@@ -4,7 +4,6 @@ import {
   TruckIcon, 
   EnvelopeIcon, 
   MapPinIcon, 
-  UserIcon, 
   QuestionMarkCircleIcon 
 } from "@heroicons/react/24/outline"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -34,20 +33,13 @@ const AnnouncementBar = () => {
     }
   ]
 
-  // Right section items - Location, Login, Help
+  // Right section items - Location, Help
   const rightItems: AnnouncementItem[] = [
     { 
       id: "location", 
       text: "Surat, Gujarat",
       icon: MapPinIcon,
       ariaLabel: "Current location"
-    },
-    { 
-      id: "login", 
-      text: "Login",
-      icon: UserIcon,
-      href: "/account",
-      ariaLabel: "Login to account"
     },
     { 
       id: "help", 

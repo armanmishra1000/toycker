@@ -127,32 +127,12 @@ const SearchModal = ({ isOpen, onClose, searchQuery = "", onSearchChange }: Sear
         } flex flex-col overflow-hidden`}
         style={{ backfaceVisibility: "hidden" }}
       >
-        {/* Header with Search Input */}
-        <div className="flex flex-col gap-3 p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Search</h2>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Close search modal"
-            >
-              <XMarkIcon className="w-6 h-6 text-gray-600" />
-            </button>
-          </div>
-
-          {/* Search Input */}
+        {/* Search Input - No Header */}
+        <div className="p-4">
           <div className="relative flex items-center">
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={localSearchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search products..."
-              className="w-full py-2 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-              aria-label="Search products"
-            />
+            {/* Search Icon - Left */}
             <svg
-              className="absolute left-3 w-4 h-4 text-gray-400"
+              className="absolute left-0 w-4 h-4 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -164,6 +144,31 @@ const SearchModal = ({ isOpen, onClose, searchQuery = "", onSearchChange }: Sear
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
+
+            {/* Input with border-bottom only */}
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={localSearchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search products..."
+              className="w-full py-3 pl-8 pr-10 bg-white border-0 border-b-2 border-primary rounded-none text-gray-900 placeholder-gray-500 outline-none transition-colors"
+              aria-label="Search products"
+            />
+
+            {/* Close Button - Right (show only when has text) */}
+            {localSearchQuery && (
+              <button
+                onClick={() => {
+                  setLocalSearchQuery("")
+                  if (onSearchChange) onSearchChange("")
+                }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 p-1 hover:text-primary transition-colors"
+                aria-label="Clear search"
+              >
+                <XMarkIcon className="w-5 h-5 text-gray-400" />
+              </button>
+            )}
           </div>
         </div>
 

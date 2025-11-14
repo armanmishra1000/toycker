@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Bars3Icon, HeartIcon, ShoppingBagIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
+import { Bars3Icon, HeartIcon, ShoppingBagIcon, MagnifyingGlassIcon, UserIcon } from "@heroicons/react/24/outline"
 import { HttpTypes } from "@medusajs/types"
 
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import AnnouncementBar from "@modules/layout/components/announcement-bar"
 import Logo from "@modules/layout/components/logo"
 import Search from "@modules/layout/components/search"
@@ -52,7 +53,7 @@ const Header = ({ regions, cart }: HeaderProps) => {
             </div>
 
             {/* Search Bar - Desktop */}
-            <div className="hidden lg:flex flex-1 max-w-md">
+            <div className="hidden lg:flex flex-1 max-w-xl">
               <Search placeholder="Search for toys..." />
             </div>
 
@@ -71,6 +72,16 @@ const Header = ({ regions, cart }: HeaderProps) => {
               >
                 <MagnifyingGlassIcon className="w-5 h-5 text-white" />
               </button>
+
+              {/* Login Button */}
+              <LocalizedClientLink href="/account/login">
+                <button
+                  className="p-2 bg-foreground rounded-full transition-colors hover:bg-opacity-90"
+                  aria-label="Login to account"
+                >
+                  <UserIcon className="w-5 h-5 text-white" />
+                </button>
+              </LocalizedClientLink>
 
               {/* Wishlist */}
               <IconButton

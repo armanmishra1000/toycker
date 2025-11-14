@@ -48,7 +48,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
           <h2 className="text-lg font-semibold font-grandstander">Menu</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:text-primary rounded-lg transition-colors"
             aria-label="Close menu"
           >
             <XMark className="w-5 h-5" />
@@ -111,13 +111,6 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
               Login / Sign Up
             </button>
           </LocalizedClientLink>
-        </div>
-
-        {/* Contact Info */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50 text-sm text-gray-600 space-y-2">
-          <p>📧 info@toycker.com</p>
-          <p>📞 +1-888-TOYCKER</p>
-          <p>📍 123 Toy Street, Play City</p>
         </div>
       </div>
     </>

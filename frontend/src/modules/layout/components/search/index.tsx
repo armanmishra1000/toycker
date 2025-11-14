@@ -27,7 +27,7 @@ const Search = ({ className = "", placeholder = "Search products..." }: SearchPr
 
   return (
     <>
-      <form onSubmit={handleSearch} className={`relative flex-1 max-w-md ${className}`}>
+      <form onSubmit={handleSearch} className={`relative flex-1 max-w-xl ${className}`}>
         <div className="relative flex items-center">
           <div className="absolute left-2 w-10 h-10 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
             <MagnifyingGlassIcon className="w-5 h-5 text-white" />
