@@ -1,0 +1,4 @@
+# Ignore frontend and other directories for Railway backend deployment
+../frontend
+../IMPLEMENTATION.md
+../DEPLOYMENT_GUIDE.md
