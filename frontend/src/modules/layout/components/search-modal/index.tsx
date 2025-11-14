@@ -132,7 +132,7 @@ const SearchModal = ({ isOpen, onClose, searchQuery = "", onSearchChange }: Sear
           <div className="relative flex items-center">
             {/* Search Icon - Left */}
             <svg
-              className="absolute left-0 w-4 h-4 text-gray-400"
+              className="absolute left-0 w-4 h-4 text-black"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -156,19 +156,18 @@ const SearchModal = ({ isOpen, onClose, searchQuery = "", onSearchChange }: Sear
               aria-label="Search products"
             />
 
-            {/* Close Button - Right (show only when has text) */}
-            {localSearchQuery && (
-              <button
-                onClick={() => {
-                  setLocalSearchQuery("")
-                  if (onSearchChange) onSearchChange("")
-                }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 p-1 hover:text-primary transition-colors"
-                aria-label="Clear search"
-              >
-                <XMarkIcon className="w-5 h-5 text-gray-400" />
-              </button>
-            )}
+            {/* Close Button - Right (always visible) */}
+            <button
+              onClick={() => {
+                setLocalSearchQuery("")
+                if (onSearchChange) onSearchChange("")
+                onClose()
+              }}
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-1 transition-colors group"
+              aria-label="Close search"
+            >
+              <XMarkIcon className="w-5 h-5 text-gray-900 group-hover:text-primary transition-colors" />
+            </button>
           </div>
         </div>
 

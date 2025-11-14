@@ -1,8 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { XMark } from "@medusajs/icons"
-import { ChevronDownIcon } from "@heroicons/react/24/outline"
+import { XMarkIcon, ChevronDownIcon } from "@heroicons/react/24/outline"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useOnClickOutside } from "@modules/layout/hooks/useOnClickOutside"
 import { navLinks, ageCategories } from "@modules/layout/config/navigation"
@@ -44,14 +43,14 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
         style={{ backfaceVisibility: "hidden" }}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
           <h2 className="text-lg font-semibold font-grandstander">Menu</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:text-primary rounded-lg transition-colors"
+            className="hover:text-primary rounded-lg transition-colors"
             aria-label="Close menu"
           >
-            <XMark className="w-5 h-5" />
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
@@ -101,11 +100,22 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                 )}
               </li>
             ))}
+            
+            {/* Wishlist Link - No Icon */}
+            <li>
+              <LocalizedClientLink 
+                href="/wishlist" 
+                onClick={onClose}
+                className="block py-3 px-4 text-base font-medium hover:bg-gray-50 transition-colors"
+              >
+                Wishlist
+              </LocalizedClientLink>
+            </li>
           </ul>
         </nav>
 
         {/* Login Button */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="px-4 pb-4">
           <LocalizedClientLink href="/account/login" onClick={onClose}>
             <button className="w-full py-3 px-4 bg-primary text-white rounded-lg font-medium hover:bg-opacity-90 transition-all">
               Login / Sign Up

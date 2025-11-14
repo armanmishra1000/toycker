@@ -43,7 +43,7 @@ const Header = ({ regions, cart }: HeaderProps) => {
                 className="lg:hidden p-2 bg-foreground rounded-full transition-colors hover:bg-opacity-90"
                 aria-label="Toggle mobile menu"
               >
-                <Bars3Icon className="w-6 h-6 text-white" />
+                <Bars3Icon className="w-5 h-5 text-white" />
               </button>
 
               {/* Logo */}
@@ -73,24 +73,28 @@ const Header = ({ regions, cart }: HeaderProps) => {
                 <MagnifyingGlassIcon className="w-5 h-5 text-white" />
               </button>
 
-              {/* Login Button */}
-              <LocalizedClientLink href="/account/login">
-                <button
-                  className="p-2 bg-foreground rounded-full transition-colors hover:bg-opacity-90"
-                  aria-label="Login to account"
-                >
-                  <UserIcon className="w-5 h-5 text-white" />
-                </button>
-              </LocalizedClientLink>
+              {/* Login Button - Desktop Only */}
+              <div className="hidden lg:block">
+                <LocalizedClientLink href="/account/login">
+                  <button
+                    className="p-2 bg-foreground rounded-full transition-colors hover:bg-opacity-90"
+                    aria-label="Login to account"
+                  >
+                    <UserIcon className="w-5 h-5 text-white" />
+                  </button>
+                </LocalizedClientLink>
+              </div>
 
-              {/* Wishlist */}
-              <IconButton
-                icon={HeartIcon}
-                label="Wishlist"
-                count={0}
-                href="/wishlist"
-                ariaLabel="Wishlist (0 items)"
-              />
+              {/* Wishlist - Desktop Only */}
+              <div className="hidden lg:block">
+                <IconButton
+                  icon={HeartIcon}
+                  label="Wishlist"
+                  count={0}
+                  href="/wishlist"
+                  ariaLabel="Wishlist (0 items)"
+                />
+              </div>
 
               {/* Shopping Bag / Cart */}
               <IconButton
@@ -120,8 +124,8 @@ const Header = ({ regions, cart }: HeaderProps) => {
       <div className="bg-white border-b border-gray-200">
         <div className="mx-auto px-4 max-w-[1440px]">
           <div className="flex items-center justify-between h-14">
-            {/* Main Navigation */}
-            <div className="hidden md:block">
+            {/* Main Navigation - Desktop Only */}
+            <div className="hidden lg:block">
               <MainNavigation />
             </div>
 
