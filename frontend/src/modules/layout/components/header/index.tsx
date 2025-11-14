@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { Bars3Icon, HeartIcon, ShoppingBagIcon, MagnifyingGlassIcon, UserIcon, EnvelopeIcon } from "@heroicons/react/24/outline"
+import { Bars3Icon, HeartIcon, ShoppingBagIcon, MagnifyingGlassIcon, UserIcon, EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/outline"
 import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -12,6 +12,36 @@ import IconButton from "@modules/layout/components/icon-button"
 import MainNavigation from "@modules/layout/components/main-navigation"
 import MobileMenu from "@modules/layout/components/mobile-menu"
 import SearchModal from "@modules/layout/components/search-modal"
+
+interface ContactInfoProps {
+  phone?: string
+  showIcon?: boolean
+}
+
+const ContactInfo = ({ 
+  phone = "+1-888-0000-000", 
+  showIcon = true 
+}: ContactInfoProps) => {
+  return (
+    <div className="py-2 px-4 border border-white/30 rounded-full">
+      <a
+        href={`tel:${phone.replace(/\D/g, "")}`}
+        className="hidden lg:flex items-center gap-2 text-white "
+        aria-label="Contact phone number"
+      >
+        {showIcon && (
+          <div className="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center flex-shrink-0">
+            <PhoneIcon className="w-5 h-5 text-white" />
+          </div>
+        )}
+        <div className="flex flex-col">
+          <span className="text-sm">24/7 Support:</span>
+          <span className="text-sm font-medium">{phone}</span>
+        </div>
+      </a>
+    </div>
+  )
+}
 
 type HeaderProps = {
   regions?: Record<string, unknown>
@@ -37,10 +67,10 @@ const Header = ({ regions, cart }: HeaderProps) => {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2 bg-foreground rounded-full transition-colors hover:bg-opacity-90"
+                className="lg:hidden p-2 w-10 h-10 bg-foreground rounded-full transition-colors relative flex justify-center items-center group"
                 aria-label="Toggle mobile menu"
               >
-                <Bars3Icon className="w-5 h-5 text-white" />
+                <Bars3Icon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
               </button>
 
               {/* Logo - Inline */}
@@ -63,12 +93,17 @@ const Header = ({ regions, cart }: HeaderProps) => {
               <Search placeholder="Search for toys..." />
             </div>
 
+            {/* Contact Info */}
+            <div className="hidden lg:block">
+              <ContactInfo />
+            </div>
+
             {/* Action Icons */}
             <div className="flex items-center gap-2">
               {/* Mobile Search Icon */}
               <button
                 onClick={() => setIsMobileSearchOpen(true)}
-                className="lg:hidden p-2 bg-foreground rounded-full transition-colors group relative"
+                className="lg:hidden w-10 h-10 bg-foreground rounded-full transition-colors relative flex justify-center items-center"
                 aria-label="Open search"
               >
                 <MagnifyingGlassIcon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
@@ -78,7 +113,7 @@ const Header = ({ regions, cart }: HeaderProps) => {
               <div className="hidden lg:block ">
                 <LocalizedClientLink href="/account/login" className="group relative">
                   <button
-                    className="p-2 bg-foreground rounded-full transition-colors relative"
+                    className="w-10 h-10 bg-foreground rounded-full transition-colors relative flex justify-center items-center"
                     aria-label="Login to account"
                   >
                     <UserIcon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
