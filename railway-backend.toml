@@ -18,3 +18,7 @@ workingDir = "backend"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
+
+# Railway build detection for monorepo
+[build.src]
+path = "backend"

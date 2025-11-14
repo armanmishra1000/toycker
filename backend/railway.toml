@@ -16,3 +16,4 @@ cmds=["npm run build"]
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
+startCommand = "npm run start"
