@@ -60,7 +60,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
 
         {/* Navigation - Scrollable */}
         <nav className="flex-1 overflow-y-auto">
-          <ul className="divide-y divide-gray-200">
+          <ul className="flex flex-col gap-1 p-2">
             {navLinks.map((link) => (
               <li key={link.id}>
                 {link.hasDropdown ? (
@@ -79,7 +79,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
 
                     {/* Dropdown Items */}
                     {isDropdownOpen(link.id) && (
-                      <div className="bg-gray-50 divide-y divide-gray-200">
+                      <div className="bg-gray-50 flex flex-col gap-1 p-2">
                         {ageCategories.map((category) => (
                           <LocalizedClientLink
                             key={category.id}

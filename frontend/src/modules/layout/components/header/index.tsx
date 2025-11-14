@@ -67,20 +67,20 @@ const Header = ({ regions, cart }: HeaderProps) => {
               {/* Mobile Search Icon */}
               <button
                 onClick={() => setIsMobileSearchOpen(true)}
-                className="lg:hidden p-2 bg-foreground rounded-full transition-colors hover:bg-opacity-90"
+                className="lg:hidden p-2 bg-foreground rounded-full transition-colors group relative"
                 aria-label="Open search"
               >
-                <MagnifyingGlassIcon className="w-5 h-5 text-white" />
+                <MagnifyingGlassIcon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
               </button>
 
               {/* Login Button - Desktop Only */}
-              <div className="hidden lg:block">
-                <LocalizedClientLink href="/account/login">
+              <div className="hidden lg:block ">
+                <LocalizedClientLink href="/account/login" className="group relative">
                   <button
-                    className="p-2 bg-foreground rounded-full transition-colors hover:bg-opacity-90"
+                    className="p-2 bg-foreground rounded-full transition-colors relative"
                     aria-label="Login to account"
                   >
-                    <UserIcon className="w-5 h-5 text-white" />
+                    <UserIcon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
                   </button>
                 </LocalizedClientLink>
               </div>
@@ -120,17 +120,17 @@ const Header = ({ regions, cart }: HeaderProps) => {
         onClose={() => setIsMobileSearchOpen(false)}
       />
 
-      {/* Row 2 - Navigation with White Background */}
-      <div className="bg-white border-b border-gray-200">
+      {/* Row 2 - Navigation with White Background - Desktop Only */}
+      <div className="hidden lg:block bg-white border-b border-gray-200">
         <div className="mx-auto px-4 max-w-[1440px]">
           <div className="flex items-center justify-between h-14">
-            {/* Main Navigation - Desktop Only */}
-            <div className="hidden lg:block">
+            {/* Main Navigation */}
+            <div>
               <MainNavigation />
             </div>
 
             {/* Super Deals Badge */}
-            <div className="md:absolute md:right-6">
+            <div>
               <SuperDealsBadge href="/deals" />
             </div>
           </div>

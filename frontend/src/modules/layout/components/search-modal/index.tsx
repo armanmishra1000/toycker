@@ -176,7 +176,7 @@ const SearchModal = ({ isOpen, onClose, searchQuery = "", onSearchChange }: Sear
         {/* Products List */}
         <div className="flex-1 overflow-y-auto">
           {displayedProducts.length > 0 ? (
-            <div className="divide-y divide-gray-200">
+            <div className="flex flex-col gap-2 p-2">
               {displayedProducts.map((product) => (
                 <LocalizedClientLink
                   key={product.id}
