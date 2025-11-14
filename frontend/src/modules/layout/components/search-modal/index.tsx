@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { XMarkIcon } from "@heroicons/react/24/outline"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { useBodyScrollLock } from "@modules/layout/hooks/useBodyScrollLock"
 
 interface Product {
   id: string
@@ -56,6 +57,9 @@ const SearchModal = ({ isOpen, onClose, searchQuery = "", onSearchChange }: Sear
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([])
 
+  // Lock body scroll when modal is open
+  useBodyScrollLock({ isLocked: isOpen })
+
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus()
@@ -98,13 +102,11 @@ const SearchModal = ({ isOpen, onClose, searchQuery = "", onSearchChange }: Sear
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside)
       document.addEventListener("keydown", handleEscapeKey)
-      document.body.style.overflow = "hidden"
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
       document.removeEventListener("keydown", handleEscapeKey)
-      document.body.style.overflow = "unset"
     }
   }, [isOpen, onClose])
 

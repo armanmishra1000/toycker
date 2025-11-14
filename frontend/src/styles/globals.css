@@ -52,6 +52,13 @@ body {
   input[type="search"]::-webkit-search-results-decoration {
     -webkit-appearance: none;
   }
+
+  /* Modal scroll lock - works cross-browser including iOS Safari */
+  .modal-open {
+    overflow: hidden !important;
+    touch-action: none;
+    -webkit-overflow-scrolling: none;
+  }
 }
 
 @layer components {
