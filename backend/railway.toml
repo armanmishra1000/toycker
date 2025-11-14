@@ -6,3 +6,13 @@ nixPkgs = ["nodejs", "npm"]
 
 [build.nixpacksPlan.phases.install]
 cmds=["npm install --legacy-peer-deps"]
+
+[build.nixpacksPlan.phases.build]
+cmds=["npm run build"]
+
+[deploy]
+# Railway will automatically use npm start command from package.json
+# No need to specify start command if package.json is correct
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
