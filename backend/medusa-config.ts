@@ -2,7 +2,7 @@ import { loadEnv, defineConfig } from "@medusajs/framework/utils"
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd())
 
-export default defineConfig({
+const config = defineConfig({
   admin: {
     disable: process.env.NODE_ENV === 'production',
   },
@@ -19,3 +19,6 @@ export default defineConfig({
     }
   }
 })
+
+export default config
+module.exports = config
