@@ -26,7 +26,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
 
   return (
     <>
-      <Nav />
+      <Nav cart={cart} />
       {customer && cart && (
         <CartMismatchBanner customer={customer} cart={cart} />
       )}
