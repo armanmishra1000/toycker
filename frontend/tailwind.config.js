@@ -34,6 +34,8 @@ module.exports = {
           80: "#1F2937",
           90: "#111827",
         },
+        primary: "#ed1c24",
+        secondary: "#ffc300",
       },
       borderRadius: {
         none: "0px",
@@ -69,6 +71,7 @@ module.exports = {
           "Ubuntu",
           "sans-serif",
         ],
+        grandstander: ["var(--font-Grandstander)", "sans-serif"],
       },
       keyframes: {
         ring: {
