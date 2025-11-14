@@ -1,8 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { 
-  XMarkIcon, 
   TruckIcon, 
   EnvelopeIcon, 
   MapPinIcon, 
@@ -20,8 +18,6 @@ interface AnnouncementItem {
 }
 
 const AnnouncementBar = () => {
-  const [isVisible, setIsVisible] = useState(true)
-
   // Left section items - Delivery and Contact Info
   const leftItems: AnnouncementItem[] = [
     { 
@@ -62,32 +58,15 @@ const AnnouncementBar = () => {
     }
   ]
 
-  useEffect(() => {
-    // Check if user has previously closed the announcement
-    const closed = localStorage.getItem('announcement-closed')
-    if (closed) {
-      setIsVisible(false)
-    }
-  }, [])
-
-  const handleClose = () => {
-    setIsVisible(false)
-    localStorage.setItem('announcement-closed', 'true')
-  }
-
-  if (!isVisible) {
-    return null
-  }
-
   const renderItem = (item: AnnouncementItem) => {
     const Icon = item.icon
     const content = (
       <div 
-        className="flex items-center gap-2 px-2 py-1 rounded hover:bg-white/10 transition-all duration-200 cursor-pointer group"
+        className="flex items-center gap-2"
         aria-label={item.ariaLabel}
       >
-        <Icon className="w-4 h-4 flex-shrink-0 group-hover:scale-110 transition-transform duration-200" />
-        <span className="whitespace-nowrap text-xs md:text-sm font-medium">
+        <Icon className="w-5 h-5 flex-shrink-0" />
+        <span className="whitespace-nowrap text-base font-medium">
           {item.text}
         </span>
       </div>
@@ -113,29 +92,20 @@ const AnnouncementBar = () => {
       role="region"
       aria-label="Announcement bar"
       aria-live="polite"
-      className="bg-primary text-white py-2 md:py-3 animate-slide-down relative"
+      className="hidden lg:block bg-primary text-white py-3"
     >
-      <div className="content-container">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-6 pr-8">
+      <div className="mx-auto px-4 max-w-[1440px]">
+        <div className="flex flex-row justify-between items-center gap-6">
           {/* Left section - Delivery and Contact */}
-          <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-4">
             {leftItems.map((item) => renderItem(item))}
           </div>
 
           {/* Right section - Location, Login, Help */}
-          <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto md:justify-end">
+          <div className="flex items-center gap-4">
             {rightItems.map((item) => renderItem(item))}
           </div>
         </div>
-
-        {/* Close button - positioned absolutely */}
-        <button
-          onClick={handleClose}
-          className="absolute top-1/2 right-4 md:right-6 transform -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-all duration-200 hover:scale-110"
-          aria-label="Close announcement"
-        >
-          <XMarkIcon className="w-4 h-4" />
-        </button>
       </div>
     </div>
   )
