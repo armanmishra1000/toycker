@@ -12,6 +12,7 @@ import IconButton from "@modules/layout/components/icon-button"
 import MainNavigation from "@modules/layout/components/main-navigation"
 import MobileMenu from "@modules/layout/components/mobile-menu"
 import SearchModal from "@modules/layout/components/search-modal"
+import { AgeCategory, NavLink, ageCategories as defaultAgeCategories, navLinks as defaultNavLinks } from "@modules/layout/config/navigation"
 
 interface ContactInfoProps {
   phone?: string
@@ -46,13 +47,17 @@ const ContactInfo = ({
 type HeaderProps = {
   regions?: Record<string, unknown>
   cart?: HttpTypes.StoreCart | null
+  navLinks?: NavLink[]
+  ageCategories?: AgeCategory[]
 }
 
-const Header = ({ regions, cart }: HeaderProps) => {
+const Header = ({ regions, cart, navLinks, ageCategories }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
 
   const cartItemCount = cart?.items?.length || 0
+  const resolvedNavLinks = navLinks && navLinks.length ? navLinks : defaultNavLinks
+  const resolvedAgeCategories = ageCategories && ageCategories.length ? ageCategories : defaultAgeCategories
 
   return (
     <>
@@ -161,7 +166,7 @@ const Header = ({ regions, cart }: HeaderProps) => {
         <div className="mx-auto px-4 max-w-[1440px]">
           <div className="h-14 flex items-center justify-between">
             {/* Main Navigation */}
-            <MainNavigation />
+            <MainNavigation navLinks={resolvedNavLinks} ageCategories={resolvedAgeCategories} />
             
             {/* Email Contact - Right Side */}
             <a
@@ -177,7 +182,12 @@ const Header = ({ regions, cart }: HeaderProps) => {
       </div>
 
       {/* Mobile Menu */}
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        navLinks={resolvedNavLinks}
+        ageCategories={resolvedAgeCategories}
+      />
     </>
   )
 }

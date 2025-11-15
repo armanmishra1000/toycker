@@ -4,15 +4,17 @@ import { useRef, useState } from "react"
 import { XMarkIcon, ChevronDownIcon } from "@heroicons/react/24/outline"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useOnClickOutside } from "@modules/layout/hooks/useOnClickOutside"
-import { navLinks, ageCategories } from "@modules/layout/config/navigation"
+import { AgeCategory, NavLink } from "@modules/layout/config/navigation"
 import { useBodyScrollLock } from "@modules/layout/hooks/useBodyScrollLock"
 
 type MobileMenuProps = {
   isOpen: boolean
   onClose: () => void
+  navLinks: NavLink[]
+  ageCategories: AgeCategory[]
 }
 
-const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
+const MobileMenu = ({ isOpen, onClose, navLinks, ageCategories }: MobileMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null)
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   

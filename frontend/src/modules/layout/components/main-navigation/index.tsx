@@ -1,66 +1,72 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { usePathname } from "next/navigation"
 import { ChevronDownIcon } from "@heroicons/react/24/outline"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ShopByAgeDropdown from "@modules/layout/components/shop-by-age-dropdown"
+import { AgeCategory, NavLink } from "@modules/layout/config/navigation"
+import { useOnClickOutside } from "@modules/layout/hooks/useOnClickOutside"
 
-interface NavLink {
-  id: string
-  label: string
-  href: string
-  hasDropdown?: boolean
+type MainNavigationProps = {
+  navLinks: NavLink[]
+  ageCategories: AgeCategory[]
 }
 
-const navLinks: NavLink[] = [
-  { id: "home", label: "Home", href: "/" },
-  { id: "shop-by-age", label: "Shop by Age", href: "/shop-by-age", hasDropdown: true },
-  { id: "about", label: "About Us", href: "/about" },
-  { id: "contact", label: "Contact", href: "/contact" },
-  { id: "metal-cars", label: "Metal Cars", href: "/metal-cars" },
-]
-
-const MainNavigation = () => {
+const MainNavigation = ({ navLinks, ageCategories }: MainNavigationProps) => {
   const pathname = usePathname()
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null)
+  const navRef = useRef<HTMLElement | null>(null)
+
+  const cleanPathname = pathname.replace(/^\/[a-z]{2}(\/|$)/, "/")
+
+  useOnClickOutside(navRef, () => setActiveDropdownId(null))
+
+  useEffect(() => {
+    setActiveDropdownId(null)
+  }, [pathname])
 
   const isActive = (href: string) => {
-    // Remove locale prefix if present (e.g., /en, /in)
-    const cleanPathname = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/')
-    
     if (href === "/" && cleanPathname === "/") return true
     if (href !== "/" && cleanPathname.startsWith(href)) return true
     return false
   }
 
+  const handleDropdownToggle = (id: string) => {
+    setActiveDropdownId((current) => (current === id ? null : id))
+  }
+
+  const closeDropdown = () => setActiveDropdownId(null)
+
   return (
-    <nav className="flex items-center gap-8" aria-label="Main navigation">
+    <nav ref={navRef} className="flex items-center gap-8" aria-label="Main navigation">
       {navLinks.map((link) => {
         const active = isActive(link.href)
-        
+
         if (link.hasDropdown) {
+          const isOpen = activeDropdownId === link.id
           return (
             <div key={link.id} className="relative group">
               <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsDropdownOpen(!isDropdownOpen)
-                }}
+                onClick={() => handleDropdownToggle(link.id)}
                 className={`flex items-center gap-1 font-medium transition-colors hover:text-primary ${
                   active ? "text-primary" : "text-black"
                 }`}
+                aria-expanded={isOpen}
+                aria-haspopup="true"
               >
                 {link.label}
                 <ChevronDownIcon
                   className={`w-4 h-4 transition-transform duration-300 ${
-                    isDropdownOpen ? "rotate-180" : ""
+                    isOpen ? "rotate-180" : ""
                   }`}
                 />
               </button>
               <ShopByAgeDropdown
-                isOpen={isDropdownOpen}
-                onClose={() => setIsDropdownOpen(false)}
+                isOpen={isOpen}
+                items={ageCategories}
+                activePathname={cleanPathname}
+                onItemClick={closeDropdown}
               />
             </div>
           )
@@ -73,6 +79,7 @@ const MainNavigation = () => {
             className={`font-medium transition-colors hover:text-primary ${
               active ? "text-primary" : "text-black"
             }`}
+            onClick={closeDropdown}
           >
             {link.label}
           </LocalizedClientLink>
