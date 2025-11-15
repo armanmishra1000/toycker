@@ -1,35 +1,124 @@
-import { Github } from "@medusajs/icons"
-import { Button, Heading } from "@medusajs/ui"
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
+import { Swiper, SwiperSlide } from "swiper/react"
+import { Autoplay } from "swiper/modules"
+import type { Swiper as SwiperInstance } from "swiper/types"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+
+import "swiper/css"
+import "swiper/css/navigation"
+
+type HeroSlide = {
+  id: number
+  imageSrc: string
+  alt: string
+}
+
+const HERO_SLIDES: HeroSlide[] = [
+  {
+    id: 1,
+    imageSrc: "/assets/images/slider_1.png",
+    alt: "Main hero promotion 1",
+  },
+  {
+    id: 2,
+    imageSrc: "/assets/images/slider_2.png",
+    alt: "Main hero promotion 2",
+  },
+  {
+    id: 3,
+    imageSrc: "/assets/images/slider_3.png",
+    alt: "Main hero promotion 3",
+  },
+]
+
+const HERO_SWIPER_OPTIONS = {
+  modules: [Autoplay],
+  loop: true,
+  grabCursor: true,
+  spaceBetween: 16,
+  slidesPerView: 1.1,
+  autoplay: {
+    delay: 5000,
+    disableOnInteraction: false,
+  },
+  breakpoints: {
+    640: {
+      slidesPerView: 1.75,
+    },
+    1024: {
+      slidesPerView: 2.25,
+    },
+  },
+}
 
 const Hero = () => {
+  const [isMounted, setIsMounted] = useState(false)
+  const swiperRef = useRef<SwiperInstance | null>(null)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    return (
+      <section className="w-full">
+        <div className="mx-auto w-full max-w-screen-2xl px-4 py-8">
+          <div className="relative w-full overflow-hidden rounded-2xl bg-ui-bg-base aspect-[16/9]" />
+        </div>
+      </section>
+    )
+  }
+
   return (
-    <div className="h-[75vh] w-full border-b border-ui-border-base relative bg-ui-bg-subtle">
-      <div className="absolute inset-0 z-10 flex flex-col justify-center items-center text-center small:p-32 gap-6">
-        <span>
-          <Heading
-            level="h1"
-            className="text-3xl leading-10 text-ui-fg-base font-normal"
+    <section className="w-full">
+      <div className="w-full px-4 py-8">
+        <div className="relative overflow-hidden">
+          <Swiper
+            {...HERO_SWIPER_OPTIONS}
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper
+            }}
+            className="hero-swiper"
           >
-            Ecommerce Starter Template
-          </Heading>
-          <Heading
-            level="h2"
-            className="text-3xl leading-10 text-ui-fg-subtle font-normal"
+            {HERO_SLIDES.map((slide) => (
+              <SwiperSlide key={slide.id}>
+                <div className="w-full">
+                  <div className="relative w-full overflow-hidden rounded-2xl bg-ui-bg-base aspect-[16/9]">
+                    <Image
+                      src={slide.imageSrc}
+                      alt={slide.alt}
+                      fill
+                      priority={slide.id === 1}
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 60vw, 100vw"
+                      className="object-cover"
+                    />
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+          <button
+            type="button"
+            className="hero-swiper-prev absolute left-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-ui-border-base bg-ui-bg-base text-ui-fg-base shadow-sm transition hover:bg-ui-bg-subtle z-10"
+            aria-label="Previous banner"
+            onClick={() => swiperRef.current?.slidePrev()}
           >
-            Powered by Medusa and Next.js
-          </Heading>
-        </span>
-        <a
-          href="https://github.com/medusajs/nextjs-starter-medusa"
-          target="_blank"
-        >
-          <Button variant="secondary">
-            View on GitHub
-            <Github />
-          </Button>
-        </a>
+            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="hero-swiper-next absolute right-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-ui-border-base bg-ui-bg-base text-ui-fg-base shadow-sm transition hover:bg-ui-bg-subtle z-10"
+            aria-label="Next banner"
+            onClick={() => swiperRef.current?.slideNext()}
+          >
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }
 
