@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 
+import ExclusiveCollections from "@modules/home/components/exclusive-collections"
 import FeaturedProducts from "@modules/home/components/featured-products"
 import Hero from "@modules/home/components/hero"
 import ShopByAge from "@modules/home/components/shop-by-age"
@@ -32,6 +33,7 @@ export default async function Home(props: {
   return (
     <>
       <Hero />
+      <ExclusiveCollections />
       <ShopByAge />
       <div className="py-12">
         <ul className="flex flex-col gap-x-6">
