@@ -1,0 +1,24 @@
+[build]
+builder = "NIXPACKS"
+
+[build.nixpacksPlan.phases.setup]
+nixPkgs = ["nodejs"]
+
+[build.nixpacksPlan.phases.install]
+cmds=["npm install --legacy-peer-deps"]
+workingDir = "backend"
+
+[build.nixpacksPlan.phases.build]
+cmds=["npm run build"]
+workingDir = "backend"
+
+[deploy]
+startCommand = "npm run start"
+workingDir = "backend"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+
+# Railway build detection for monorepo
+[build.src]
+path = "backend"
