@@ -2,15 +2,15 @@ import React, { Suspense } from "react"
 
 import ImageGallery from "@modules/products/components/image-gallery"
 import ProductActions from "@modules/products/components/product-actions"
-import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
 import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
-import ProductInfo from "@modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
 import ProductActionsWrapper from "./product-actions-wrapper"
+import CustomerReviews from "@modules/products/components/customer-reviews"
+import OrderInformation from "@modules/products/components/order-information"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -31,36 +31,28 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
 
   return (
     <>
-      <div
-        className="content-container  flex flex-col small:flex-row small:items-start py-6 relative"
-        data-testid="product-container"
-      >
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-6">
-          <ProductInfo product={product} />
-          <ProductTabs product={product} />
-        </div>
-        <div className="block w-full relative">
-          <ImageGallery images={images} />
-        </div>
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-12">
-          <ProductOnboardingCta />
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
+      <div className="content-container py-8" data-testid="product-container">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,_55%)_minmax(320px,_1fr)]">
+          <div className="flex flex-col gap-10">
+            <ImageGallery images={images} />
+            <ProductTabs product={product} />
+            <CustomerReviews />
+          </div>
+          <div className="flex flex-col gap-6">
+            <Suspense
+              fallback={<ProductActions disabled={true} product={product} />}
+            >
+              <ProductActionsWrapper
+                id={product.id}
                 region={region}
+                countryCode={countryCode}
               />
-            }
-          >
-            <ProductActionsWrapper id={product.id} region={region} />
-          </Suspense>
+            </Suspense>
+            <OrderInformation />
+          </div>
         </div>
       </div>
-      <div
-        className="content-container my-16 small:my-32"
-        data-testid="related-products-container"
-      >
+      <div className="content-container my-16" data-testid="related-products-container">
         <Suspense fallback={<SkeletonRelatedProducts />}>
           <RelatedProducts product={product} countryCode={countryCode} />
         </Suspense>

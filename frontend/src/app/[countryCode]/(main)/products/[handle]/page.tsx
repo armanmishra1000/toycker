@@ -53,20 +53,28 @@ export async function generateStaticParams() {
 }
 
 function getImagesForVariant(
-  product: HttpTypes.StoreProduct,
+  product?: HttpTypes.StoreProduct,
   selectedVariantId?: string
 ) {
-  if (!selectedVariantId || !product.variants) {
-    return product.images
+  if (!product) {
+    return []
   }
 
-  const variant = product.variants!.find((v) => v.id === selectedVariantId)
-  if (!variant || !variant.images.length) {
-    return product.images
+  const allImages = product.images ?? []
+
+  if (!selectedVariantId || !product.variants?.length) {
+    return allImages
   }
 
-  const imageIdsMap = new Map(variant.images.map((i) => [i.id, true]))
-  return product.images!.filter((i) => imageIdsMap.has(i.id))
+  const variant = product.variants.find((v) => v.id === selectedVariantId)
+  const variantImages = variant?.images ?? []
+
+  if (!variant || variantImages.length === 0) {
+    return allImages
+  }
+
+  const imageIdsMap = new Map(variantImages.map((image) => [image.id, true]))
+  return allImages.filter((image) => imageIdsMap.has(image.id))
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -125,7 +133,7 @@ export default async function ProductPage(props: Props) {
       product={pricedProduct}
       region={region}
       countryCode={params.countryCode}
-      images={images}
+      images={images ?? []}
     />
   )
 }

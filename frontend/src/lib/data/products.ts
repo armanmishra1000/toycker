@@ -37,10 +37,22 @@ export const listProducts = async ({
 
   let region: HttpTypes.StoreRegion | undefined | null
 
-  if (countryCode) {
-    region = await getRegion(countryCode)
-  } else {
-    region = await retrieveRegion(regionId!)
+  if (regionId) {
+    try {
+      region = await retrieveRegion(regionId)
+    } catch (error) {
+      console.warn(
+        `Unable to retrieve region with id ${regionId}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      )
+      region = null
+    }
+  }
+
+  if (!region && countryCode) {
+    region =
+      (await getRegion(countryCode)) || (await getRegion(countryCode, { forceRefresh: true }))
   }
 
   if (!region) {
