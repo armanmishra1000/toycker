@@ -12,6 +12,7 @@ import IconButton from "@modules/layout/components/icon-button"
 import MainNavigation from "@modules/layout/components/main-navigation"
 import MobileMenu from "@modules/layout/components/mobile-menu"
 import SearchModal from "@modules/layout/components/search-modal"
+import CartSidebar from "@modules/layout/components/cart-sidebar"
 import { AgeCategory, NavLink, ageCategories as defaultAgeCategories, navLinks as defaultNavLinks } from "@modules/layout/config/navigation"
 
 interface ContactInfoProps {
@@ -54,6 +55,7 @@ type HeaderProps = {
 const Header = ({ regions, cart, navLinks, ageCategories }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
+  const [isCartSidebarOpen, setIsCartSidebarOpen] = useState(false)
 
   const cartItemCount = cart?.items?.length || 0
   const resolvedNavLinks = navLinks && navLinks.length ? navLinks : defaultNavLinks
@@ -142,8 +144,8 @@ const Header = ({ regions, cart, navLinks, ageCategories }: HeaderProps) => {
                 icon={ShoppingBagIcon}
                 label="Shopping Bag"
                 count={cartItemCount}
-                href="/cart"
                 ariaLabel={`Shopping bag (${cartItemCount} items)`}
+                onClick={() => setIsCartSidebarOpen(true)}
               />
             </div>
           </div>
@@ -187,6 +189,12 @@ const Header = ({ regions, cart, navLinks, ageCategories }: HeaderProps) => {
         onClose={() => setIsMobileMenuOpen(false)}
         navLinks={resolvedNavLinks}
         ageCategories={resolvedAgeCategories}
+      />
+
+      <CartSidebar
+        isOpen={isCartSidebarOpen}
+        onClose={() => setIsCartSidebarOpen(false)}
+        cart={cart}
       />
     </>
   )
