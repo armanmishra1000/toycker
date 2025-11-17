@@ -13,7 +13,16 @@ import MainNavigation from "@modules/layout/components/main-navigation"
 import MobileMenu from "@modules/layout/components/mobile-menu"
 import SearchModal from "@modules/layout/components/search-modal"
 import CartSidebar from "@modules/layout/components/cart-sidebar"
-import { AgeCategory, NavLink, ageCategories as defaultAgeCategories, navLinks as defaultNavLinks } from "@modules/layout/config/navigation"
+import {
+  AgeCategory,
+  NavLink,
+  ShopMenuPromo,
+  ShopMenuSection,
+  ageCategories as defaultAgeCategories,
+  navLinks as defaultNavLinks,
+  shopMenuPromo as defaultShopMenuPromo,
+  shopMenuSections as defaultShopMenuSections,
+} from "@modules/layout/config/navigation"
 
 interface ContactInfoProps {
   phone?: string
@@ -50,9 +59,18 @@ type HeaderProps = {
   cart?: HttpTypes.StoreCart | null
   navLinks?: NavLink[]
   ageCategories?: AgeCategory[]
+  shopMenuSections?: ShopMenuSection[]
+  shopMenuPromo?: ShopMenuPromo
 }
 
-const Header = ({ regions, cart, navLinks, ageCategories }: HeaderProps) => {
+const Header = ({
+  regions,
+  cart,
+  navLinks,
+  ageCategories,
+  shopMenuSections,
+  shopMenuPromo,
+}: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const [isCartSidebarOpen, setIsCartSidebarOpen] = useState(false)
@@ -60,6 +78,20 @@ const Header = ({ regions, cart, navLinks, ageCategories }: HeaderProps) => {
   const cartItemCount = cart?.items?.length || 0
   const resolvedNavLinks = navLinks && navLinks.length ? navLinks : defaultNavLinks
   const resolvedAgeCategories = ageCategories && ageCategories.length ? ageCategories : defaultAgeCategories
+  const fallbackSections = defaultShopMenuSections.map((section) =>
+    section.id === "age"
+      ? {
+          ...section,
+          items: resolvedAgeCategories.map((category) => ({
+            id: category.id,
+            label: category.label,
+            href: category.href,
+          })),
+        }
+      : section,
+  )
+  const resolvedShopMenuSections = shopMenuSections && shopMenuSections.length ? shopMenuSections : fallbackSections
+  const resolvedShopMenuPromo = shopMenuPromo ?? defaultShopMenuPromo
 
   return (
     <>
@@ -168,7 +200,11 @@ const Header = ({ regions, cart, navLinks, ageCategories }: HeaderProps) => {
         <div className="mx-auto px-4 max-w-[1440px]">
           <div className="h-14 flex items-center justify-between">
             {/* Main Navigation */}
-            <MainNavigation navLinks={resolvedNavLinks} ageCategories={resolvedAgeCategories} />
+            <MainNavigation
+              navLinks={resolvedNavLinks}
+              shopMenuSections={resolvedShopMenuSections}
+              shopMenuPromo={resolvedShopMenuPromo}
+            />
             
             {/* Email Contact - Right Side */}
             <a
@@ -188,7 +224,8 @@ const Header = ({ regions, cart, navLinks, ageCategories }: HeaderProps) => {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         navLinks={resolvedNavLinks}
-        ageCategories={resolvedAgeCategories}
+        shopMenuSections={resolvedShopMenuSections}
+        shopMenuPromo={resolvedShopMenuPromo}
       />
 
       <CartSidebar
