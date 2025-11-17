@@ -52,11 +52,33 @@ body {
   input[type="search"]::-webkit-search-results-decoration {
     -webkit-appearance: none;
   }
+
+  /* Modal scroll lock - works cross-browser including iOS Safari */
+  .modal-open {
+    overflow: hidden !important;
+    touch-action: none;
+    -webkit-overflow-scrolling: none;
+  }
 }
 
 @layer components {
   .content-container {
     @apply max-w-[1440px] w-full mx-auto px-6;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   .contrast-btn {

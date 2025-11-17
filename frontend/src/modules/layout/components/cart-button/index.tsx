@@ -1,8 +1,12 @@
-import { retrieveCart } from "@lib/data/cart"
+"use client"
+
+import { HttpTypes } from "@medusajs/types"
 import CartDropdown from "../cart-dropdown"
 
-export default async function CartButton() {
-  const cart = await retrieveCart().catch(() => null)
-
+export default function CartButton({ 
+  cart 
+}: { 
+  cart?: HttpTypes.StoreCart | null 
+}) {
   return <CartDropdown cart={cart} />
 }
