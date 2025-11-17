@@ -29,19 +29,21 @@ const CustomerReviews = () => {
   }
 
   return (
-    <section className="space-y-4 rounded-3xl border border-dashed border-ui-border-base p-6">
-      <div className="flex flex-col gap-2">
-        <h3 className="text-2xl font-semibold text-ui-fg-base">Customer Reviews</h3>
-        <div className="flex items-center gap-2 text-sm text-ui-fg-muted">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Star key={index} className="h-5 w-5 text-ui-border-base" />
-          ))}
-          <span>Be the first to write a review</span>
-        </div>
+    <section className="rounded-[28px] border border-slate-200 bg-white px-6 py-8 text-center shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+      <h3 className="text-2xl font-semibold text-slate-900">Customer Reviews</h3>
+      <div className="mt-3 flex items-center justify-center gap-1">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Star key={index} className="h-5 w-5 text-[#00B37E]" />
+        ))}
       </div>
-      <Button variant="secondary" onClick={() => setIsModalOpen(true)}>
-        Write a Review
-      </Button>
+      <p className="mt-2 text-sm text-slate-500">Be the first to write a review</p>
+      <button
+        type="button"
+        onClick={() => setIsModalOpen(true)}
+        className="mt-5 inline-flex items-center justify-center rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-500"
+      >
+        Write A Review
+      </button>
 
       <Modal isOpen={isModalOpen} close={() => setIsModalOpen(false)} size="large">
         <Modal.Title>Write a Review</Modal.Title>

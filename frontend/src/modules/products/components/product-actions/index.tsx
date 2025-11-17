@@ -1,13 +1,11 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
-import Divider from "@modules/common/components/divider"
 import Modal from "@modules/common/components/modal"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
-import ProductPrice from "../product-price"
 import { isEqual } from "lodash"
 import {
   FormEvent,
@@ -19,6 +17,7 @@ import {
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   Gift,
+  GitCompare,
   Heart,
   MessageCircleQuestion,
   Minus,
@@ -40,6 +39,11 @@ const optionsAsKeymap = (
     acc[varopt.option_id] = varopt.value
     return acc
   }, {})
+}
+
+const formatPriceForDisplay = (price?: string) => {
+  if (!price) return ""
+  return price.replace("₹", "Rs. ")
 }
 
 export default function ProductActions({ product, disabled }: ProductActionsProps) {
@@ -255,34 +259,78 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
     }
   }
 
+  const priceMeta = useMemo(() => {
+    try {
+      return getProductPrice({ product, variantId: selectedVariant?.id })
+    } catch (error) {
+      console.error(error)
+      return { cheapestPrice: null, variantPrice: null }
+    }
+  }, [product, selectedVariant?.id])
+
+  const displayPrice = selectedVariant
+    ? priceMeta.variantPrice
+    : priceMeta.cheapestPrice
+
+  const showOriginalPrice =
+    (displayPrice?.price_type === "sale" && !!displayPrice.original_price) ||
+    (displayPrice?.original_price_number || 0) > (displayPrice?.calculated_price_number || 0)
+
+  const requiresSelection = (product.options?.length ?? 0) > 0 && !selectedVariant
+
+  const canTransact =
+    inStock &&
+    !!selectedVariant &&
+    !disabled &&
+    isValidVariant &&
+    !isAdding
+
+  const addToCartLabel = requiresSelection
+    ? "Select options"
+    : !isValidVariant
+    ? "Select options"
+    : !inStock
+    ? "Out of stock"
+    : isAdding
+    ? "Adding..."
+    : "Add to Cart"
+
   return (
-    <section className="flex flex-col gap-6 rounded-3xl border border-ui-border-base bg-white p-6 shadow-sm">
-      {product.collection && (
-        <LocalizedClientLink
-          href={`/collections/${product.collection.handle}`}
-          className="self-start text-sm text-ui-fg-muted underline-offset-4 transition hover:text-ui-fg-base hover:underline"
-        >
-          {product.collection.title}
-        </LocalizedClientLink>
-      )}
+    <section className="flex flex-col gap-6 rounded-[32px] border border-ui-border-base/70 bg-white p-6 shadow-[0_12px_45px_rgba(15,23,42,0.08)] lg:p-8">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <h1 className="text-[32px] font-semibold leading-tight text-slate-900">
+            {product.title}
+          </h1>
+          <p className="text-base text-slate-500">
+            {product.subtitle || product.description || "Playful accessories curated for everyday wonder."}
+          </p>
+        </div>
 
-      <div>
-        <h1 className="text-3xl font-semibold text-ui-fg-base">
-          {product.title}
-        </h1>
-        <p className="mt-3 text-sm text-ui-fg-subtle">
-          {product.description || "A modern collectible designed for daily joy."}
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <ProductPrice product={product} variant={selectedVariant} />
-        <p className="text-sm text-ui-fg-muted">Inclusive of taxes. Duties calculated at checkout.</p>
+        <div className="flex flex-wrap items-baseline gap-3">
+          {displayPrice ? (
+            <>
+              <span className="text-3xl font-bold text-[#E7353A]">
+                {formatPriceForDisplay(displayPrice.calculated_price)}
+              </span>
+              {showOriginalPrice && displayPrice?.original_price && (
+                <span className="text-lg text-slate-400 line-through">
+                  {formatPriceForDisplay(displayPrice.original_price)}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="h-9 w-32 animate-pulse rounded-full bg-slate-100" />
+          )}
+        </div>
+        <p className="text-sm text-slate-500">Inclusive of all taxes</p>
       </div>
 
       {(product.variants?.length ?? 0) > 1 && (
         <div className="flex flex-col gap-y-4">
           {(product.options || []).map((option) => {
+            const normalizedTitle = option.title?.toLowerCase() ?? ""
+            const isColorOption = normalizedTitle.includes("color")
             return (
               <div key={option.id}>
                 <OptionSelect
@@ -292,138 +340,129 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
                   title={option.title ?? ""}
                   data-testid="product-options"
                   disabled={!!disabled || isAdding}
+                  layout={isColorOption ? "swatch" : "pill"}
                 />
               </div>
             )
           })}
-          <Divider />
         </div>
       )}
 
       <div className="space-y-3">
-        <p className="text-sm font-medium text-ui-fg-base">Gift Wrap</p>
-        <label className="flex items-center justify-between gap-3 rounded-2xl border border-ui-border-base px-4 py-3 text-sm">
-          <div>
-            <p className="font-medium text-ui-fg-base">Wrap it for gifting</p>
-            <p className="text-xs text-ui-fg-muted">Add a handwritten note + premium wrap</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-ui-fg-interactive">+ ₹{GIFT_WRAP_FEE}</span>
-            <input
-              type="checkbox"
-              className="h-5 w-5 rounded border-ui-border-base text-ui-fg-interactive focus:ring-ui-fg-interactive"
-              checked={giftWrap}
-              onChange={(event) => setGiftWrap(event.target.checked)}
-            />
-          </div>
-        </label>
+        <span className="text-sm font-medium text-slate-700">Add-ons</span>
+        <button
+          type="button"
+          onClick={() => setGiftWrap((prev) => !prev)}
+          aria-pressed={giftWrap}
+          className={`flex w-full items-center justify-between gap-3 rounded-[24px] border px-5 py-4 text-left text-sm transition ${
+            giftWrap
+              ? "border-[#E7353A] bg-[#FFF5F5]"
+              : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <span className="flex items-center gap-3 text-base font-semibold text-slate-800">
+            <Gift className="h-5 w-5 text-[#E7353A]" />
+            Add a Gift Wrap
+          </span>
+          <span className="text-sm font-semibold text-[#E7353A]">
+            + ₹{GIFT_WRAP_FEE}
+          </span>
+        </button>
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-ui-fg-base">Quantity</p>
+        <p className="text-sm font-medium text-slate-700">Quantity</p>
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => updateQuantity("dec")}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-ui-border-base text-ui-fg-base transition hover:bg-ui-bg-subtle"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:bg-slate-50"
             aria-label="Decrease quantity"
           >
             <Minus className="h-4 w-4" />
           </button>
-          <div className="flex h-12 w-16 items-center justify-center rounded-2xl border border-ui-border-base text-lg font-semibold">
+          <div className="flex h-12 min-w-[64px] items-center justify-center rounded-full border border-slate-200 text-lg font-semibold">
             {quantity}
           </div>
           <button
             type="button"
             onClick={() => updateQuantity("inc")}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-ui-border-base text-ui-fg-base transition hover:bg-ui-bg-subtle"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:bg-slate-50"
             aria-label="Increase quantity"
             disabled={maxQuantity === 0 || (maxQuantity !== 0 && quantity >= maxQuantity)}
           >
             <Plus className="h-4 w-4" />
           </button>
           {maxQuantity !== 0 && (
-            <p className="text-xs text-ui-fg-muted">
+            <p className="text-xs text-slate-500">
               {Math.max(maxQuantity - quantity, 0)} pieces left in stock
             </p>
           )}
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Button
-          onClick={() => handleAddToCart("add")}
-          disabled={
-            !inStock ||
-            !selectedVariant ||
-            !!disabled ||
-            isAdding ||
-            !isValidVariant
-          }
-          variant="primary"
-          className="w-full"
-          isLoading={isAdding}
-          data-testid="add-product-button"
-        >
-          {!selectedVariant && !options
-            ? "Select variant"
-            : !inStock || !isValidVariant
-            ? "Out of stock"
-            : "Add to Cart"}
-        </Button>
-        <Button
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => handleAddToCart("add")}
+            disabled={!canTransact}
+            className={`h-14 flex-1 rounded-full px-10 text-base font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A] ${
+              canTransact
+                ? "bg-[#F6E36C] text-slate-900 hover:brightness-95"
+                : "cursor-not-allowed bg-slate-200 text-slate-500"
+            }`}
+            data-testid="add-product-button"
+          >
+            {addToCartLabel}
+          </button>
+          <button
+            type="button"
+            onClick={toggleWishlist}
+            className={`flex h-14 w-14 items-center justify-center rounded-full border text-[#E7353A] transition ${
+              wishlistSaved ? "border-[#E7353A] bg-[#FFF5F5]" : "border-ui-border-base"
+            }`}
+            aria-label="Toggle wishlist"
+          >
+            <Heart className={`h-5 w-5 ${wishlistSaved ? "fill-current" : ""}`} />
+          </button>
+          <button
+            type="button"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-ui-border-base text-ui-fg-base transition hover:bg-ui-bg-subtle"
+            aria-label="Compare"
+          >
+            <GitCompare className="h-5 w-5" />
+          </button>
+        </div>
+        <button
+          type="button"
           onClick={() => handleAddToCart("buy")}
-          disabled={
-            !inStock ||
-            !selectedVariant ||
-            !!disabled ||
-            isAdding ||
-            !isValidVariant
-          }
-          variant="secondary"
-          className="w-full"
+          disabled={!canTransact}
+          className={`h-14 w-full rounded-full text-base font-semibold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A] ${
+            canTransact ? "bg-[#E7353A] hover:bg-[#d52c34]" : "cursor-not-allowed bg-slate-300"
+          }`}
         >
           Buy It Now
-        </Button>
+        </button>
       </div>
 
-      <button
-        type="button"
-        onClick={toggleWishlist}
-        className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
-      >
-        <Heart
-          className={`h-4 w-4 ${wishlistSaved ? "fill-current text-red-500" : ""}`}
-        />
-        {wishlistSaved ? "Added to Wishlist" : "Add to Wishlist"}
-      </button>
-
-      <div className="space-y-4 rounded-2xl bg-ui-bg-subtle p-4">
-        <div className="flex items-center gap-3">
-          <Gift className="h-5 w-5 text-ui-fg-interactive" />
-          <span className="text-sm text-ui-fg-base">
-            Use code <strong>PLAYJOY</strong> for complimentary gift wrap.
-          </span>
-        </div>
-        <Divider />
-        <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            onClick={() => setIsQuestionOpen(true)}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
-          >
-            <MessageCircleQuestion className="h-4 w-4" />
-            Ask a question
-          </button>
-          <button
-            type="button"
-            onClick={handleShare}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
-          >
-            <Share2 className="h-4 w-4" />
-            {shareCopied ? "Link copied" : "Share"}
-          </button>
-        </div>
+      <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-ui-fg-base">
+        <button
+          type="button"
+          onClick={() => setIsQuestionOpen(true)}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
+        >
+          <MessageCircleQuestion className="h-4 w-4" />
+          Ask a question
+        </button>
+        <button
+          type="button"
+          onClick={handleShare}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
+        >
+          <Share2 className="h-4 w-4" />
+          {shareCopied ? "Link copied" : "Share"}
+        </button>
       </div>
 
       <Modal

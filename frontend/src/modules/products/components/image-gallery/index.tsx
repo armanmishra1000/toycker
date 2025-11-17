@@ -1,13 +1,12 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import { Container } from "@medusajs/ui"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { Swiper, SwiperSlide } from "swiper/react"
 import type { Swiper as SwiperInstance } from "swiper/types"
 import { FreeMode, Navigation, Thumbs } from "swiper/modules"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react"
 
 import "swiper/css"
 import "swiper/css/free-mode"
@@ -20,11 +19,20 @@ type ImageGalleryProps = {
 
 const ImageGallery = ({ images }: ImageGalleryProps) => {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperInstance | null>(null)
+  const [mainSwiper, setMainSwiper] = useState<SwiperInstance | null>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  useEffect(() => {
+    setActiveIndex(0)
+    if (mainSwiper) {
+      mainSwiper.slideTo(0)
+    }
+  }, [images, mainSwiper])
 
   const safeThumbs = useMemo(() => {
     if (!thumbsSwiper || thumbsSwiper.destroyed) {
@@ -32,6 +40,14 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
     }
     return thumbsSwiper
   }, [thumbsSwiper])
+
+  const currentImage = images[activeIndex]
+
+  const handleZoom = () => {
+    if (!currentImage?.url) return
+    if (typeof window === "undefined") return
+    window.open(currentImage.url, "_blank")
+  }
 
   if (!images?.length) {
     return (
@@ -51,12 +67,13 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
   }
 
   return (
-    <div className="flex w-full flex-col gap-6 lg:flex-row">
-      <div className="hidden w-[120px] lg:block">
+    <div className="flex w-full flex-col gap-4 lg:flex-row lg:gap-6">
+      <div className="hidden w-[110px] flex-col lg:flex">
+        <div className="rounded-[32px] border border-slate-200 bg-white/90 p-3 shadow-[0_18px_35px_rgba(15,23,42,0.08)]">
         <Swiper
           direction="vertical"
           modules={[FreeMode, Thumbs]}
-          spaceBetween={12}
+          spaceBetween={16}
           slidesPerView={Math.min(images.length, 5)}
           freeMode
           slideToClickedSlide
@@ -68,16 +85,22 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
             <SwiperSlide key={image.id ?? index} className="!h-24">
               <button
                 type="button"
-                className="group relative flex h-24 w-full items-center justify-center overflow-hidden rounded-2xl border border-transparent transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-fg-interactive"
+                onClick={() => mainSwiper?.slideTo(index)}
+                className={`group relative flex h-[88px] w-full items-center justify-center overflow-hidden rounded-[26px] border bg-[#FBFBFB] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A]/60 ${
+                  activeIndex === index
+                    ? "border-[#E7353A] shadow-[0_10px_22px_rgba(231,53,58,0.18)]"
+                    : "border-transparent shadow-sm"
+                }`}
               >
                 <ImageThumb image={image} index={index} />
               </button>
             </SwiperSlide>
           ))}
         </Swiper>
+        </div>
       </div>
 
-      <div className="relative flex-1 overflow-hidden rounded-3xl">
+      <div className="relative flex-1 overflow-hidden rounded-[36px] border border-slate-200 bg-gradient-to-br from-[#FBF9FF] via-white to-[#EEF9F4] shadow-[0_30px_65px_rgba(15,23,42,0.08)]">
         <Swiper
           modules={[Navigation, Thumbs]}
           navigation={{
@@ -87,26 +110,39 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
           spaceBetween={24}
           thumbs={{ swiper: safeThumbs }}
           className="product-main-swiper"
+          onSwiper={(swiperInstance) => setMainSwiper(swiperInstance)}
+          onSlideChange={(swiperInstance) =>
+            setActiveIndex(swiperInstance.activeIndex ?? 0)
+          }
         >
           {images.map((image, index) => (
             <SwiperSlide key={image.id ?? index}>
-              <Container className="relative aspect-[5/6] w-full overflow-hidden bg-ui-bg-subtle">
+              <div className="relative aspect-[4/4.4] w-full overflow-hidden rounded-[34px] bg-white">
                 {image.url ? (
                   <Image
                     src={image.url}
                     alt={`Product image ${index + 1}`}
                     fill
                     priority={index === 0}
-                    sizes="(min-width: 1024px) 540px, 100vw"
+                    sizes="(min-width: 1024px) 620px, 100vw"
                     className="object-cover"
                   />
                 ) : (
                   <div className="h-full w-full bg-ui-bg-subtle" />
                 )}
-              </Container>
+              </div>
             </SwiperSlide>
           ))}
         </Swiper>
+
+        <button
+          type="button"
+          onClick={handleZoom}
+          className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-ui-fg-base shadow-md transition hover:scale-105"
+          aria-label="Open image in new tab"
+        >
+          <Maximize2 className="h-5 w-5" />
+        </button>
 
         <button
           type="button"
@@ -134,9 +170,16 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
         >
           {images.map((image, index) => (
             <SwiperSlide key={(image.id ?? index) + "-mobile"}>
-              <div className="relative h-20 w-full overflow-hidden rounded-2xl">
+              <button
+                type="button"
+                onClick={() => mainSwiper?.slideTo(index)}
+                className={`relative h-20 w-full overflow-hidden rounded-2xl border ${
+                  activeIndex === index ? "border-[#E7353A]" : "border-transparent"
+                }`}
+                aria-label={`Show image ${index + 1}`}
+              >
                 <ImageThumb image={image} index={index} />
-              </div>
+              </button>
             </SwiperSlide>
           ))}
         </Swiper>

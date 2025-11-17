@@ -5,6 +5,7 @@ import ProductActions from "@modules/products/components/product-actions"
 import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
@@ -31,14 +32,24 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
 
   return (
     <>
-      <div className="content-container py-8" data-testid="product-container">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,_55%)_minmax(320px,_1fr)]">
-          <div className="flex flex-col gap-10">
+      <div className="content-container py-6 lg:py-10" data-testid="product-container">
+        <nav className="mb-6 flex gap-2 text-sm text-slate-500">
+          <LocalizedClientLink
+            href="/"
+            className="transition hover:text-slate-900"
+          >
+            Home
+          </LocalizedClientLink>
+          <span>•</span>
+          <span className="text-slate-700">{product.title}</span>
+        </nav>
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,_720px)_minmax(360px,_460px)] xl:gap-16">
+          <div className="flex flex-col gap-8">
             <ImageGallery images={images} />
             <ProductTabs product={product} />
             <CustomerReviews />
           </div>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 lg:sticky lg:top-24">
             <Suspense
               fallback={<ProductActions disabled={true} product={product} />}
             >

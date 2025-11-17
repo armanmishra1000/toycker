@@ -3,32 +3,42 @@ import { ShieldCheck, Truck, Wallet } from "lucide-react"
 const ORDER_MESSAGES = [
   {
     icon: Truck,
-    title: "Order Now and Get it Delivered.",
-    subtitle: "Speedy dispatch within 24 hours on all prepaid orders.",
+    lead: "Order Now and",
+    highlight: "Get it Delivered.",
+    helper: "Speedy dispatch within 24 hours on all prepaid orders.",
   },
   {
     icon: Wallet,
-    title: "Cash On Delivery is Available",
-    subtitle: "Pay securely at your doorstep across 18,000+ pin codes.",
+    lead: "Cash On Delivery",
+    highlight: "is Available",
+    helper: "Pay securely at your doorstep across 18,000+ pin codes.",
   },
   {
     icon: ShieldCheck,
-    title: "Easy Returns / Exchanges Policy (Wrong/Damaged items Only)",
-    subtitle: "Initiate a request within 7 days for a no-hassle exchange.",
+    lead: "Easy Returns / Exchanges Policy",
+    highlight: "(Wrong/Damaged items Only)",
+    helper: "Initiate a request within 7 days for a no-hassle exchange.",
   },
 ]
 
 const OrderInformation = () => {
   return (
-    <div className="space-y-4 rounded-3xl border border-ui-border-base bg-ui-bg-base/60 p-5">
-      {ORDER_MESSAGES.map(({ icon: Icon, title, subtitle }) => (
-        <div key={title} className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
-            <Icon className="h-5 w-5 text-ui-fg-interactive" />
+    <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+      {ORDER_MESSAGES.map(({ icon: Icon, lead, highlight, helper }, index) => (
+        <div
+          key={lead}
+          className={`flex items-start gap-4 py-4 ${
+            index === 0 ? "pt-0" : "border-t border-dashed border-slate-200"
+          } ${index === ORDER_MESSAGES.length - 1 ? "pb-0" : ""}`}
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700">
+            <Icon className="h-5 w-5" strokeWidth={1.6} />
           </div>
-          <div>
-            <p className="text-sm font-semibold text-ui-fg-base">{title}</p>
-            <p className="text-xs text-ui-fg-muted">{subtitle}</p>
+          <div className="space-y-1">
+            <p className="text-sm text-slate-600">
+              {lead} <span className="font-semibold text-slate-900">{highlight}</span>
+            </p>
+            <p className="text-xs text-slate-500">{helper}</p>
           </div>
         </div>
       ))}
