@@ -1,4 +1,5 @@
 import { Container, clx } from "@medusajs/ui"
+import { HttpTypes } from "@medusajs/types"
 import Image from "next/image"
 import React from "react"
 
@@ -6,8 +7,7 @@ import PlaceholderImage from "@modules/common/icons/placeholder-image"
 
 type ThumbnailProps = {
   thumbnail?: string | null
-  // TODO: Fix image typings
-  images?: any[] | null
+  images?: HttpTypes.StoreProductImage[] | null
   size?: "small" | "medium" | "large" | "full" | "square"
   isFeatured?: boolean
   className?: string
@@ -22,12 +22,15 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   className,
   "data-testid": dataTestid,
 }) => {
-  const initialImage = thumbnail || images?.[0]?.url
+  const gallery = (images ?? []).filter((image): image is HttpTypes.StoreProductImage => Boolean(image?.url))
+  const primaryImage = thumbnail || gallery[0]?.url || null
+  const secondaryImage = gallery.find((image) => image.url && image.url !== primaryImage)?.url || null
+  const hasHoverImage = Boolean(primaryImage && secondaryImage)
 
   return (
     <Container
       className={clx(
-        "relative w-full overflow-hidden p-4 bg-ui-bg-subtle shadow-elevation-card-rest rounded-large group-hover:shadow-elevation-card-hover transition-shadow ease-in-out duration-150",
+        "group/thumbnail relative w-full overflow-hidden rounded-large bg-ui-bg-subtle p-4 shadow-elevation-card-rest transition-shadow ease-in-out duration-150 hover:shadow-elevation-card-hover",
         className,
         {
           "aspect-[11/14]": isFeatured,
@@ -41,30 +44,51 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
       )}
       data-testid={dataTestid}
     >
-      <ImageOrPlaceholder image={initialImage} size={size} />
+      {primaryImage ? (
+        <div className="relative h-full w-full">
+          <ImageLayer image={primaryImage} isPrimary hasHoverImage={hasHoverImage} />
+          {hasHoverImage && secondaryImage && (
+            <ImageLayer image={secondaryImage} isPrimary={false} hasHoverImage={hasHoverImage} />
+          )}
+        </div>
+      ) : (
+        <PlaceholderFallback size={size} />
+      )}
     </Container>
   )
 }
 
-const ImageOrPlaceholder = ({
+const PlaceholderFallback = ({ size }: Pick<ThumbnailProps, "size">) => (
+  <div className="absolute inset-0 flex h-full w-full items-center justify-center">
+    <PlaceholderImage size={size === "small" ? 16 : 24} />
+  </div>
+)
+
+const ImageLayer = ({
   image,
-  size,
-}: Pick<ThumbnailProps, "size"> & { image?: string }) => {
-  return image ? (
-    <Image
-      src={image}
-      alt="Thumbnail"
-      className="absolute inset-0 object-cover object-center"
-      draggable={false}
-      quality={50}
-      sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-      fill
-    />
-  ) : (
-    <div className="w-full h-full absolute inset-0 flex items-center justify-center">
-      <PlaceholderImage size={size === "small" ? 16 : 24} />
-    </div>
-  )
-}
+  isPrimary,
+  hasHoverImage,
+}: {
+  image: string
+  isPrimary: boolean
+  hasHoverImage: boolean
+}) => (
+  <Image
+    src={image}
+    alt="Product thumbnail"
+    fill
+    draggable={false}
+    quality={50}
+    sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
+    className={clx(
+      "absolute inset-0 h-full w-full object-cover object-center transition-all duration-300 ease-out",
+      hasHoverImage
+        ? isPrimary
+          ? "opacity-100 group-hover/thumbnail:opacity-0"
+          : "opacity-0 scale-[1.01] group-hover/thumbnail:opacity-100 group-hover/thumbnail:scale-[1.05]"
+        : "opacity-100"
+    )}
+  />
+)
 
 export default Thumbnail

@@ -1,8 +1,7 @@
 "use client"
 
 import FilterRadioGroup from "@modules/common/components/filter-radio-group"
-
-export type SortOptions = "price_asc" | "price_desc" | "created_at"
+import { SortOptions } from "../types"
 
 type SortProductsProps = {
   sortBy: SortOptions
@@ -10,19 +9,15 @@ type SortProductsProps = {
   "data-testid"?: string
 }
 
-const sortOptions = [
-  {
-    value: "created_at",
-    label: "Latest Arrivals",
-  },
-  {
-    value: "price_asc",
-    label: "Price: Low -> High",
-  },
-  {
-    value: "price_desc",
-    label: "Price: High -> Low",
-  },
+export const SORT_OPTIONS: { value: SortOptions; label: string }[] = [
+  { value: "featured", label: "Featured" },
+  { value: "best_selling", label: "Best selling" },
+  { value: "alpha_asc", label: "Alphabetically A–Z" },
+  { value: "alpha_desc", label: "Alphabetically Z–A" },
+  { value: "price_asc", label: "Price low to high" },
+  { value: "price_desc", label: "Price high to low" },
+  { value: "date_old_new", label: "Date old to new" },
+  { value: "date_new_old", label: "Date new to old" },
 ]
 
 const SortProducts = ({
@@ -37,7 +32,7 @@ const SortProducts = ({
   return (
     <FilterRadioGroup
       title="Sort by"
-      items={sortOptions}
+      items={SORT_OPTIONS}
       value={sortBy}
       handleChange={handleChange}
       data-testid={dataTestId}

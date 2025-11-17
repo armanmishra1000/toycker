@@ -1,5 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { SortOptions } from "@modules/store/components/refinement-list/types"
 
 interface MinPricedProduct extends HttpTypes.StoreProduct {
   _minPrice?: number
@@ -15,36 +15,30 @@ export function sortProducts(
   products: HttpTypes.StoreProduct[],
   sortBy: SortOptions
 ): HttpTypes.StoreProduct[] {
-  let sortedProducts = products as MinPricedProduct[]
+  const requiresPriceSort = sortBy === "price_asc" || sortBy === "price_desc"
 
-  if (["price_asc", "price_desc"].includes(sortBy)) {
-    // Precompute the minimum price for each product
-    sortedProducts.forEach((product) => {
-      if (product.variants && product.variants.length > 0) {
-        product._minPrice = Math.min(
-          ...product.variants.map(
-            (variant) => variant?.calculated_price?.calculated_amount || 0
-          )
+  if (!requiresPriceSort) {
+    return products
+  }
+
+  const sortedProducts = [...products] as MinPricedProduct[]
+
+  sortedProducts.forEach((product) => {
+    if (product.variants && product.variants.length > 0) {
+      product._minPrice = Math.min(
+        ...product.variants.map(
+          (variant) => variant?.calculated_price?.calculated_amount || 0
         )
-      } else {
-        product._minPrice = Infinity
-      }
-    })
-
-    // Sort products based on the precomputed minimum prices
-    sortedProducts.sort((a, b) => {
-      const diff = a._minPrice! - b._minPrice!
-      return sortBy === "price_asc" ? diff : -diff
-    })
-  }
-
-  if (sortBy === "created_at") {
-    sortedProducts.sort((a, b) => {
-      return (
-        new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime()
       )
-    })
-  }
+    } else {
+      product._minPrice = Infinity
+    }
+  })
+
+  sortedProducts.sort((a, b) => {
+    const diff = (a._minPrice ?? Infinity) - (b._minPrice ?? Infinity)
+    return sortBy === "price_asc" ? diff : -diff
+  })
 
   return sortedProducts
 }
