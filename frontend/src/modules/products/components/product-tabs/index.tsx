@@ -1,9 +1,5 @@
 "use client"
 
-import Back from "@modules/common/icons/back"
-import FastDelivery from "@modules/common/icons/fast-delivery"
-import Refresh from "@modules/common/icons/refresh"
-
 import Accordion from "./accordion"
 import { HttpTypes } from "@medusajs/types"
 
@@ -14,17 +10,17 @@ type ProductTabsProps = {
 const ProductTabs = ({ product }: ProductTabsProps) => {
   const tabs = [
     {
-      label: "Product Information",
-      component: <ProductInfoTab product={product} />,
+      label: "Description",
+      component: <DescriptionTab description={product.description} />,
     },
     {
       label: "Shipping & Returns",
-      component: <ShippingInfoTab />,
+      component: <ShippingReturnsTab />,
     },
   ]
 
   return (
-    <div className="w-full">
+    <div className="w-full rounded-[26px] border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
       <Accordion type="multiple">
         {tabs.map((tab, i) => (
           <Accordion.Item
@@ -32,6 +28,7 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
             title={tab.label}
             headingSize="medium"
             value={tab.label}
+            className="border-transparent px-4"
           >
             {tab.component}
           </Accordion.Item>
@@ -41,81 +38,35 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   )
 }
 
-const ProductInfoTab = ({ product }: ProductTabsProps) => {
-  return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-2 gap-x-8">
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Material</span>
-            <p>{product.material ? product.material : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Country of origin</span>
-            <p>{product.origin_country ? product.origin_country : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Type</span>
-            <p>{product.type ? product.type.value : "-"}</p>
-          </div>
-        </div>
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Weight</span>
-            <p>{product.weight ? `${product.weight} g` : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Dimensions</span>
-            <p>
-              {product.length && product.width && product.height
-                ? `${product.length}L x ${product.width}W x ${product.height}H`
-                : "-"}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+const DescriptionTab = ({ description }: { description?: string }) => (
+  <div className="py-6 text-sm text-slate-600 whitespace-pre-line">
+    {description || "Product description will be updated shortly."}
+  </div>
+)
 
-const ShippingInfoTab = () => {
-  return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-1 gap-y-8">
-        <div className="flex items-start gap-x-2">
-          <FastDelivery />
-          <div>
-            <span className="font-semibold">Fast delivery</span>
-            <p className="max-w-sm">
-              Your package will arrive in 3-5 business days at your pick up
-              location or in the comfort of your home.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-x-2">
-          <Refresh />
-          <div>
-            <span className="font-semibold">Simple exchanges</span>
-            <p className="max-w-sm">
-              Is the fit not quite right? No worries - we&apos;ll exchange your
-              product for a new one.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-x-2">
-          <Back />
-          <div>
-            <span className="font-semibold">Easy returns</span>
-            <p className="max-w-sm">
-              Just return your product and we&apos;ll refund your money. No
-              questions asked – we&apos;ll do our best to make sure your return
-              is hassle-free.
-            </p>
-          </div>
-        </div>
-      </div>
+const ShippingReturnsTab = () => (
+  <div className="space-y-4 py-6 text-sm text-slate-700">
+    <div>
+      <p className="font-semibold">Order Now and Get it Delivered.</p>
+      <p className="text-ui-fg-subtle">
+        We dispatch within 24 hours and deliver across India via express partners.
+      </p>
     </div>
-  )
-}
+    <div>
+      <p className="font-semibold">Cash On Delivery is Available</p>
+      <p className="text-ui-fg-subtle">
+        Choose COD at checkout for a worry-free purchase experience.
+      </p>
+    </div>
+    <div>
+      <p className="font-semibold">
+        Easy Returns / Exchanges Policy (Wrong/Damaged items Only)
+      </p>
+      <p className="text-ui-fg-subtle">
+        Share unboxing photos within 48 hours and we will arrange a free exchange.
+      </p>
+    </div>
+  </div>
+)
 
 export default ProductTabs

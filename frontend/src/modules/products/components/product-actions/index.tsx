@@ -1,21 +1,34 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
-import { useIntersection } from "@lib/hooks/use-in-view"
+import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
-import Divider from "@modules/common/components/divider"
+import Modal from "@modules/common/components/modal"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
 import { isEqual } from "lodash"
-import { useParams, usePathname, useSearchParams } from "next/navigation"
-import { useEffect, useMemo, useRef, useState } from "react"
-import ProductPrice from "../product-price"
-import MobileActions from "./mobile-actions"
-import { useRouter } from "next/navigation"
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
+import {
+  Gift,
+  GitCompare,
+  Heart,
+  MessageCircleQuestion,
+  Minus,
+  Plus,
+  Share2,
+} from "lucide-react"
+
+const GIFT_WRAP_FEE = 50
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
-  region: HttpTypes.StoreRegion
   disabled?: boolean
 }
 
@@ -28,16 +41,32 @@ const optionsAsKeymap = (
   }, {})
 }
 
-export default function ProductActions({
-  product,
-  disabled,
-}: ProductActionsProps) {
+const formatPriceForDisplay = (price?: string) => {
+  if (!price) return ""
+  return price.replace("₹", "Rs. ")
+}
+
+export default function ProductActions({ product, disabled }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
+  const [quantity, setQuantity] = useState(1)
+  const [giftWrap, setGiftWrap] = useState(false)
+  const [wishlistSaved, setWishlistSaved] = useState(false)
+  const [isQuestionOpen, setIsQuestionOpen] = useState(false)
+  const [questionStatus, setQuestionStatus] = useState<"idle" | "success">(
+    "idle"
+  )
+  const [questionForm, setQuestionForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    message: "",
+  })
+  const [shareCopied, setShareCopied] = useState(false)
   const countryCode = useParams().countryCode as string
 
   // If there is only 1 variant, preselect the options
@@ -59,6 +88,14 @@ export default function ProductActions({
     })
   }, [product.variants, options])
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+    const saved = window.localStorage.getItem(`wishlist-${product.id}`)
+    setWishlistSaved(saved === "true")
+  }, [product.id])
+
   // update the options when a variant is selected
   const setOptionValue = (optionId: string, value: string) => {
     setOptions((prev) => ({
@@ -66,6 +103,20 @@ export default function ProductActions({
       [optionId]: value,
     }))
   }
+
+  useEffect(() => {
+    if (!selectedVariant) {
+      return
+    }
+    if (selectedVariant.manage_inventory) {
+      const available = Math.max(selectedVariant.inventory_quantity ?? 0, 0)
+      if (available > 0 && quantity > available) {
+        setQuantity(available)
+      } else if (available === 0 && quantity !== 1) {
+        setQuantity(1)
+      }
+    }
+  }, [quantity, selectedVariant])
 
   //check if the selected options produce a valid variant
   const isValidVariant = useMemo(() => {
@@ -90,7 +141,7 @@ export default function ProductActions({
     }
 
     router.replace(pathname + "?" + params.toString())
-  }, [selectedVariant, isValidVariant])
+  }, [selectedVariant, isValidVariant, pathname, router, searchParams])
 
   // check if the selected variant is in stock
   const inStock = useMemo(() => {
@@ -116,84 +167,395 @@ export default function ProductActions({
     return false
   }, [selectedVariant])
 
-  const actionsRef = useRef<HTMLDivElement>(null)
+  const maxQuantity = useMemo(() => {
+    if (!selectedVariant) {
+      return 10
+    }
+    if (!selectedVariant.manage_inventory || selectedVariant.allow_backorder) {
+      return 10
+    }
+    return Math.max(selectedVariant.inventory_quantity ?? 0, 0)
+  }, [selectedVariant])
 
-  const inView = useIntersection(actionsRef, "0px")
+  const updateQuantity = (direction: "inc" | "dec") => {
+    setQuantity((prev) => {
+      if (direction === "dec") {
+        return Math.max(1, prev - 1)
+      }
+
+      const limit = maxQuantity === 0 ? prev : maxQuantity
+      return Math.min(limit || prev + 1, prev + 1)
+    })
+  }
+
+  const toggleWishlist = useCallback(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+    const next = !wishlistSaved
+    window.localStorage.setItem(`wishlist-${product.id}`, String(next))
+    setWishlistSaved(next)
+  }, [product.id, wishlistSaved])
 
   // add the selected variant to the cart
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (mode: "add" | "buy" = "add") => {
     if (!selectedVariant?.id) return null
 
     setIsAdding(true)
 
-    await addToCart({
-      variantId: selectedVariant.id,
-      quantity: 1,
-      countryCode,
-    })
+    try {
+      await addToCart({
+        variantId: selectedVariant.id,
+        quantity,
+        countryCode,
+        metadata: giftWrap
+          ? {
+              gift_wrap: true,
+              gift_wrap_fee: GIFT_WRAP_FEE,
+            }
+          : undefined,
+      })
 
-    setIsAdding(false)
+      if (mode === "buy") {
+        router.push(`/${countryCode}/checkout`)
+      }
+    } finally {
+      setIsAdding(false)
+    }
   }
 
+  const handleQuestionSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setQuestionStatus("success")
+    setTimeout(() => {
+      setIsQuestionOpen(false)
+      setQuestionStatus("idle")
+      setQuestionForm({ name: "", phone: "", email: "", message: "" })
+    }, 1500)
+  }
+
+  const handleShare = async () => {
+    if (typeof window === "undefined") {
+      return
+    }
+    const url = window.location.href
+    const shareNavigator = navigator as Navigator & {
+      share?: (data: ShareData) => Promise<void>
+    }
+    if (shareNavigator.share) {
+      await shareNavigator.share({
+        title: product.title,
+        url,
+      })
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
+    } catch (error) {
+      console.error("Unable to copy share link", error)
+    }
+  }
+
+  const priceMeta = useMemo(() => {
+    try {
+      return getProductPrice({ product, variantId: selectedVariant?.id })
+    } catch (error) {
+      console.error(error)
+      return { cheapestPrice: null, variantPrice: null }
+    }
+  }, [product, selectedVariant?.id])
+
+  const displayPrice = selectedVariant
+    ? priceMeta.variantPrice
+    : priceMeta.cheapestPrice
+
+  const showOriginalPrice =
+    (displayPrice?.price_type === "sale" && !!displayPrice.original_price) ||
+    (displayPrice?.original_price_number || 0) > (displayPrice?.calculated_price_number || 0)
+
+  const requiresSelection = (product.options?.length ?? 0) > 0 && !selectedVariant
+
+  const canTransact =
+    inStock &&
+    !!selectedVariant &&
+    !disabled &&
+    isValidVariant &&
+    !isAdding
+
+  const addToCartLabel = requiresSelection
+    ? "Select options"
+    : !isValidVariant
+    ? "Select options"
+    : !inStock
+    ? "Out of stock"
+    : isAdding
+    ? "Adding..."
+    : "Add to Cart"
+
   return (
-    <>
-      <div className="flex flex-col gap-y-2" ref={actionsRef}>
-        <div>
-          {(product.variants?.length ?? 0) > 1 && (
-            <div className="flex flex-col gap-y-4">
-              {(product.options || []).map((option) => {
-                return (
-                  <div key={option.id}>
-                    <OptionSelect
-                      option={option}
-                      current={options[option.id]}
-                      updateOption={setOptionValue}
-                      title={option.title ?? ""}
-                      data-testid="product-options"
-                      disabled={!!disabled || isAdding}
-                    />
-                  </div>
-                )
-              })}
-              <Divider />
-            </div>
-          )}
+    <section className="flex flex-col gap-6 rounded-[32px] border border-ui-border-base/70 bg-white p-6 shadow-[0_12px_45px_rgba(15,23,42,0.08)] lg:p-8">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <h1 className="text-[32px] font-semibold leading-tight text-slate-900">
+            {product.title}
+          </h1>
+          <p className="text-base text-slate-500">
+            {product.subtitle || product.description || "Playful accessories curated for everyday wonder."}
+          </p>
         </div>
 
-        <ProductPrice product={product} variant={selectedVariant} />
-
-        <Button
-          onClick={handleAddToCart}
-          disabled={
-            !inStock ||
-            !selectedVariant ||
-            !!disabled ||
-            isAdding ||
-            !isValidVariant
-          }
-          variant="primary"
-          className="w-full h-10"
-          isLoading={isAdding}
-          data-testid="add-product-button"
-        >
-          {!selectedVariant && !options
-            ? "Select variant"
-            : !inStock || !isValidVariant
-            ? "Out of stock"
-            : "Add to cart"}
-        </Button>
-        <MobileActions
-          product={product}
-          variant={selectedVariant}
-          options={options}
-          updateOptions={setOptionValue}
-          inStock={inStock}
-          handleAddToCart={handleAddToCart}
-          isAdding={isAdding}
-          show={!inView}
-          optionsDisabled={!!disabled || isAdding}
-        />
+        <div className="flex flex-wrap items-baseline gap-3">
+          {displayPrice ? (
+            <>
+              <span className="text-3xl font-bold text-[#E7353A]">
+                {formatPriceForDisplay(displayPrice.calculated_price)}
+              </span>
+              {showOriginalPrice && displayPrice?.original_price && (
+                <span className="text-lg text-slate-400 line-through">
+                  {formatPriceForDisplay(displayPrice.original_price)}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="h-9 w-32 animate-pulse rounded-full bg-slate-100" />
+          )}
+        </div>
+        <p className="text-sm text-slate-500">Inclusive of all taxes</p>
       </div>
-    </>
+
+      {(product.variants?.length ?? 0) > 1 && (
+        <div className="flex flex-col gap-y-4">
+          {(product.options || []).map((option) => {
+            const normalizedTitle = option.title?.toLowerCase() ?? ""
+            const isColorOption = normalizedTitle.includes("color")
+            return (
+              <div key={option.id}>
+                <OptionSelect
+                  option={option}
+                  current={options[option.id]}
+                  updateOption={setOptionValue}
+                  title={option.title ?? ""}
+                  data-testid="product-options"
+                  disabled={!!disabled || isAdding}
+                  layout={isColorOption ? "swatch" : "pill"}
+                />
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <span className="text-sm font-medium text-slate-700">Add-ons</span>
+        <button
+          type="button"
+          onClick={() => setGiftWrap((prev) => !prev)}
+          aria-pressed={giftWrap}
+          className={`flex w-full items-center justify-between gap-3 rounded-[24px] border px-5 py-4 text-left text-sm transition ${
+            giftWrap
+              ? "border-[#E7353A] bg-[#FFF5F5]"
+              : "border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          <span className="flex items-center gap-3 text-base font-semibold text-slate-800">
+            <Gift className="h-5 w-5 text-[#E7353A]" />
+            Add a Gift Wrap
+          </span>
+          <span className="text-sm font-semibold text-[#E7353A]">
+            + ₹{GIFT_WRAP_FEE}
+          </span>
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-slate-700">Quantity</p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => updateQuantity("dec")}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:bg-slate-50"
+            aria-label="Decrease quantity"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <div className="flex h-12 min-w-[64px] items-center justify-center rounded-full border border-slate-200 text-lg font-semibold">
+            {quantity}
+          </div>
+          <button
+            type="button"
+            onClick={() => updateQuantity("inc")}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:bg-slate-50"
+            aria-label="Increase quantity"
+            disabled={maxQuantity === 0 || (maxQuantity !== 0 && quantity >= maxQuantity)}
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          {maxQuantity !== 0 && (
+            <p className="text-xs text-slate-500">
+              {Math.max(maxQuantity - quantity, 0)} pieces left in stock
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => handleAddToCart("add")}
+            disabled={!canTransact}
+            className={`h-14 flex-1 rounded-full px-10 text-base font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A] ${
+              canTransact
+                ? "bg-[#F6E36C] text-slate-900 hover:brightness-95"
+                : "cursor-not-allowed bg-slate-200 text-slate-500"
+            }`}
+            data-testid="add-product-button"
+          >
+            {addToCartLabel}
+          </button>
+          <button
+            type="button"
+            onClick={toggleWishlist}
+            className={`flex h-14 w-14 items-center justify-center rounded-full border text-[#E7353A] transition ${
+              wishlistSaved ? "border-[#E7353A] bg-[#FFF5F5]" : "border-ui-border-base"
+            }`}
+            aria-label="Toggle wishlist"
+          >
+            <Heart className={`h-5 w-5 ${wishlistSaved ? "fill-current" : ""}`} />
+          </button>
+          <button
+            type="button"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-ui-border-base text-ui-fg-base transition hover:bg-ui-bg-subtle"
+            aria-label="Compare"
+          >
+            <GitCompare className="h-5 w-5" />
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={() => handleAddToCart("buy")}
+          disabled={!canTransact}
+          className={`h-14 w-full rounded-full text-base font-semibold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A] ${
+            canTransact ? "bg-[#E7353A] hover:bg-[#d52c34]" : "cursor-not-allowed bg-slate-300"
+          }`}
+        >
+          Buy It Now
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-ui-fg-base">
+        <button
+          type="button"
+          onClick={() => setIsQuestionOpen(true)}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
+        >
+          <MessageCircleQuestion className="h-4 w-4" />
+          Ask a question
+        </button>
+        <button
+          type="button"
+          onClick={handleShare}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
+        >
+          <Share2 className="h-4 w-4" />
+          {shareCopied ? "Link copied" : "Share"}
+        </button>
+      </div>
+
+      <Modal
+        isOpen={isQuestionOpen}
+        close={() => setIsQuestionOpen(false)}
+        size="large"
+      >
+        <Modal.Title>Ask a question</Modal.Title>
+        <Modal.Description>
+          Fill in the form and our support will get back to you shortly.
+        </Modal.Description>
+        <Modal.Body>
+          <form className="w-full space-y-4" onSubmit={handleQuestionSubmit}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <InputField
+                label="Your name"
+                value={questionForm.name}
+                onChange={(value) =>
+                  setQuestionForm((prev) => ({ ...prev, name: value }))
+                }
+                required
+              />
+              <InputField
+                label="Your phone number"
+                value={questionForm.phone}
+                onChange={(value) =>
+                  setQuestionForm((prev) => ({ ...prev, phone: value }))
+                }
+              />
+            </div>
+            <InputField
+              label="Your email"
+              type="email"
+              value={questionForm.email}
+              onChange={(value) =>
+                setQuestionForm((prev) => ({ ...prev, email: value }))
+              }
+              required
+            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-ui-fg-base">
+                Your message
+              </label>
+              <textarea
+                required
+                value={questionForm.message}
+                onChange={(event) =>
+                  setQuestionForm((prev) => ({
+                    ...prev,
+                    message: event.target.value,
+                  }))
+                }
+                className="min-h-[120px] w-full rounded-2xl border border-ui-border-base px-4 py-3 text-sm focus:border-ui-fg-interactive focus:outline-none"
+              />
+            </div>
+            <Modal.Footer>
+              <Button type="button" variant="secondary" onClick={() => setIsQuestionOpen(false)}>
+                Back
+              </Button>
+              <Button type="submit">
+                {questionStatus === "success" ? "Message sent" : "Send your message"}
+              </Button>
+            </Modal.Footer>
+          </form>
+        </Modal.Body>
+      </Modal>
+    </section>
+  )
+}
+
+const InputField = ({
+  label,
+  type = "text",
+  value,
+  onChange,
+  required,
+}: {
+  label: string
+  type?: string
+  value: string
+  onChange: (value: string) => void
+  required?: boolean
+}) => {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-ui-fg-base">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        required={required}
+        className="w-full rounded-2xl border border-ui-border-base px-4 py-3 text-sm focus:border-ui-fg-interactive focus:outline-none"
+      />
+    </div>
   )
 }

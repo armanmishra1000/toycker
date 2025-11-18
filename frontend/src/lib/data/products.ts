@@ -2,8 +2,13 @@
 
 import { sdk } from "@lib/config"
 import { sortProducts } from "@lib/util/sort-products"
+import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import {
+  AvailabilityFilter,
+  PriceRangeFilter,
+  SortOptions,
+} from "@modules/store/components/refinement-list/types"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
@@ -32,10 +37,22 @@ export const listProducts = async ({
 
   let region: HttpTypes.StoreRegion | undefined | null
 
-  if (countryCode) {
-    region = await getRegion(countryCode)
-  } else {
-    region = await retrieveRegion(regionId!)
+  if (regionId) {
+    try {
+      region = await retrieveRegion(regionId)
+    } catch (error) {
+      console.warn(
+        `Unable to retrieve region with id ${regionId}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      )
+      region = null
+    }
+  }
+
+  if (!region && countryCode) {
+    region =
+      (await getRegion(countryCode)) || (await getRegion(countryCode, { forceRefresh: true }))
   }
 
   if (!region) {
@@ -85,52 +102,232 @@ export const listProducts = async ({
     })
 }
 
-/**
- * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
- */
-export const listProductsWithSort = async ({
-  page = 0,
-  queryParams,
-  sortBy = "created_at",
-  countryCode,
-}: {
+const ORDER_MAP: Record<SortOptions, string | undefined> = {
+  featured: "-created_at",
+  best_selling: undefined,
+  alpha_asc: "title",
+  alpha_desc: "-title",
+  price_asc: undefined,
+  price_desc: undefined,
+  date_old_new: "created_at",
+  date_new_old: "-created_at",
+}
+
+const AGE_METADATA_KEY = "age_band"
+const CLIENT_SCAN_LIMIT = 600
+const CLIENT_SCAN_MAX_PAGES = 50
+
+const convertMajorToMinor = (value: number) => Math.round(value * 100)
+
+const isProductInStock = (product: HttpTypes.StoreProduct) => {
+  return product.variants?.some((variant) => {
+    if (variant?.manage_inventory === false) {
+      return true
+    }
+
+    const quantity = variant?.inventory_quantity ?? 0
+    return quantity > 0
+  })
+}
+
+const matchesPriceFilter = (product: HttpTypes.StoreProduct, priceFilter?: PriceRangeFilter) => {
+  if (!priceFilter || (priceFilter.min === undefined && priceFilter.max === undefined)) {
+    return true
+  }
+
+  const cheapestPrice = getProductPrice({ product }).cheapestPrice
+
+  if (!cheapestPrice) {
+    return false
+  }
+  const amount = cheapestPrice.calculated_price_number
+
+  const min =
+    typeof priceFilter.min === "number" ? convertMajorToMinor(Math.max(priceFilter.min, 0)) : undefined
+  const max =
+    typeof priceFilter.max === "number" ? convertMajorToMinor(Math.max(priceFilter.max, 0)) : undefined
+
+  if (min !== undefined && amount < min) {
+    return false
+  }
+
+  if (max !== undefined && amount > max) {
+    return false
+  }
+
+  return true
+}
+
+const matchesAgeFilter = (product: HttpTypes.StoreProduct, ageFilter?: string) => {
+  if (!ageFilter) {
+    return true
+  }
+
+  const metadataValue = product.metadata?.[AGE_METADATA_KEY]
+
+  if (!metadataValue || typeof metadataValue !== "string") {
+    return false
+  }
+
+  return metadataValue.toLowerCase() === ageFilter.toLowerCase()
+}
+
+const applyClientSideFilters = (
+  product: HttpTypes.StoreProduct,
+  filters: {
+    availability?: AvailabilityFilter
+    price?: PriceRangeFilter
+    age?: string
+  }
+) => {
+  const inStock = isProductInStock(product)
+
+  if (filters.availability === "in_stock" && !inStock) {
+    return false
+  }
+
+  if (filters.availability === "out_of_stock" && inStock) {
+    return false
+  }
+
+  if (!matchesPriceFilter(product, filters.price)) {
+    return false
+  }
+
+  if (!matchesAgeFilter(product, filters.age)) {
+    return false
+  }
+
+  return true
+}
+
+type ListPaginatedProductsArgs = {
   page?: number
-  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
+  limit?: number
+  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
   sortBy?: SortOptions
   countryCode: string
-}): Promise<{
+  availability?: AvailabilityFilter
+  priceFilter?: PriceRangeFilter
+  ageFilter?: string
+}
+
+export const listPaginatedProducts = async ({
+  page = 1,
+  limit = 12,
+  queryParams,
+  sortBy = "featured",
+  countryCode,
+  availability,
+  priceFilter,
+  ageFilter,
+}: ListPaginatedProductsArgs): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
-  nextPage: number | null
-  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
+  pagination: { page: number; limit: number }
 }> => {
-  const limit = queryParams?.limit || 12
+  const normalizedPage = Math.max(page, 1)
+  const requiresClientSideSorting = sortBy === "price_asc" || sortBy === "price_desc"
+  const requiresClientSideFiltering = Boolean(availability || priceFilter || ageFilter)
+  const needsFullScan = requiresClientSideFiltering || requiresClientSideSorting
+  const order = ORDER_MAP[sortBy]
+  const baseQuery = {
+    ...queryParams,
+    ...(order ? { order } : {}),
+  }
 
-  const {
-    response: { products, count },
-  } = await listProducts({
-    pageParam: 0,
-    queryParams: {
-      ...queryParams,
-      limit: 100,
-    },
-    countryCode,
-  })
+  if (!needsFullScan) {
+    const {
+      response: { products, count },
+    } = await listProducts({
+      pageParam: normalizedPage,
+      queryParams: {
+        ...baseQuery,
+        limit,
+      },
+      countryCode,
+    })
 
-  const sortedProducts = sortProducts(products, sortBy)
+    return {
+      response: {
+        products,
+        count,
+      },
+      pagination: {
+        page: normalizedPage,
+        limit,
+      },
+    }
+  }
 
-  const pageParam = (page - 1) * limit
+  const aggregated: HttpTypes.StoreProduct[] = []
+  let cursor = 1
+  let iterations = 0
+  const chunkSize = Math.max(limit, 24)
 
-  const nextPage = count > pageParam + limit ? pageParam + limit : null
+  while (iterations < CLIENT_SCAN_MAX_PAGES && aggregated.length < CLIENT_SCAN_LIMIT) {
+    iterations += 1
+    const { response, nextPage } = await listProducts({
+      pageParam: cursor,
+      queryParams: {
+        ...baseQuery,
+        limit: chunkSize,
+      },
+      countryCode,
+    })
 
-  const paginatedProducts = sortedProducts.slice(pageParam, pageParam + limit)
+    aggregated.push(...response.products)
+
+    if (!nextPage) {
+      break
+    }
+
+    cursor = nextPage
+  }
+
+  const filteredProducts = aggregated.filter((product) =>
+    applyClientSideFilters(product, {
+      availability,
+      price: priceFilter,
+      age: ageFilter,
+    })
+  )
+
+  const sortedProducts = requiresClientSideSorting
+    ? sortProducts(filteredProducts, sortBy)
+    : filteredProducts
+
+  const offset = (normalizedPage - 1) * limit
+  const paginatedProducts = sortedProducts.slice(offset, offset + limit)
 
   return {
     response: {
       products: paginatedProducts,
-      count,
+      count: sortedProducts.length,
     },
-    nextPage,
-    queryParams,
+    pagination: {
+      page: normalizedPage,
+      limit,
+    },
   }
+}
+
+export const getStoreStats = async ({
+  countryCode,
+  queryParams,
+}: {
+  countryCode: string
+  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
+}) => {
+  const {
+    response: { count },
+  } = await listProducts({
+    pageParam: 1,
+    queryParams: {
+      limit: 1,
+      ...queryParams,
+    },
+    countryCode,
+  })
+
+  return { count }
 }

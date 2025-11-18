@@ -175,6 +175,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                     {(product.variants?.length ?? 0) > 1 && (
                       <div className="flex flex-col gap-y-6">
                         {(product.options || []).map((option) => {
+                          const normalizedTitle = option.title?.toLowerCase() ?? ""
                           return (
                             <div key={option.id}>
                               <OptionSelect
@@ -183,6 +184,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                                 updateOption={updateOptions}
                                 title={option.title ?? ""}
                                 disabled={optionsDisabled}
+                                layout={normalizedTitle.includes("color") ? "swatch" : "pill"}
                               />
                             </div>
                           )

@@ -2,15 +2,16 @@ import React, { Suspense } from "react"
 
 import ImageGallery from "@modules/products/components/image-gallery"
 import ProductActions from "@modules/products/components/product-actions"
-import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
 import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
-import ProductInfo from "@modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
 import ProductActionsWrapper from "./product-actions-wrapper"
+import CustomerReviews from "@modules/products/components/customer-reviews"
+import OrderInformation from "@modules/products/components/order-information"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -31,36 +32,38 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
 
   return (
     <>
-      <div
-        className="content-container  flex flex-col small:flex-row small:items-start py-6 relative"
-        data-testid="product-container"
-      >
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-6">
-          <ProductInfo product={product} />
-          <ProductTabs product={product} />
-        </div>
-        <div className="block w-full relative">
-          <ImageGallery images={images} />
-        </div>
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-12">
-          <ProductOnboardingCta />
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
+      <div className="content-container py-6 lg:py-10" data-testid="product-container">
+        <nav className="mb-6 flex gap-2 text-sm text-slate-500">
+          <LocalizedClientLink
+            href="/"
+            className="transition hover:text-slate-900"
           >
-            <ProductActionsWrapper id={product.id} region={region} />
-          </Suspense>
+            Home
+          </LocalizedClientLink>
+          <span>•</span>
+          <span className="text-slate-700">{product.title}</span>
+        </nav>
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,_720px)_minmax(360px,_460px)] xl:gap-16">
+          <div className="flex flex-col gap-8">
+            <ImageGallery images={images} />
+            <ProductTabs product={product} />
+            <CustomerReviews />
+          </div>
+          <div className="flex flex-col gap-6 lg:sticky lg:top-24">
+            <Suspense
+              fallback={<ProductActions disabled={true} product={product} />}
+            >
+              <ProductActionsWrapper
+                id={product.id}
+                region={region}
+                countryCode={countryCode}
+              />
+            </Suspense>
+            <OrderInformation />
+          </div>
         </div>
       </div>
-      <div
-        className="content-container my-16 small:my-32"
-        data-testid="related-products-container"
-      >
+      <div className="content-container my-16" data-testid="related-products-container">
         <Suspense fallback={<SkeletonRelatedProducts />}>
           <RelatedProducts product={product} countryCode={countryCode} />
         </Suspense>

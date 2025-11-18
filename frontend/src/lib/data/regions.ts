@@ -37,30 +37,55 @@ export const retrieveRegion = async (id: string) => {
 
 const regionMap = new Map<string, HttpTypes.StoreRegion>()
 
-export const getRegion = async (countryCode: string) => {
+const normalizeCountryCode = (countryCode?: string) =>
+  (countryCode ?? "").toLowerCase()
+
+const hydrateRegionCache = async () => {
+  const regions = await listRegions()
+
+  if (!regions) {
+    return
+  }
+
+  regionMap.clear()
+  regions.forEach((region) => {
+    region.countries?.forEach((country) => {
+      if (country?.iso_2) {
+        regionMap.set(country.iso_2.toLowerCase(), region)
+      }
+    })
+  })
+}
+
+type GetRegionOptions = {
+  forceRefresh?: boolean
+}
+
+export const getRegion = async (
+  countryCode: string,
+  options?: GetRegionOptions
+) => {
   try {
-    if (regionMap.has(countryCode)) {
-      return regionMap.get(countryCode)
-    }
+    const normalizedCode = normalizeCountryCode(countryCode)
 
-    const regions = await listRegions()
-
-    if (!regions) {
+    if (!normalizedCode) {
       return null
     }
 
-    regions.forEach((region) => {
-      region.countries?.forEach((c) => {
-        regionMap.set(c?.iso_2 ?? "", region)
-      })
-    })
+    if (options?.forceRefresh) {
+      regionMap.clear()
+    }
 
-    const region = countryCode
-      ? regionMap.get(countryCode)
-      : regionMap.get("us")
+    if (!regionMap.size || !regionMap.has(normalizedCode)) {
+      await hydrateRegionCache()
+    }
 
-    return region
-  } catch (e: any) {
+    if (!regionMap.has(normalizedCode) && !options?.forceRefresh) {
+      await hydrateRegionCache()
+    }
+
+    return regionMap.get(normalizedCode) ?? null
+  } catch (error) {
     return null
   }
 }

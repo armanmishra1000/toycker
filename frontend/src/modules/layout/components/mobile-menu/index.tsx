@@ -4,17 +4,24 @@ import { useRef, useState } from "react"
 import { XMarkIcon, ChevronDownIcon } from "@heroicons/react/24/outline"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useOnClickOutside } from "@modules/layout/hooks/useOnClickOutside"
-import { AgeCategory, NavLink } from "@modules/layout/config/navigation"
+import { NavLink, ShopMenuPromo, ShopMenuSection } from "@modules/layout/config/navigation"
 import { useBodyScrollLock } from "@modules/layout/hooks/useBodyScrollLock"
 
 type MobileMenuProps = {
   isOpen: boolean
   onClose: () => void
   navLinks: NavLink[]
-  ageCategories: AgeCategory[]
+  shopMenuSections: ShopMenuSection[]
+  shopMenuPromo: ShopMenuPromo
 }
 
-const MobileMenu = ({ isOpen, onClose, navLinks, ageCategories }: MobileMenuProps) => {
+const MobileMenu = ({
+  isOpen,
+  onClose,
+  navLinks,
+  shopMenuSections,
+  shopMenuPromo,
+}: MobileMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null)
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   
@@ -82,16 +89,44 @@ const MobileMenu = ({ isOpen, onClose, navLinks, ageCategories }: MobileMenuProp
                     {/* Dropdown Items */}
                     {isDropdownOpen(link.id) && (
                       <div className="bg-gray-50 flex flex-col gap-1 p-2">
-                        {ageCategories.map((category) => (
-                          <LocalizedClientLink
-                            key={category.id}
-                            href={category.href}
-                            onClick={onClose}
-                            className="block py-2 px-8 text-sm hover:bg-primary hover:text-white transition-colors"
-                          >
-                            {category.label}
-                          </LocalizedClientLink>
+                        {shopMenuSections.map((section) => (
+                          <div key={section.id} className="px-2 py-2">
+                            <p className="px-6 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                              {section.title}
+                            </p>
+                            <div className="mt-1 flex flex-col">
+                              {section.items.map((item) => (
+                                <LocalizedClientLink
+                                  key={item.id}
+                                  href={item.href}
+                                  onClick={onClose}
+                                  className="block py-2 pl-8 pr-4 text-sm hover:bg-primary hover:text-white transition-colors"
+                                >
+                                  {item.label}
+                                </LocalizedClientLink>
+                              ))}
+                            </div>
+                          </div>
                         ))}
+
+                        <div className="rounded-2xl bg-rose-50 p-4">
+                          <div className="space-y-2">
+                            {shopMenuPromo.links.map((link, index) => (
+                              <LocalizedClientLink
+                                key={link.id}
+                                href={link.href}
+                                onClick={onClose}
+                                className={`${
+                                  index === 0
+                                    ? "block rounded-full bg-primary px-4 py-2 text-center text-sm font-semibold text-white"
+                                    : "block text-sm font-medium text-gray-800"
+                                }`}
+                              >
+                                {link.label}
+                              </LocalizedClientLink>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
