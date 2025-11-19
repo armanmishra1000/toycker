@@ -1,5 +1,6 @@
 /dist
 .env
+.env.production
 .DS_Store
 /uploads
 /node_modules
@@ -14,6 +15,7 @@ coverage
 ./tsconfig.tsbuildinfo
 medusa-db.sql
 build
+public
 .cache
 
 .yarn/*

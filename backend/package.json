@@ -13,7 +13,8 @@
     "medusa"
   ],
   "scripts": {
-    "build": "medusa build",
+    "build": "medusa build && npm run copy-admin",
+    "copy-admin": "node -e \"const fs=require('fs');const path=require('path');const src=path.join('.medusa','server','public');const dst='public';fs.rmSync(dst,{recursive:true,force:true});fs.cpSync(src,dst,{recursive:true});\"",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "start": "node ./scripts/start.js",
     "dev": "medusa develop",
