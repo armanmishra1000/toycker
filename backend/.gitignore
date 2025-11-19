@@ -15,6 +15,7 @@ coverage
 ./tsconfig.tsbuildinfo
 medusa-db.sql
 build
+public
 .cache
 
 .yarn/*
