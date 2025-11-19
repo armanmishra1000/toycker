@@ -16,7 +16,7 @@
  
  - Google Cloud project with billing enabled and IAM permissions to create Compute Engine instances, firewall rules, and service accounts. ([Compute Engine startup scripts doc](https://cloud.google.com/compute/docs/instances/startup-scripts/linux))
  - Neon project with an initialized database and credentials for a least-privileged user.
- - Domain/DNS if you plan to expose the backend publicly.
+- Domain/DNS if you plan to expose the backend publicly (optional; you can rely on a static IP only).
  - Optional: Upstash/MemoryStore Redis URL for sessions + cache modules.
  
  ## 3. Configure Neon
@@ -38,18 +38,19 @@
  | `DATABASE_SSL` | `true` to ensure Medusa config injects TLS driver options. |
  | `DB_SSL_REJECT_UNAUTHORIZED` | `true` if you upload the Neon root CA, otherwise `false` to accept Neon’s managed certificates. |
  | `MEDUSA_WORKER_MODE` | `server` on the API VM, `worker` on the worker VM/process. ([Medusa config docs](https://docs.medusajs.com/learn/configurations/medusa-config)) |
- | `REDIS_URL`, `JWT_SECRET`, `COOKIE_SECRET`, `STORE_CORS`, `ADMIN_CORS`, `AUTH_CORS` | Standard Medusa variables (see `.env.template`). |
+| `REDIS_URL`, `JWT_SECRET`, `COOKIE_SECRET`, `STORE_CORS`, `ADMIN_CORS`, `AUTH_CORS` | Standard Medusa variables (see `.env.template`). If you do not own a domain yet, set the CORS origins to your VM’s static IP (for example `http://34.28.xx.yy:9000` for admin/auth and `http://34.28.xx.yy:8000` for the storefront). |
  
  Commit only templates/placeholders; inject real secrets via the VM environment or secret files.
  
- ## 5. Provision the Compute Engine VM
- 
- 1. **Create the instance:**
+## 5. Provision the Compute Engine VM
+
+ 1. **Reserve/assign a static external IP** so the VM keeps the same public endpoint even without a domain. Use Google’s [static IP instructions](https://docs.cloud.google.com/compute/docs/ip-addresses/configure-static-external-ip-addresses) to reserve a regional IPv4 address and attach it to the VM.
+ 2. **Create the instance:**
     - Machine type: `e2-medium` (2 vCPU / 4 GB RAM) or larger for production.
     - Boot disk: Debian/Ubuntu LTS, ≥30 GB SSD.
     - Enable “Allow HTTP/HTTPS traffic” for quick testing or manage via custom firewall rules later.
- 2. **Attach service account** with minimal permissions (logging/monitoring) if you’ll use GCP APIs.
- 3. **Set a startup script** or run manually (see next section). ([Startup scripts doc](https://cloud.google.com/compute/docs/instances/startup-scripts/linux))
+ 3. **Attach service account** with minimal permissions (logging/monitoring) if you’ll use GCP APIs.
+ 4. **Set a startup script** or run manually (see next section). ([Startup scripts doc](https://cloud.google.com/compute/docs/instances/startup-scripts/linux))
  
  ## 6. Harden Networking
  
@@ -154,11 +155,43 @@
  3. **Backups** – Neon provides PITR on paid plans; schedule exports if needed.
  4. **Zero-downtime deploys** – Pull latest code, run `npm install && npm run build`, then `pm2 reload ecosystem.config.js`.
  5. **Security** – Rotate JWT/DB credentials regularly, keep VM patched (`unattended-upgrades`), and restrict SSH access.
+
+## 11. Running Without a Domain Name
+
+You can keep Medusa’s Admin and Store APIs reachable exclusively via the VM’s public IP:
+
+1. **Stick with the reserved static IP** from [Google’s static IP setup](https://docs.cloud.google.com/compute/docs/ip-addresses/configure-static-external-ip-addresses). Access the admin at `http://<STATIC_IP>:9000/app` (or through whatever reverse proxy you configure later).
+2. **Update CORS origins** in `.env.production` to the static IP + ports (for example, `ADMIN_CORS=http://<STATIC_IP>:9000` and `STORE_CORS=http://<STATIC_IP>:8000`). This keeps Medusa’s auth and admin flows working from that IP, with no DNS required.
+3. **Later, when you buy a domain**, add an A record pointing to the same IP, update the CORS settings to use the domain, and optionally enable HTTPS via a reverse proxy (NGINX, Cloud Run, load balancer, etc.).
  
-## 11. Decommission the Previous Host
+## 12. Decommission the Previous Host
 
 1. Delete the old PaaS services/projects to avoid accidental double billing.
 2. Revoke any OAuth tokens or CI/CD integrations that were tied to the previous host.
 3. Update documentation (this repo) to point only to the Google Cloud + Neon process.
 
 Following this checklist moves the backend off the legacy stack and onto a controllable Google Cloud VM while following Medusa’s production best practices for separate server/worker runtimes and SSL-secured Neon connections.
+
+
+
+
+
+-----------
+bash
+     cd ~/toycker/backend
+     pm2 start ecosystem.config.js
+
+   4. Verify they’re running
+
+   bash
+     pm2 status
+     pm2 logs medusa-server
+     pm2 logs medusa-worker
+
+   5. Keep them alive after reboot
+
+   bash
+     pm2 save
+     pm2 startup systemd
+     # Follow the printed command (usually sudo env PATH=... pm2 startup systemd -u dell --hp /home/dell)
+     pm2 save          # run once more after the startup command
