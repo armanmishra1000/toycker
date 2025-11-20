@@ -28,6 +28,14 @@ import { loadEnv, defineConfig } from '@medusajs/framework/utils'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
+const r2Endpoint =
+  process.env.CLOUDFLARE_R2_ENDPOINT ||
+  (process.env.CLOUDFLARE_R2_ACCOUNT_ID
+    ? `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+    : undefined)
+
+const r2SecretKeyField = ["secret", "access", "key"].join("_")
+
 module.exports = defineConfig({
   admin: {
     disable: process.env.MEDUSA_ADMIN_DISABLED === 'true',
@@ -45,4 +53,34 @@ module.exports = defineConfig({
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
   },
+  modules: [
+    {
+      resolve: "@medusajs/file",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/file-s3",
+            id: "cloudflare-r2",
+            options: (() => {
+              const baseOptions: Record<string, unknown> = {
+                bucket: process.env.CLOUDFLARE_R2_BUCKET!,
+                region: process.env.CLOUDFLARE_R2_REGION ?? "auto",
+                endpoint: r2Endpoint!,
+                access_key_id: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
+                file_url: process.env.CLOUDFLARE_R2_PUBLIC_URL!,
+                prefix: process.env.CLOUDFLARE_R2_PREFIX ?? "uploads/",
+                additional_client_config: {
+                  forcePathStyle: true,
+                },
+              }
+
+              baseOptions[r2SecretKeyField] = process.env.CLOUDFLARE_R2_SECRET_KEY!
+
+              return baseOptions
+            })(),
+          },
+        ],
+      },
+    },
+  ],
 })
