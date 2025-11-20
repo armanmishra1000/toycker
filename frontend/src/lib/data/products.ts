@@ -12,6 +12,19 @@ import {
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
+type SdkFetchOptions = Parameters<typeof sdk.client.fetch>[1]
+type ProductCacheMode = "force-cache" | "no-store"
+
+const PRODUCT_CACHE_MODE: ProductCacheMode = (() => {
+  const override = process.env.NEXT_PUBLIC_PRODUCTS_CACHE_MODE
+
+  if (override === "force-cache" || override === "no-store") {
+    return override
+  }
+
+  return process.env.NODE_ENV === "production" ? "no-store" : "force-cache"
+})()
+
 export const listProducts = async ({
   pageParam = 1,
   queryParams,
@@ -66,27 +79,35 @@ export const listProducts = async ({
     ...(await getAuthHeaders()),
   }
 
-  const next = {
-    ...(await getCacheOptions("products")),
+  const next =
+    PRODUCT_CACHE_MODE === "force-cache"
+      ? {
+          ...(await getCacheOptions("products")),
+        }
+      : undefined
+
+  const requestOptions: SdkFetchOptions = {
+    method: "GET",
+    query: {
+      limit,
+      offset,
+      region_id: region?.id,
+      fields:
+        "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
+      ...queryParams,
+    },
+    headers,
+    cache: PRODUCT_CACHE_MODE,
+  }
+
+  if (next) {
+    requestOptions.next = next
   }
 
   return sdk.client
     .fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
       `/store/products`,
-      {
-        method: "GET",
-        query: {
-          limit,
-          offset,
-          region_id: region?.id,
-          fields:
-            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
-          ...queryParams,
-        },
-        headers,
-        next,
-        cache: "force-cache",
-      }
+      requestOptions
     )
     .then(({ products, count }) => {
       const nextPage = count > offset + limit ? pageParam + 1 : null
