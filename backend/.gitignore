@@ -1,11 +1,10 @@
 /dist
 .env
-.env.production
 .DS_Store
 /uploads
 /node_modules
 yarn-error.log
-
+.env.production
 .idea
 
 coverage
@@ -15,7 +14,6 @@ coverage
 ./tsconfig.tsbuildinfo
 medusa-db.sql
 build
-public
 .cache
 
 .yarn/*
