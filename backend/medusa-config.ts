@@ -31,6 +31,8 @@ loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 module.exports = defineConfig({
   admin: {
     disable: process.env.MEDUSA_ADMIN_DISABLED === 'true',
+    path: '/app',
+    outDir: 'build',
   },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -42,5 +44,5 @@ module.exports = defineConfig({
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
-  }
+  },
 })
