@@ -150,7 +150,7 @@ const Header = ({
 
               {/* Login Button - Desktop Only */}
               <div className="hidden lg:block ">
-                <LocalizedClientLink href="/account/login" className="group relative">
+                <LocalizedClientLink href="/account" className="group relative">
                   <button
                     className="w-10 h-10 bg-foreground rounded-full transition-colors relative flex justify-center items-center"
                     aria-label="Login to account"
@@ -198,7 +198,7 @@ const Header = ({
       {/* Row 2 - Navigation with White Background - Desktop Only */}
       <div className="hidden lg:block bg-white border-b border-gray-200">
         <div className="mx-auto px-4 max-w-[1440px]">
-          <div className="h-14 flex items-center justify-between">
+          <div className="flex items-center justify-between">
             {/* Main Navigation */}
             <MainNavigation
               navLinks={resolvedNavLinks}

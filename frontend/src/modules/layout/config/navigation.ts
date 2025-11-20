@@ -42,13 +42,14 @@ export const navLinks: NavLink[] = [
 ]
 
 export const ageCategories: AgeCategory[] = [
-  { id: "0-12-months", label: "0-12 Months", href: "/shop-by-age/0-12-months" },
-  { id: "1-2-years", label: "1-2 Years", href: "/shop-by-age/1-2-years" },
-  { id: "2-3-years", label: "2-3 Years", href: "/shop-by-age/2-3-years" },
-  { id: "3-5-years", label: "3-5 Years", href: "/shop-by-age/3-5-years" },
-  { id: "5-8-years", label: "5-8 Years", href: "/shop-by-age/5-8-years" },
-  { id: "8-12-years", label: "8-12 Years", href: "/shop-by-age/8-12-years" },
-  { id: "12-plus", label: "12+ Years", href: "/shop-by-age/12-plus" },
+  { id: "0-18-months", label: "0-18 Month", href: "/collections/0-18-months" },
+  { id: "18-36-months", label: "18-36 Month", href: "/collections/18-36-months" },
+  { id: "3-5-years", label: "3-5 Year", href: "/collections/3-5-years" },
+  { id: "5-7-years", label: "5-7 Year", href: "/collections/5-7-years" },
+  { id: "7-9-years", label: "7-9 Years", href: "/collections/7-9-years" },
+  { id: "9-12-years", label: "9-12 Year", href: "/collections/9-12-years" },
+  { id: "12-14-years", label: "12-14 Year", href: "/collections/12-14-years" },
+  { id: "14-plus-years", label: "14+ Year", href: "/collections/14-plus-years" },
 ]
 
 export const shopMenuSections: ShopMenuSection[] = [
@@ -56,12 +57,12 @@ export const shopMenuSections: ShopMenuSection[] = [
     id: "brands",
     title: "Shop By Brand",
     items: [
-      { id: "giggles", label: "Giggles", href: "/shop/brand/giggles" },
-      { id: "fundough", label: "Fundough", href: "/shop/brand/fundough" },
-      { id: "games", label: "Games", href: "/shop/brand/games" },
-      { id: "handycrafts", label: "Handycrafts", href: "/shop/brand/handycrafts" },
-      { id: "play-learn", label: "Play & Learn", href: "/shop/brand/play-and-learn" },
-      { id: "other-brands", label: "Other Brands", href: "/shop/brand" },
+      { id: "giggles", label: "Giggles", href: "/categories/giggles" },
+      { id: "fundough", label: "Fundough", href: "/categories/fundough" },
+      { id: "games", label: "Games", href: "/categories/games" },
+      { id: "handycrafts", label: "Handycrafts", href: "/categories/handycrafts" },
+      { id: "play-learn", label: "Play & Learn", href: "/categories/play-and-learn" },
+      { id: "other-brands", label: "Other Brands", href: "/categories" },
     ],
   },
   {
@@ -79,9 +80,9 @@ export const shopMenuSections: ShopMenuSection[] = [
 export const shopMenuPromo: ShopMenuPromo = {
   title: "Shop All",
   links: [
-    { id: "shop-all", label: "Shop All", href: "/shop" },
-    { id: "new-arrivals", label: "New Arrivals", href: "/new-arrivals" },
-    { id: "best-sellers", label: "Best Sellers", href: "/best-sellers" },
+    { id: "shop-all", label: "Shop All", href: "/store" },
+    { id: "new-arrivals", label: "New Arrivals", href: "/categories/new-arrivals" },
+    { id: "best-sellers", label: "Best Sellers", href: "/categories/best-sellers" },
   ],
   image: {
     src: "/assets/images/H373b3e2614344291824ff29116a86506M.jpg",

@@ -157,7 +157,7 @@ const MobileMenu = ({
 
         {/* Login Button */}
         <div className="px-4 pb-4">
-          <LocalizedClientLink href="/account/login" onClick={onClose}>
+          <LocalizedClientLink href="/account" onClick={onClose}>
             <button className="w-full py-3 px-4 bg-primary text-white rounded-lg font-medium hover:bg-opacity-90 transition-all">
               Login / Sign Up
             </button>
