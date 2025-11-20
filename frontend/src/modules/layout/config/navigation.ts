@@ -42,13 +42,14 @@ export const navLinks: NavLink[] = [
 ]
 
 export const ageCategories: AgeCategory[] = [
-  { id: "0-12-months", label: "0-12 Months", href: "/categories/0-12-months" },
-  { id: "1-2-years", label: "1-2 Years", href: "/categories/1-2-years" },
-  { id: "2-3-years", label: "2-3 Years", href: "/categories/2-3-years" },
-  { id: "3-5-years", label: "3-5 Years", href: "/categories/3-5-years" },
-  { id: "5-8-years", label: "5-8 Years", href: "/categories/5-8-years" },
-  { id: "8-12-years", label: "8-12 Years", href: "/categories/8-12-years" },
-  { id: "12-plus", label: "12+ Years", href: "/categories/12-plus" },
+  { id: "0-18-months", label: "0-18 Month", href: "/collections/0-18-months" },
+  { id: "18-36-months", label: "18-36 Month", href: "/collections/18-36-months" },
+  { id: "3-5-years", label: "3-5 Year", href: "/collections/3-5-years" },
+  { id: "5-7-years", label: "5-7 Year", href: "/collections/5-7-years" },
+  { id: "7-9-years", label: "7-9 Years", href: "/collections/7-9-years" },
+  { id: "9-12-years", label: "9-12 Year", href: "/collections/9-12-years" },
+  { id: "12-14-years", label: "12-14 Year", href: "/collections/12-14-years" },
+  { id: "14-plus-years", label: "14+ Year", href: "/collections/14-plus-years" },
 ]
 
 export const shopMenuSections: ShopMenuSection[] = [
@@ -56,12 +57,12 @@ export const shopMenuSections: ShopMenuSection[] = [
     id: "brands",
     title: "Shop By Brand",
     items: [
-      { id: "giggles", label: "Giggles", href: "/collections/giggles" },
-      { id: "fundough", label: "Fundough", href: "/collections/fundough" },
-      { id: "games", label: "Games", href: "/collections/games" },
-      { id: "handycrafts", label: "Handycrafts", href: "/collections/handycrafts" },
-      { id: "play-learn", label: "Play & Learn", href: "/collections/play-and-learn" },
-      { id: "other-brands", label: "Other Brands", href: "/collections" },
+      { id: "giggles", label: "Giggles", href: "/categories/giggles" },
+      { id: "fundough", label: "Fundough", href: "/categories/fundough" },
+      { id: "games", label: "Games", href: "/categories/games" },
+      { id: "handycrafts", label: "Handycrafts", href: "/categories/handycrafts" },
+      { id: "play-learn", label: "Play & Learn", href: "/categories/play-and-learn" },
+      { id: "other-brands", label: "Other Brands", href: "/categories" },
     ],
   },
   {
