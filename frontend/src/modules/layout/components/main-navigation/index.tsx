@@ -124,7 +124,7 @@ const MainNavigation = ({ navLinks, shopMenuSections, shopMenuPromo }: MainNavig
             >
               <button
                 onClick={() => (isOpen ? setActiveDropdownId(null) : openDropdown(link.id))}
-                className={`flex items-center gap-1 font-medium transition-colors hover:text-primary ${
+                className={`flex items-center gap-1 font-medium transition-colors hover:text-primary py-4 ${
                   active ? "text-primary" : "text-black"
                 }`}
                 aria-expanded={isOpen}
@@ -159,7 +159,7 @@ const MainNavigation = ({ navLinks, shopMenuSections, shopMenuPromo }: MainNavig
           <LocalizedClientLink
             key={link.id}
             href={link.href}
-            className={`font-medium transition-colors hover:text-primary ${
+            className={`font-medium transition-colors hover:text-primary py-4 ${
               active ? "text-primary" : "text-black"
             }`}
             onClick={closeDropdown}

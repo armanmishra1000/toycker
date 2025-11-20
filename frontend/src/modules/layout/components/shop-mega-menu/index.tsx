@@ -17,7 +17,7 @@ type ShopMegaMenuProps = {
 }
 
 const basePanelClasses =
-  "rounded-2xl p-4 shadow-[0_15px_45px_rgba(15,23,42,0.08)]"
+  "rounded-2xl p-4"
 
 const ShopMegaMenu = ({
   sections,
@@ -34,7 +34,7 @@ const ShopMegaMenu = ({
     <div
       role="region"
       aria-label="Shop menu"
-      className={`absolute left-0 top-[calc(100%+0.75rem)] z-40 w-[min(980px,92vw)] rounded-3xl border border-gray-200/70 bg-white/95 backdrop-blur transition-all duration-200 ease-out ${
+      className={`absolute left-0 top-[calc(100%+0rem)] z-10 w-[min(850px,92vw)] rounded-br-xl rounded-bl-xl border border-gray-200/70 bg-white/95 backdrop-blur transition-all duration-200 ease-out ${
         isOpen
           ? "pointer-events-auto translate-y-0 opacity-100"
           : "pointer-events-none translate-y-2 opacity-0"
@@ -44,7 +44,7 @@ const ShopMegaMenu = ({
       onMouseLeave={onMouseLeave}
       onKeyDown={onKeyDown}
     >
-      <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))]">
+      <div className="grid gap-3 p-6 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
         {sections.map((section) => (
           <div
             key={section.id}
