@@ -2,29 +2,29 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ChangeEvent, ReactNode, useEffect, useMemo, useState } from "react"
-import { Minus, Plus } from "lucide-react"
+import { useOptionalStorefrontFilters } from "@modules/store/context/storefront-filters"
 
 import { AvailabilityFilter, PRICE_SLIDER_LIMITS } from "./types"
 
-type ActiveFilter = {
+export type ActiveFilter = {
   label: string
   value: string
   paramKey: string | string[]
 }
 
-type FilterOption = {
+export type FilterOption = {
   label: string
   value: string
   count?: number
 }
 
-type FilterConfig = {
+export type FilterConfig = {
   availability?: FilterOption[]
   ages?: FilterOption[]
   categories?: FilterOption[]
 }
 
-type SelectedFilters = {
+export type SelectedFilters = {
   availability?: AvailabilityFilter
   age?: string
   category?: string
@@ -32,11 +32,12 @@ type SelectedFilters = {
   priceMax?: number
 }
 
-type RefinementListProps = {
+export type RefinementListProps = {
   searchQuery?: string | null
   activeFilters?: ActiveFilter[]
   filterOptions?: FilterConfig
   selectedFilters?: SelectedFilters
+  onFiltersChange?: (next: SelectedFilters) => void
 }
 
 type PriceRangeState = {
@@ -87,17 +88,41 @@ const RefinementList = ({
   activeFilters,
   filterOptions,
   selectedFilters,
+  onFiltersChange,
 }: RefinementListProps) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const storefrontFilters = useOptionalStorefrontFilters()
 
   const sliderBounds = PRICE_SLIDER_LIMITS
+  const fallbackFilters = selectedFilters ?? {}
+  const shouldUseCustomState = Boolean(onFiltersChange)
+  const effectiveFilters = shouldUseCustomState
+    ? fallbackFilters
+    : storefrontFilters
+    ? {
+        availability: storefrontFilters.filters.availability,
+        age: storefrontFilters.filters.age,
+        category: storefrontFilters.filters.categoryId,
+        priceMin: storefrontFilters.filters.priceRange?.min,
+        priceMax: storefrontFilters.filters.priceRange?.max,
+      }
+    : fallbackFilters
+  const resolvedSearchQuery = shouldUseCustomState
+    ? searchQuery ?? undefined
+    : storefrontFilters?.filters.searchQuery ?? searchQuery ?? undefined
+  const selectedAvailability = effectiveFilters.availability
+  const selectedAge = effectiveFilters.age
+  const selectedCategory = effectiveFilters.category
+  const selectedPriceMin = effectiveFilters.priceMin
+  const selectedPriceMax = effectiveFilters.priceMax
+
   const [priceRange, setPriceRange] = useState<PriceRangeState>(() =>
     normalizePriceRange(
       {
-        min: selectedFilters?.priceMin ?? sliderBounds.min,
-        max: selectedFilters?.priceMax ?? sliderBounds.max,
+        min: selectedPriceMin ?? sliderBounds.min,
+        max: selectedPriceMax ?? sliderBounds.max,
       },
       sliderBounds
     )
@@ -107,13 +132,13 @@ const RefinementList = ({
     setPriceRange(
       normalizePriceRange(
         {
-          min: selectedFilters?.priceMin ?? sliderBounds.min,
-          max: selectedFilters?.priceMax ?? sliderBounds.max,
+          min: selectedPriceMin ?? sliderBounds.min,
+          max: selectedPriceMax ?? sliderBounds.max,
         },
         sliderBounds
       )
     )
-  }, [selectedFilters?.priceMin, selectedFilters?.priceMax, sliderBounds])
+  }, [selectedPriceMin, selectedPriceMax, sliderBounds])
 
   const pushWithParams = (params: URLSearchParams) => {
     const queryString = params.toString()
@@ -121,6 +146,45 @@ const RefinementList = ({
   }
 
   const toggleCheckboxParam = (name: string, value: string) => {
+    if (!shouldUseCustomState && storefrontFilters) {
+      if (name === "availability") {
+        const typedValue = value as AvailabilityFilter
+        const nextValue = storefrontFilters.filters.availability === typedValue ? undefined : typedValue
+        storefrontFilters.setAvailability(nextValue)
+      } else if (name === "age") {
+        const nextValue = storefrontFilters.filters.age === value ? undefined : value
+        storefrontFilters.setAge(nextValue)
+      } else if (name === "category") {
+        const nextValue = storefrontFilters.filters.categoryId === value ? undefined : value
+        storefrontFilters.setCategory(nextValue)
+      }
+      return
+    }
+
+    if (onFiltersChange) {
+      if (name === "availability") {
+        const typedValue = value as AvailabilityFilter
+        const nextValue = effectiveFilters.availability === typedValue ? undefined : typedValue
+        onFiltersChange({
+          ...effectiveFilters,
+          availability: nextValue,
+        })
+      } else if (name === "age") {
+        const nextValue = effectiveFilters.age === value ? undefined : value
+        onFiltersChange({
+          ...effectiveFilters,
+          age: nextValue,
+        })
+      } else if (name === "category") {
+        const nextValue = effectiveFilters.category === value ? undefined : value
+        onFiltersChange({
+          ...effectiveFilters,
+          category: nextValue,
+        })
+      }
+      return
+    }
+
     const params = new URLSearchParams(searchParams)
     const currentValue = params.get(name)
 
@@ -135,6 +199,31 @@ const RefinementList = ({
   }
 
   const commitPriceRange = (range: PriceRangeState) => {
+    if (!shouldUseCustomState && storefrontFilters) {
+      const min = range.min !== undefined && range.min > sliderBounds.min ? Math.round(range.min) : undefined
+      const max = range.max !== undefined && range.max < sliderBounds.max ? Math.round(range.max) : undefined
+      storefrontFilters.setPriceRange(
+        min === undefined && max === undefined
+          ? undefined
+          : {
+              min,
+              max,
+            }
+      )
+      return
+    }
+
+    if (onFiltersChange) {
+      const min = range.min !== undefined && range.min > sliderBounds.min ? Math.round(range.min) : undefined
+      const max = range.max !== undefined && range.max < sliderBounds.max ? Math.round(range.max) : undefined
+      onFiltersChange({
+        ...effectiveFilters,
+        priceMin: min,
+        priceMax: max,
+      })
+      return
+    }
+
     const params = new URLSearchParams(searchParams)
 
     if (range.min !== undefined && range.min > sliderBounds.min) {
@@ -189,32 +278,96 @@ const RefinementList = ({
       })
     }
 
-    appendChip("availability", selectedFilters?.availability, filterOptions?.availability)
-    appendChip("age", selectedFilters?.age, filterOptions?.ages)
-    appendChip("category", selectedFilters?.category, filterOptions?.categories)
+    appendChip("availability", selectedAvailability, filterOptions?.availability)
+    appendChip("age", selectedAge, filterOptions?.ages)
+    appendChip("category", selectedCategory, filterOptions?.categories)
 
-    if (selectedFilters?.priceMin !== undefined || selectedFilters?.priceMax !== undefined) {
-      const formattedMin = formatCurrency(selectedFilters?.priceMin ?? sliderBounds.min)
-      const formattedMax = formatCurrency(selectedFilters?.priceMax ?? sliderBounds.max)
+    if (selectedPriceMin !== undefined || selectedPriceMax !== undefined) {
+      const formattedMin = formatCurrency(selectedPriceMin ?? sliderBounds.min)
+      const formattedMax = formatCurrency(selectedPriceMax ?? sliderBounds.max)
       chips.push({
         label: `Price: ${formattedMin} – ${formattedMax}`,
-        value: `${selectedFilters?.priceMin ?? sliderBounds.min}-${selectedFilters?.priceMax ?? sliderBounds.max}`,
+        value: `${selectedPriceMin ?? sliderBounds.min}-${selectedPriceMax ?? sliderBounds.max}`,
         paramKey: ["price_min", "price_max"],
       })
     }
 
-    if (searchQuery) {
+    if (resolvedSearchQuery) {
       chips.push({
-        label: `Search: "${searchQuery}"`,
-        value: searchQuery,
+        label: `Search: "${resolvedSearchQuery}"`,
+        value: resolvedSearchQuery,
         paramKey: "q",
       })
     }
 
     return chips
-  }, [activeFilters, filterOptions, searchQuery, selectedFilters, sliderBounds])
+  }, [
+    activeFilters,
+    filterOptions,
+    resolvedSearchQuery,
+    selectedAvailability,
+    selectedAge,
+    selectedCategory,
+    selectedPriceMin,
+    selectedPriceMax,
+    sliderBounds,
+  ])
 
   const clearFilter = (paramKey: string | string[]) => {
+    if (!shouldUseCustomState && storefrontFilters) {
+      const keys = Array.isArray(paramKey) ? paramKey : [paramKey]
+      keys.forEach((key) => {
+        switch (key) {
+          case "availability":
+            storefrontFilters.setAvailability(undefined)
+            break
+          case "age":
+            storefrontFilters.setAge(undefined)
+            break
+          case "category":
+            storefrontFilters.setCategory(undefined)
+            break
+          case "price_min":
+          case "price_max":
+            storefrontFilters.setPriceRange(undefined)
+            break
+          case "q":
+            storefrontFilters.setSearchQuery(undefined)
+            break
+          default:
+            break
+        }
+      })
+      return
+    }
+
+    if (onFiltersChange) {
+      const keys = Array.isArray(paramKey) ? paramKey : [paramKey]
+      const next: SelectedFilters = { ...effectiveFilters }
+      keys.forEach((key) => {
+        switch (key) {
+          case "availability":
+            next.availability = undefined
+            break
+          case "age":
+            next.age = undefined
+            break
+          case "category":
+            next.category = undefined
+            break
+          case "price_min":
+          case "price_max":
+            next.priceMin = undefined
+            next.priceMax = undefined
+            break
+          default:
+            break
+        }
+      })
+      onFiltersChange(next)
+      return
+    }
+
     const params = new URLSearchParams(searchParams)
     const keys = Array.isArray(paramKey) ? paramKey : [paramKey]
     keys.forEach((key) => params.delete(key))
@@ -224,7 +377,7 @@ const RefinementList = ({
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      <section className="rounded-2xl border border-ui-border-base bg-ui-bg-base/80 p-5 shadow-elevation-card-rest">
+      <section className="space-y-8">
         {resolvedFilters.length > 0 && (
           <div className="mb-5 flex flex-wrap gap-2" data-testid="active-filters">
             {resolvedFilters.map((filter) => (
@@ -242,43 +395,43 @@ const RefinementList = ({
           </div>
         )}
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {filterOptions?.availability?.length ? (
-            <AccordionSection title="Availability" defaultOpen>
+            <FilterSection title="Availability">
               <CheckboxGroup
                 options={filterOptions.availability}
-                selectedValue={selectedFilters?.availability}
+                  selectedValue={selectedAvailability}
                 onChange={(value) => toggleCheckboxParam("availability", value)}
               />
-            </AccordionSection>
+            </FilterSection>
           ) : null}
 
-          <AccordionSection title="Price" defaultOpen>
+          <FilterSection title="Price">
             <PriceRangeControls
               sliderBounds={sliderBounds}
               priceRange={priceRange}
               onRangeChange={updatePriceRange}
             />
-          </AccordionSection>
+          </FilterSection>
 
           {filterOptions?.ages?.length ? (
-            <AccordionSection title="Shop by age" defaultOpen>
+            <FilterSection title="Shop by age">
               <CheckboxGroup
                 options={filterOptions.ages}
-                selectedValue={selectedFilters?.age}
+                selectedValue={selectedAge}
                 onChange={(value) => toggleCheckboxParam("age", value)}
               />
-            </AccordionSection>
+            </FilterSection>
           ) : null}
 
           {filterOptions?.categories?.length ? (
-            <AccordionSection title="Category" defaultOpen>
+            <FilterSection title="Category">
               <CheckboxGroup
                 options={filterOptions.categories}
-                selectedValue={selectedFilters?.category}
+                selectedValue={selectedCategory}
                 onChange={(value) => toggleCheckboxParam("category", value)}
               />
-            </AccordionSection>
+            </FilterSection>
           ) : null}
         </div>
       </section>
@@ -286,35 +439,18 @@ const RefinementList = ({
   )
 }
 
-const AccordionSection = ({
+const FilterSection = ({
   title,
   children,
-  defaultOpen = true,
 }: {
   title: string
   children: ReactNode
-  defaultOpen?: boolean
-}) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen)
-
-  return (
-    <div className="border-b border-ui-border-subtle pb-4 last:border-b-0 last:pb-0">
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between text-left"
-      >
-        <span className="text-sm font-semibold text-ui-fg-base">{title}</span>
-        {isOpen ? (
-          <Minus className="h-4 w-4 text-ui-fg-muted" aria-hidden />
-        ) : (
-          <Plus className="h-4 w-4 text-ui-fg-muted" aria-hidden />
-        )}
-      </button>
-      {isOpen && <div className="mt-4 space-y-3">{children}</div>}
-    </div>
-  )
-}
+}) => (
+  <div className="space-y-3">
+    <p className="text-base font-semibold text-ui-fg-base">{title}</p>
+    <div className="space-y-3">{children}</div>
+  </div>
+)
 
 const CheckboxGroup = ({
   options,

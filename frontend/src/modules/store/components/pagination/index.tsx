@@ -3,6 +3,8 @@
 import { clx } from "@medusajs/ui"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
+import { useOptionalStorefrontFilters } from "@modules/store/context/storefront-filters"
+
 export function Pagination({
   page,
   totalPages,
@@ -15,6 +17,10 @@ export function Pagination({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const storefrontFilters = useOptionalStorefrontFilters()
+
+  const currentPage = storefrontFilters ? storefrontFilters.filters.page : page
+  const pagesCount = storefrontFilters ? storefrontFilters.totalPages : totalPages
 
   // Helper function to generate an array of numbers within a range
   const arrayRange = (start: number, stop: number) =>
@@ -22,6 +28,10 @@ export function Pagination({
 
   // Function to handle page changes
   const handlePageChange = (newPage: number) => {
+    if (storefrontFilters) {
+      storefrontFilters.setPage(newPage)
+      return
+    }
     const params = new URLSearchParams(searchParams)
     params.set("page", newPage.toString())
     router.push(`${pathname}?${params.toString()}`)
@@ -59,45 +69,45 @@ export function Pagination({
   const renderPageButtons = () => {
     const buttons = []
 
-    if (totalPages <= 7) {
+    if (pagesCount <= 7) {
       // Show all pages
       buttons.push(
-        ...arrayRange(1, totalPages).map((p) =>
-          renderPageButton(p, p, p === page)
+        ...arrayRange(1, pagesCount).map((p) =>
+          renderPageButton(p, p, p === currentPage)
         )
       )
     } else {
       // Handle different cases for displaying pages and ellipses
-      if (page <= 4) {
+      if (currentPage <= 4) {
         // Show 1, 2, 3, 4, 5, ..., lastpage
         buttons.push(
-          ...arrayRange(1, 5).map((p) => renderPageButton(p, p, p === page))
+          ...arrayRange(1, 5).map((p) => renderPageButton(p, p, p === currentPage))
         )
         buttons.push(renderEllipsis("ellipsis1"))
         buttons.push(
-          renderPageButton(totalPages, totalPages, totalPages === page)
+          renderPageButton(pagesCount, pagesCount, pagesCount === currentPage)
         )
-      } else if (page >= totalPages - 3) {
+      } else if (currentPage >= pagesCount - 3) {
         // Show 1, ..., lastpage - 4, lastpage - 3, lastpage - 2, lastpage - 1, lastpage
-        buttons.push(renderPageButton(1, 1, 1 === page))
+        buttons.push(renderPageButton(1, 1, 1 === currentPage))
         buttons.push(renderEllipsis("ellipsis2"))
         buttons.push(
-          ...arrayRange(totalPages - 4, totalPages).map((p) =>
-            renderPageButton(p, p, p === page)
+          ...arrayRange(pagesCount - 4, pagesCount).map((p) =>
+            renderPageButton(p, p, p === currentPage)
           )
         )
       } else {
         // Show 1, ..., page - 1, page, page + 1, ..., lastpage
-        buttons.push(renderPageButton(1, 1, 1 === page))
+        buttons.push(renderPageButton(1, 1, 1 === currentPage))
         buttons.push(renderEllipsis("ellipsis3"))
         buttons.push(
-          ...arrayRange(page - 1, page + 1).map((p) =>
-            renderPageButton(p, p, p === page)
+          ...arrayRange(currentPage - 1, currentPage + 1).map((p) =>
+            renderPageButton(p, p, p === currentPage)
           )
         )
         buttons.push(renderEllipsis("ellipsis4"))
         buttons.push(
-          renderPageButton(totalPages, totalPages, totalPages === page)
+          renderPageButton(pagesCount, pagesCount, pagesCount === currentPage)
         )
       }
     }

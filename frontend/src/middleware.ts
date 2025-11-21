@@ -5,61 +5,52 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
 
-const regionMapCache = {
-  regionMap: new Map<string, HttpTypes.StoreRegion>(),
-  regionMapUpdated: Date.now(),
-}
+const REGION_CACHE_TAG = "regions"
+const REGION_CACHE_TTL = 3600
 
-async function getRegionMap(cacheId: string) {
-  const { regionMap, regionMapUpdated } = regionMapCache
-
+async function getRegionMap() {
   if (!BACKEND_URL) {
     throw new Error(
       "Middleware.ts: Error fetching regions. Did you set up regions in your Medusa Admin and define a MEDUSA_BACKEND_URL environment variable? Note that the variable is no longer named NEXT_PUBLIC_MEDUSA_BACKEND_URL."
     )
   }
 
-  if (
-    !regionMap.keys().next().value ||
-    regionMapUpdated < Date.now() - 3600 * 1000
-  ) {
-    // Fetch regions from Medusa. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
-    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, {
-      headers: {
-        "x-publishable-api-key": PUBLISHABLE_API_KEY!,
-      },
-      next: {
-        revalidate: 3600,
-        tags: [`regions-${cacheId}`],
-      },
-      cache: "force-cache",
-    }).then(async (response) => {
-      const json = await response.json()
+  const response = await fetch(`${BACKEND_URL}/store/regions`, {
+    headers: {
+      "x-publishable-api-key": PUBLISHABLE_API_KEY!,
+    },
+    next: {
+      revalidate: REGION_CACHE_TTL,
+      tags: [REGION_CACHE_TAG],
+    },
+    cache: "force-cache",
+  })
 
-      if (!response.ok) {
-        throw new Error(json.message)
-      }
+  const json = await response.json()
 
-      return json
-    })
-
-    if (!regions?.length) {
-      throw new Error(
-        "No regions found. Please set up regions in your Medusa Admin."
-      )
-    }
-
-    // Create a map of country codes to regions.
-    regions.forEach((region: HttpTypes.StoreRegion) => {
-      region.countries?.forEach((c) => {
-        regionMapCache.regionMap.set(c.iso_2 ?? "", region)
-      })
-    })
-
-    regionMapCache.regionMapUpdated = Date.now()
+  if (!response.ok) {
+    throw new Error(json.message)
   }
 
-  return regionMapCache.regionMap
+  const { regions } = json as { regions: HttpTypes.StoreRegion[] }
+
+  if (!regions?.length) {
+    throw new Error(
+      "No regions found. Please set up regions in your Medusa Admin."
+    )
+  }
+
+  const regionMap = new Map<string, HttpTypes.StoreRegion>()
+
+  regions.forEach((region) => {
+    region.countries?.forEach((country) => {
+      if (country?.iso_2) {
+        regionMap.set(country.iso_2.toLowerCase(), region)
+      }
+    })
+  })
+
+  return regionMap
 }
 
 /**
@@ -112,7 +103,7 @@ export async function middleware(request: NextRequest) {
 
   let cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
-  const regionMap = await getRegionMap(cacheId)
+  const regionMap = await getRegionMap()
 
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
 

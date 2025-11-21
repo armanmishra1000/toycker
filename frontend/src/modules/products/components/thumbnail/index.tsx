@@ -46,9 +46,9 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
     >
       {primaryImage ? (
         <div className="relative h-full w-full">
-          <ImageLayer image={primaryImage} isPrimary hasHoverImage={hasHoverImage} />
+          <MediaLayer url={primaryImage} isPrimary hasHoverImage={hasHoverImage} />
           {hasHoverImage && secondaryImage && (
-            <ImageLayer image={secondaryImage} isPrimary={false} hasHoverImage={hasHoverImage} />
+            <MediaLayer url={secondaryImage} isPrimary={false} hasHoverImage={hasHoverImage} />
           )}
         </div>
       ) : (
@@ -64,31 +64,64 @@ const PlaceholderFallback = ({ size }: Pick<ThumbnailProps, "size">) => (
   </div>
 )
 
-const ImageLayer = ({
-  image,
+const videoExtensions = /\.(mp4|webm|ogg)$/i
+const gifExtension = /\.gif$/i
+
+const classifyMedia = (url: string) => {
+  if (videoExtensions.test(url)) {
+    return "video" as const
+  }
+  if (gifExtension.test(url)) {
+    return "gif" as const
+  }
+  return "image" as const
+}
+
+const MediaLayer = ({
+  url,
   isPrimary,
   hasHoverImage,
 }: {
-  image: string
+  url: string
   isPrimary: boolean
   hasHoverImage: boolean
-}) => (
-  <Image
-    src={image}
-    alt="Product thumbnail"
-    fill
-    draggable={false}
-    quality={50}
-    sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-    className={clx(
-      "absolute inset-0 h-full w-full object-cover object-center transition-all duration-300 ease-out",
-      hasHoverImage
-        ? isPrimary
-          ? "opacity-100 group-hover/thumbnail:opacity-0"
-          : "opacity-0 scale-[1.01] group-hover/thumbnail:opacity-100 group-hover/thumbnail:scale-[1.05]"
-        : "opacity-100"
-    )}
-  />
-)
+}) => {
+  const type = classifyMedia(url)
+  const baseClass = clx(
+    "absolute inset-0 h-full w-full object-cover object-center transition-all duration-300 ease-out",
+    hasHoverImage
+      ? isPrimary
+        ? "opacity-100 group-hover/thumbnail:opacity-0"
+        : "opacity-0 scale-[1.01] group-hover/thumbnail:opacity-100 group-hover/thumbnail:scale-[1.05]"
+      : "opacity-100"
+  )
+
+  if (type === "video") {
+    return (
+      <video
+        className={baseClass}
+        src={url}
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="metadata"
+      />
+    )
+  }
+
+  return (
+    <Image
+      src={url}
+      alt="Product thumbnail"
+      fill
+      draggable={false}
+      quality={type === "gif" ? 90 : 50}
+      unoptimized={type === "gif"}
+      sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
+      className={baseClass}
+    />
+  )
+}
 
 export default Thumbnail

@@ -22,7 +22,7 @@ export const listRegions = async () => {
 
 export const retrieveRegion = async (id: string) => {
   const next = {
-    ...(await getCacheOptions(["regions", id].join("-"))),
+    ...(await getCacheOptions(["regions", id].join("-"), { globalTag: "regions" })),
   }
 
   return sdk.client

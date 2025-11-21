@@ -1,15 +1,18 @@
 import { notFound } from "next/navigation"
-import { Suspense } from "react"
 
-import InteractiveLink from "@modules/common/components/interactive-link"
-import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@modules/store/components/refinement-list"
-import { SortOptions } from "@modules/store/components/refinement-list/types"
-import PaginatedProducts from "@modules/store/templates/paginated-products"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { listPaginatedProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
+import InteractiveLink from "@modules/common/components/interactive-link"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { SortOptions, ViewMode } from "@modules/store/components/refinement-list/types"
+import ProductGridSection from "@modules/store/components/product-grid-section"
+import { StorefrontFiltersProvider } from "@modules/store/context/storefront-filters"
+import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
+import { fetchAvailabilityCounts } from "@modules/store/utils/availability"
+import FilterDrawer from "@modules/store/components/filter-drawer"
+import Breadcrumbs from "@modules/common/components/breadcrumbs"
 
-export default function CategoryTemplate({
+export default async function CategoryTemplate({
   category,
   sortBy,
   page,
@@ -20,10 +23,31 @@ export default function CategoryTemplate({
   page?: string
   countryCode: string
 }) {
+  if (!category || !countryCode) notFound()
+
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "featured"
+  const defaultViewMode: ViewMode = "grid-4"
 
-  if (!category || !countryCode) notFound()
+  const [{ inStock, outOfStock }, {
+    response: { products: initialProducts, count: initialCount },
+  }] = await Promise.all([
+    fetchAvailabilityCounts(countryCode),
+    listPaginatedProducts({
+      page: pageNumber,
+      limit: STORE_PRODUCT_PAGE_SIZE,
+      sortBy: sort,
+      countryCode,
+      queryParams: {
+        category_id: [category.id],
+      },
+    }),
+  ])
+
+  const availabilityOptions = [
+    { value: "in_stock", label: "In stock", count: inStock },
+    { value: "out_of_stock", label: "Out of stock", count: outOfStock },
+  ]
 
   const parents = [] as HttpTypes.StoreProductCategory[]
 
@@ -36,63 +60,60 @@ export default function CategoryTemplate({
 
   getParents(category)
 
+  const breadcrumbTrail = parents.length ? [...parents].reverse() : []
+  const breadcrumbItems = [
+    { label: "Store", href: "/store" },
+    { label: "Categories", href: "/categories" },
+    ...breadcrumbTrail.map((parent) => ({ label: parent.name, href: `/categories/${parent.handle}` })),
+    { label: category.name },
+  ]
+
   return (
-    <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
-      data-testid="category-container"
+    <StorefrontFiltersProvider
+      countryCode={countryCode}
+      initialFilters={{
+        sortBy: sort,
+        page: pageNumber,
+        viewMode: defaultViewMode,
+      }}
+      initialProducts={initialProducts}
+      initialCount={initialCount}
+      pageSize={STORE_PRODUCT_PAGE_SIZE}
+      fixedCategoryId={category.id}
     >
-      <RefinementList />
-      <div className="w-full">
-        <div className="flex flex-row mb-8 text-2xl-semi gap-4">
-          {parents &&
-            parents.map((parent) => (
-              <span key={parent.id} className="text-ui-fg-subtle">
-                <LocalizedClientLink
-                  className="mr-4 hover:text-black"
-                  href={`/categories/${parent.handle}`}
-                  data-testid="sort-by-link"
-                >
-                  {parent.name}
-                </LocalizedClientLink>
-                /
-              </span>
-            ))}
-          <h1 data-testid="category-page-title">{category.name}</h1>
-        </div>
-        {category.description && (
-          <div className="mb-8 text-base-regular">
-            <p>{category.description}</p>
-          </div>
-        )}
-        {category.category_children && (
-          <div className="mb-8 text-base-large">
-            <ul className="grid grid-cols-1 gap-2">
-              {category.category_children?.map((c) => (
-                <li key={c.id}>
-                  <InteractiveLink href={`/categories/${c.handle}`}>
-                    {c.name}
-                  </InteractiveLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <Suspense
-          fallback={
-            <SkeletonProductGrid
-              numberOfProducts={category.products?.length ?? 8}
-            />
-          }
-        >
-          <PaginatedProducts
-            sortBy={sort}
-            page={pageNumber}
-            categoryId={category.id}
-            countryCode={countryCode}
+      <FilterDrawer filterOptions={{ availability: availabilityOptions }}>
+        <div className="mx-auto p-4 max-w-[1440px]" data-testid="category-container">
+          <Breadcrumbs items={breadcrumbItems} className="mb-6" />
+          <h1 className="mb-4 text-3xl font-semibold" data-testid="category-page-title">{category.name}</h1>
+          {category.description && (
+            <div className="mb-8 text-base-regular">
+              <p>{category.description}</p>
+            </div>
+          )}
+          {category.category_children && (
+            <div className="text-base-large">
+              <ul className="grid grid-cols-1 gap-2">
+                {category.category_children?.map((c) => (
+                  <li key={c.id}>
+                    <InteractiveLink href={`/categories/${c.handle}`}>
+                      {c.name}
+                    </InteractiveLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <ProductGridSection
             title={category.name}
+            products={initialProducts}
+            totalCount={initialCount}
+            page={pageNumber}
+            viewMode={defaultViewMode}
+            sortBy={sort}
+            pageSize={STORE_PRODUCT_PAGE_SIZE}
           />
-        </Suspense>
-      </div>
-    </div>
+        </div>
+      </FilterDrawer>
+    </StorefrontFiltersProvider>
   )
 }

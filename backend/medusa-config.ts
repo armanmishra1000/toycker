@@ -36,6 +36,28 @@ const r2Endpoint =
 
 const r2SecretKeyField = ["secret", "access", "key"].join("_")
 
+const redisUrl = process.env.CACHE_REDIS_URL
+const redisTtl = process.env.CACHE_REDIS_TTL ? Number(process.env.CACHE_REDIS_TTL) : undefined
+const redisPrefix = process.env.CACHE_REDIS_PREFIX
+
+if (!redisUrl) {
+  throw new Error(
+    "CACHE_REDIS_URL must be configured to enable the Redis caching provider."
+  )
+}
+
+const redisProviderOptions: Record<string, unknown> = {
+  redisUrl,
+}
+
+if (typeof redisTtl === "number" && !Number.isNaN(redisTtl) && redisTtl > 0) {
+  redisProviderOptions.ttl = redisTtl
+}
+
+if (redisPrefix) {
+  redisProviderOptions.prefix = redisPrefix
+}
+
 module.exports = defineConfig({
   admin: {
     disable: process.env.MEDUSA_ADMIN_DISABLED === 'true',
@@ -54,6 +76,19 @@ module.exports = defineConfig({
     }
   },
   modules: [
+    {
+      resolve: "@medusajs/medusa/caching",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/caching-redis",
+            id: "caching-redis",
+            is_default: true,
+            options: redisProviderOptions,
+          },
+        ],
+      },
+    },
     {
       resolve: "@medusajs/file",
       options: {
