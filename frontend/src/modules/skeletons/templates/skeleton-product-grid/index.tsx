@@ -7,7 +7,7 @@ type SkeletonProductGridProps = {
   viewMode?: ViewMode
 }
 
-const SkeletonProductGrid = ({ numberOfProducts = 8, viewMode = "grid-3" }: SkeletonProductGridProps) => {
+const SkeletonProductGrid = ({ numberOfProducts = 8, viewMode = "grid-4" }: SkeletonProductGridProps) => {
   const isListView = viewMode === "list"
   const gridClassName = getGridClassName(viewMode)
 
@@ -35,6 +35,10 @@ const SkeletonProductGrid = ({ numberOfProducts = 8, viewMode = "grid-3" }: Skel
 }
 
 const getGridClassName = (viewMode: ViewMode) => {
+  if (viewMode === "grid-5") {
+    return "grid grid-cols-2 small:grid-cols-3 medium:grid-cols-5 gap-x-6 gap-y-8 flex-1"
+  }
+
   if (viewMode === "grid-4") {
     return "grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8 flex-1"
   }
@@ -43,7 +47,7 @@ const getGridClassName = (viewMode: ViewMode) => {
     return "flex w-full flex-col gap-5 flex-1"
   }
 
-  return "grid grid-cols-2 small:grid-cols-3 medium:grid-cols-3 gap-x-6 gap-y-8 flex-1"
+  return "grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8 flex-1"
 }
 
 export default SkeletonProductGrid

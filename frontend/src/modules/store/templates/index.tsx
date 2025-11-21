@@ -1,7 +1,6 @@
 import { listCategories } from "@lib/data/categories"
 import { getStoreStats, listPaginatedProducts } from "@lib/data/products"
 import type { HttpTypes } from "@medusajs/types"
-import RefinementList from "@modules/store/components/refinement-list"
 import {
   AvailabilityFilter,
   PriceRangeFilter,
@@ -13,6 +12,7 @@ import { StorefrontFiltersProvider } from "@modules/store/context/storefront-fil
 import ProductGridSection from "@modules/store/components/product-grid-section"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
 import { fetchAvailabilityCounts } from "@modules/store/utils/availability"
+import FilterDrawer from "@modules/store/components/filter-drawer"
 
 const StoreHero = ({ totalCount }: { totalCount: number }) => (
   <section className="rounded-2xl border border-ui-border-base bg-ui-bg-subtle px-6 py-8 shadow-elevation-card-rest">
@@ -53,7 +53,7 @@ const StoreTemplate = async ({
 }) => {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "featured"
-  const resolvedViewMode = viewMode || "grid-3"
+  const resolvedViewMode = viewMode || "grid-4"
 
   const [{ count }, categories, availabilityCounts] = await Promise.all([
     getStoreStats({ countryCode }),
@@ -143,40 +143,35 @@ const StoreTemplate = async ({
       initialCount={initialCount}
       pageSize={STORE_PRODUCT_PAGE_SIZE}
     >
-      <div className="content-container space-y-8 py-6" data-testid="category-container">
-        <StoreHero totalCount={count} />
-        <div className="flex flex-col gap-10 small:flex-row">
-          <div className="small:min-w-[260px] small:max-w-xs">
-            <RefinementList
-              searchQuery={searchQuery}
-              selectedFilters={{
-                availability,
-                priceMin: priceRange?.min,
-                priceMax: priceRange?.max,
-                age: ageFilter,
-                category: categoryId,
-              }}
-              filterOptions={{
-                availability: availabilityOptions,
-                ages: ageOptions,
-                categories: categoryOptions,
-              }}
-            />
-          </div>
-          <div className="w-full">
-            <ProductGridSection
-              title="All products"
-              products={initialProducts}
-              totalCount={initialCount}
-              page={pageNumber}
-              viewMode={resolvedViewMode}
-              sortBy={sort}
-              pageSize={STORE_PRODUCT_PAGE_SIZE}
-              totalCountHint={count}
-            />
-          </div>
+      <FilterDrawer
+        searchQuery={searchQuery}
+        selectedFilters={{
+          availability,
+          priceMin: priceRange?.min,
+          priceMax: priceRange?.max,
+          age: ageFilter,
+          category: categoryId,
+        }}
+        filterOptions={{
+          availability: availabilityOptions,
+          ages: ageOptions,
+          categories: categoryOptions,
+        }}
+      >
+        <div className="content-container space-y-8 py-6" data-testid="category-container">
+          <StoreHero totalCount={count} />
+          <ProductGridSection
+            title="All products"
+            products={initialProducts}
+            totalCount={initialCount}
+            page={pageNumber}
+            viewMode={resolvedViewMode}
+            sortBy={sort}
+            pageSize={STORE_PRODUCT_PAGE_SIZE}
+            totalCountHint={count}
+          />
         </div>
-      </div>
+      </FilterDrawer>
     </StorefrontFiltersProvider>
   )
 }

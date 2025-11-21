@@ -88,7 +88,7 @@ export default async function PaginatedProducts({
   })
 
   const totalCount = typeof count === "number" ? count : totalCountHint ?? 0
-  const resolvedViewMode = viewMode || "grid-3"
+  const resolvedViewMode = viewMode || "grid-4"
   const resolvedSort = sortBy || "featured"
 
   return (

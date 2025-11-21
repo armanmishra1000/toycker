@@ -4,12 +4,12 @@ import { listPaginatedProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import InteractiveLink from "@modules/common/components/interactive-link"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions, ViewMode } from "@modules/store/components/refinement-list/types"
 import ProductGridSection from "@modules/store/components/product-grid-section"
 import { StorefrontFiltersProvider } from "@modules/store/context/storefront-filters"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
 import { fetchAvailabilityCounts } from "@modules/store/utils/availability"
+import FilterDrawer from "@modules/store/components/filter-drawer"
 
 export default async function CategoryTemplate({
   category,
@@ -26,7 +26,7 @@ export default async function CategoryTemplate({
 
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "featured"
-  const defaultViewMode: ViewMode = "grid-3"
+  const defaultViewMode: ViewMode = "grid-4"
 
   const [{ inStock, outOfStock }, {
     response: { products: initialProducts, count: initialCount },
@@ -72,16 +72,8 @@ export default async function CategoryTemplate({
       initialCount={initialCount}
       pageSize={STORE_PRODUCT_PAGE_SIZE}
     >
-      <div
-        className="flex flex-col small:flex-row small:items-start py-6 content-container"
-        data-testid="category-container"
-      >
-        <RefinementList
-          filterOptions={{
-            availability: availabilityOptions,
-          }}
-        />
-        <div className="w-full">
+      <FilterDrawer filterOptions={{ availability: availabilityOptions }}>
+        <div className="content-container py-6" data-testid="category-container">
           <div className="flex flex-row mb-8 text-2xl-semi gap-4">
             {parents &&
               parents.map((parent) => (
@@ -126,7 +118,7 @@ export default async function CategoryTemplate({
             pageSize={STORE_PRODUCT_PAGE_SIZE}
           />
         </div>
-      </div>
+      </FilterDrawer>
     </StorefrontFiltersProvider>
   )
 }

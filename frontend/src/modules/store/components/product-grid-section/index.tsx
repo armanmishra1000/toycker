@@ -12,6 +12,7 @@ import {
 } from "@modules/store/components/refinement-list/types"
 import { useOptionalStorefrontFilters } from "@modules/store/context/storefront-filters"
 import type { HttpTypes } from "@medusajs/types"
+import { WishlistProvider } from "@modules/products/context/wishlist"
 
 type ProductGridSectionProps = {
   title: string
@@ -68,45 +69,51 @@ const ProductGridSection = ({
   const emptyStateHeading = useMemo(() => title || "Products", [title])
 
   return (
-    <section className="space-y-6">
-      <ResultsToolbar totalCount={effectiveCount} viewMode={derived.viewMode} sortBy={derived.sortBy} />
+    <WishlistProvider>
+      <section className="space-y-6">
+        <ResultsToolbar totalCount={effectiveCount} viewMode={derived.viewMode} sortBy={derived.sortBy} />
 
-      {derived.error && (
-        <p className="rounded-md border border-ui-border-danger bg-ui-bg-base px-4 py-3 text-sm text-ui-fg-danger" role="alert">
-          {derived.error}
-        </p>
-      )}
+        {derived.error && (
+          <p className="rounded-md border border-ui-border-danger bg-ui-bg-base px-4 py-3 text-sm text-ui-fg-danger" role="alert">
+            {derived.error}
+          </p>
+        )}
 
-      {shouldShowSkeleton ? (
-        <SkeletonProductGrid numberOfProducts={pageSize} viewMode={derived.viewMode} />
-      ) : hasProducts ? (
-        derived.viewMode === "list" ? (
-          <div className={gridClassName} data-testid="products-list">
-            {derived.products.map((product) => (
-              <ProductPreview key={product.id} product={product} viewMode={derived.viewMode} />
-            ))}
-          </div>
+        {shouldShowSkeleton ? (
+          <SkeletonProductGrid numberOfProducts={pageSize} viewMode={derived.viewMode} />
+        ) : hasProducts ? (
+          derived.viewMode === "list" ? (
+            <div className={gridClassName} data-testid="products-list">
+              {derived.products.map((product) => (
+                <ProductPreview key={product.id} product={product} viewMode={derived.viewMode} />
+              ))}
+            </div>
+          ) : (
+            <ul className={gridClassName} data-testid="products-list">
+              {derived.products.map((product) => (
+                <li key={product.id}>
+                  <ProductPreview product={product} viewMode={derived.viewMode} />
+                </li>
+              ))}
+            </ul>
+          )
         ) : (
-          <ul className={gridClassName} data-testid="products-list">
-            {derived.products.map((product) => (
-              <li key={product.id}>
-                <ProductPreview product={product} viewMode={derived.viewMode} />
-              </li>
-            ))}
-          </ul>
-        )
-      ) : (
-        <EmptyState heading={emptyStateHeading} />
-      )}
+          <EmptyState heading={emptyStateHeading} />
+        )}
 
-      {totalPages > 1 && !derived.error && (
-        <Pagination data-testid="product-pagination" page={derived.page} totalPages={totalPages} />
-      )}
-    </section>
+        {totalPages > 1 && !derived.error && (
+          <Pagination data-testid="product-pagination" page={derived.page} totalPages={totalPages} />
+        )}
+      </section>
+    </WishlistProvider>
   )
 }
 
 const getGridClassName = (mode: ViewMode) => {
+  if (mode === "grid-5") {
+    return "grid w-full grid-cols-1 gap-x-5 gap-y-8 small:grid-cols-2 medium:grid-cols-5"
+  }
+
   if (mode === "grid-4") {
     return "grid w-full grid-cols-1 gap-x-6 gap-y-10 small:grid-cols-2 medium:grid-cols-4"
   }
@@ -115,7 +122,7 @@ const getGridClassName = (mode: ViewMode) => {
     return "flex w-full flex-col gap-5"
   }
 
-  return "grid w-full grid-cols-1 gap-x-6 gap-y-10 small:grid-cols-2 medium:grid-cols-3"
+  return "grid w-full grid-cols-1 gap-x-6 gap-y-10 small:grid-cols-2 medium:grid-cols-4"
 }
 
 const EmptyState = ({ heading }: { heading: string }) => (

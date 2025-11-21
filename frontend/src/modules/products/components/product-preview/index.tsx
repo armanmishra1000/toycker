@@ -1,8 +1,11 @@
+"use client"
+
 import { Text, clx } from "@medusajs/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { ViewMode } from "@modules/store/components/refinement-list/types"
+import WishlistButton from "@modules/products/components/wishlist-button"
 
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
@@ -25,11 +28,12 @@ const isProductInStock = (product: HttpTypes.StoreProduct) =>
 export default function ProductPreview({
   product,
   isFeatured,
-  viewMode = "grid-3",
+  viewMode = "grid-4",
 }: ProductPreviewProps) {
   const { cheapestPrice } = getProductPrice({ product })
   const inStock = isProductInStock(product)
   const isListView = viewMode === "list"
+  const description = product.description?.trim() || product.subtitle?.trim()
   const cardClassName = clx(
     "group relative block rounded-3xl border border-ui-border-base bg-ui-bg-base/80 p-4 shadow-elevation-card-rest transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elevation-card-hover",
     {
@@ -60,6 +64,9 @@ export default function ProductPreview({
             isFeatured={isFeatured}
             className="h-full w-full rounded-2xl border-none bg-ui-bg-base/0 p-0 shadow-none object-cover transition-transform duration-300 group-hover:scale-[1.05]"
           />
+          <div className="absolute right-3 top-3 z-10">
+            <WishlistButton productId={product.id} productTitle={product.title} />
+          </div>
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-t from-ui-bg-base/80 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
@@ -83,6 +90,9 @@ export default function ProductPreview({
                 {inStock ? "Available" : "Sold out"}
               </span>
             </div>
+            {isListView && description ? (
+              <p className="text-sm text-ui-fg-subtle">{description}</p>
+            ) : null}
           </div>
           <div className="flex items-center justify-between gap-4">
             {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
