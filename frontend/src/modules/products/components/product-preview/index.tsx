@@ -31,7 +31,9 @@ export default function ProductPreview({
   const params = useParams<{ countryCode?: string }>()
   const [isPending, startTransition] = useTransition()
   const [status, setStatus] = useState<"idle" | "added" | "error">("idle")
-  const countryCodeParam = Array.isArray(params?.countryCode) ? params.countryCode[0] : params?.countryCode
+  const countryCodeParam = Array.isArray(params?.countryCode)
+    ? params.countryCode[0]
+    : params?.countryCode
   const multipleVariants = (product.variants?.length ?? 0) > 1
   const defaultVariant = useMemo(() => {
     if (!product.variants?.length) {
@@ -71,10 +73,15 @@ export default function ProductPreview({
     isListView ? "line-clamp-2" : "line-clamp-1",
     titleSizeMap[viewMode] ?? "text-lg"
   )
-  const descriptionPreview = isListView ? product.description?.trim() : undefined
+  const descriptionPreview = isListView
+    ? product.description?.trim()
+    : undefined
 
   return (
-    <LocalizedClientLink href={`/products/${product.handle}`} className={cardClassName}>
+    <LocalizedClientLink
+      href={`/products/${product.handle}`}
+      className={cardClassName}
+    >
       <div
         className={clx("flex flex-col gap-4", {
           "flex w-full flex-row gap-6": isListView,
@@ -90,15 +97,14 @@ export default function ProductPreview({
             className="h-full w-full rounded-2xl border-none bg-ui-bg-base/0 p-0 shadow-none object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
           <div className="absolute right-3 top-3 z-10 translate-x-4 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-            <WishlistButton productId={product.id} productTitle={product.title} />
+            <WishlistButton
+              productId={product.id}
+              productTitle={product.title}
+            />
           </div>
           <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
-        <div
-          className={clx(
-            "flex flex-1 flex-col gap-2"
-          )}
-        >
+        <div className={clx("flex flex-1 flex-col gap-2")}>
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <Text className={titleClassName} data-testid="product-title">
@@ -112,29 +118,36 @@ export default function ProductPreview({
             )}
           </div>
           <div className="mt-auto flex items-center justify-between gap-4">
-            {cheapestPrice ? (
-              <PreviewPrice price={cheapestPrice} />
-            ) : (
-              <span className="text-sm font-semibold text-ui-fg-base">Pricing unavailable</span>
-            )}
+            <div className="flex items-end justify-between gap-1">
+              {cheapestPrice ? (
+                <PreviewPrice price={cheapestPrice} />
+              ) : (
+                <span className="text-sm font-semibold text-ui-fg-base">
+                  Pricing unavailable
+                </span>
+              )}
+            </div>
             <button
               type="button"
-              onClick={(event) => handleAddToCart(event, {
-                multipleVariants,
-                defaultVariantId: defaultVariant?.id,
-                countryCode: countryCodeParam,
-                productHandle: product.handle,
-                startTransition,
-                setStatus,
-                router,
-              })}
+              onClick={(event) =>
+                handleAddToCart(event, {
+                  multipleVariants,
+                  defaultVariantId: defaultVariant?.id,
+                  countryCode: countryCodeParam,
+                  productHandle: product.handle,
+                  startTransition,
+                  setStatus,
+                  router,
+                })
+              }
               className={clx(
                 "rounded-full px-5 py-2 text-xs font-semibold text-white transition",
                 multipleVariants
                   ? "bg-slate-900 hover:bg-slate-800"
                   : "bg-[#111827] hover:bg-black",
                 {
-                  "cursor-not-allowed opacity-60": !multipleVariants && !defaultVariant?.id,
+                  "cursor-not-allowed opacity-60":
+                    !multipleVariants && !defaultVariant?.id,
                 }
               )}
               disabled={isPending && !multipleVariants}
