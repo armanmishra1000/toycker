@@ -15,9 +15,7 @@ const SkeletonProductGrid = ({ numberOfProducts = 8, viewMode = "grid-4" }: Skel
     return (
       <div className={gridClassName} data-testid="products-list-loader">
         {repeat(numberOfProducts).map((index) => (
-          <div key={index}>
-            <SkeletonProductPreview />
-          </div>
+          <SkeletonProductPreview key={index} viewMode="list" />
         ))}
       </div>
     )
@@ -27,7 +25,7 @@ const SkeletonProductGrid = ({ numberOfProducts = 8, viewMode = "grid-4" }: Skel
     <ul className={gridClassName} data-testid="products-list-loader">
       {repeat(numberOfProducts).map((index) => (
         <li key={index}>
-          <SkeletonProductPreview />
+          <SkeletonProductPreview viewMode={viewMode} />
         </li>
       ))}
     </ul>

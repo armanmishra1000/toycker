@@ -4,7 +4,7 @@ import { MouseEvent } from "react"
 
 import { Heart } from "lucide-react"
 
-import { useWishlist } from "@modules/products/context/wishlist"
+import { useOptionalWishlist } from "@modules/products/context/wishlist"
 
 type WishlistButtonProps = {
   productId: string
@@ -12,7 +12,13 @@ type WishlistButtonProps = {
 }
 
 const WishlistButton = ({ productId, productTitle }: WishlistButtonProps) => {
-  const { isInWishlist, toggleWishlist } = useWishlist()
+  const wishlist = useOptionalWishlist()
+
+  if (!wishlist) {
+    return null
+  }
+
+  const { isInWishlist, toggleWishlist } = wishlist
   const isActive = isInWishlist(productId)
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -27,7 +33,7 @@ const WishlistButton = ({ productId, productTitle }: WishlistButtonProps) => {
       onClick={handleClick}
       aria-pressed={isActive}
       aria-label={isActive ? `Remove ${productTitle} from wishlist` : `Add ${productTitle} to wishlist`}
-      className="rounded-full border border-ui-border-base bg-white/90 p-2 text-ui-fg-muted shadow-sm transition hover:border-ui-border-strong hover:text-ui-fg-base"
+      className="rounded-full bg-white/90 p-2 text-ui-fg-muted transition hover:text-ui-fg-base w-10 h-10 flex justify-center items-center"
     >
       <Heart
         className="h-4 w-4"

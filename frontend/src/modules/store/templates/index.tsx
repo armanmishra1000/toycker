@@ -13,22 +13,7 @@ import ProductGridSection from "@modules/store/components/product-grid-section"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
 import { fetchAvailabilityCounts } from "@modules/store/utils/availability"
 import FilterDrawer from "@modules/store/components/filter-drawer"
-
-const StoreHero = ({ totalCount }: { totalCount: number }) => (
-  <section className="rounded-2xl border border-ui-border-base bg-ui-bg-subtle px-6 py-8 shadow-elevation-card-rest">
-    <p className="text-sm uppercase tracking-wide text-ui-fg-muted">
-      Toycker flagship collection
-    </p>
-    <h1 className="mt-3 text-3xl font-semibold" data-testid="store-page-title">
-      Discover every toy in one place
-    </h1>
-    <p className="mt-2 text-base text-ui-fg-subtle">
-      {totalCount > 0
-        ? `Browse ${totalCount} creative toys added through the Medusa admin panel. Each item listed there appears here automatically.`
-        : "No products are live yet. Add toys from the Medusa admin panel to populate this page."}
-    </p>
-  </section>
-)
+import Breadcrumbs from "@modules/common/components/breadcrumbs"
 
 const StoreTemplate = async ({
   sortBy,
@@ -158,8 +143,18 @@ const StoreTemplate = async ({
           categories: categoryOptions,
         }}
       >
-        <div className="content-container space-y-8 py-6" data-testid="category-container">
-          <StoreHero totalCount={count} />
+        <div className="mx-auto p-4 max-w-[1440px]" data-testid="category-container" id="store-catalog">
+          <Breadcrumbs
+            items={[
+              {
+                label: "Store",
+              },
+            ]}
+            className="mb-6"
+          />
+          <h1 className="mb-4 text-3xl font-semibold text-slate-900" data-testid="store-page-title">
+            All products
+          </h1>
           <ProductGridSection
             title="All products"
             products={initialProducts}

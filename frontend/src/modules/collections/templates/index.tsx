@@ -6,6 +6,7 @@ import { StorefrontFiltersProvider } from "@modules/store/context/storefront-fil
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
 import { fetchAvailabilityCounts } from "@modules/store/utils/availability"
 import FilterDrawer from "@modules/store/components/filter-drawer"
+import Breadcrumbs from "@modules/common/components/breadcrumbs"
 
 export default async function CollectionTemplate({
   sortBy,
@@ -49,17 +50,23 @@ export default async function CollectionTemplate({
         sortBy: sort,
         page: pageNumber,
         viewMode: defaultViewMode,
-        collectionId: collection.id,
       }}
       initialProducts={initialProducts}
       initialCount={initialCount}
       pageSize={STORE_PRODUCT_PAGE_SIZE}
+      fixedCollectionId={collection.id}
     >
       <FilterDrawer filterOptions={{ availability: availabilityOptions }}>
-        <div className="content-container py-6">
-          <div className="mb-8 text-2xl-semi">
-            <h1>{collection.title}</h1>
-          </div>
+        <div className="mx-auto p-4 max-w-[1440px]">
+          <Breadcrumbs
+            className="mb-6"
+            items={[
+              { label: "Store", href: "/store" },
+              { label: "Collections", href: "/collections" },
+              { label: collection.title },
+            ]}
+          />
+          <h1 className="mb-4 text-3xl font-semibold">{collection.title}</h1>
           <ProductGridSection
             title={collection.title}
             products={initialProducts}

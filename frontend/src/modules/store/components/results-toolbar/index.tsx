@@ -1,10 +1,17 @@
 "use client"
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ComponentType } from "react"
+import { ComponentType, Fragment } from "react"
 
 import { clx } from "@medusajs/ui"
-import { ChevronDown, LayoutGrid, PanelsTopLeft, Rows, SlidersHorizontal } from "lucide-react"
+import { Check, ChevronDown, LayoutGrid, PanelsTopLeft, Rows, SlidersHorizontal } from "lucide-react"
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "@headlessui/react"
 
 import { SORT_OPTIONS } from "@modules/store/components/refinement-list/sort-products"
 import { SortOptions, ViewMode } from "@modules/store/components/refinement-list/types"
@@ -92,7 +99,7 @@ const ResultsToolbar = ({ totalCount, viewMode, sortBy }: ResultsToolbarProps) =
         </p>
       </div>
 
-      <div className="flex w-full flex-1 flex-wrap items-center justify-end gap-4 text-sm text-ui-fg-base small:flex-nowrap">
+      <div className="flex w-full flex-1 flex-wrap items-center justify-end gap-2 text-sm text-ui-fg-base small:flex-nowrap">
         <div className="flex items-center gap-2" aria-label="Toggle product layout">
           {viewModes.map((mode) => {
             const isActive = effectiveViewMode === mode.value
@@ -117,26 +124,71 @@ const ResultsToolbar = ({ totalCount, viewMode, sortBy }: ResultsToolbarProps) =
           })}
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-ui-fg-muted">Sort by:</span>
-          <label className="relative inline-flex items-center">
-            <select
-              className="cursor-pointer appearance-none bg-transparent pr-6 text-sm font-semibold text-ui-fg-base focus:outline-none"
-              value={effectiveSortBy}
-              onChange={(event) => handleSortChange(event.target.value as SortOptions)}
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-0 h-4 w-4 text-ui-fg-muted" />
-          </label>
-        </div>
+        <SortDropdown value={effectiveSortBy} onChange={handleSortChange} />
       </div>
     </div>
   )
 }
 
 export default ResultsToolbar
+
+const SortDropdown = ({
+  value,
+  onChange,
+}: {
+  value: SortOptions
+  onChange: (value: SortOptions) => void
+}) => (
+  <Listbox value={value} onChange={onChange}>
+    {({ open }) => (
+      <div className="relative">
+        <ListboxButton
+          className={clx(
+            "inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold transition-all",
+            "border-ui-border-base bg-ui-bg-field text-ui-fg-base hover:border-ui-border-strong"
+          )}
+        >
+          <span className="text-ui-fg-muted">Sort by:</span>
+          <span className="text-ui-fg-base">{SORT_OPTIONS.find((opt) => opt.value === value)?.label ?? "Featured"}</span>
+          <ChevronDown
+            className={clx("h-4 w-4 text-ui-fg-muted transition-transform", {
+              "-scale-y-100": open,
+            })}
+            aria-hidden
+          />
+        </ListboxButton>
+        <Transition
+          show={open}
+          as={Fragment}
+          leave="transition ease-in duration-100"
+          leaveFrom="opacity-100 translate-y-0"
+          leaveTo="opacity-0 -translate-y-1"
+        >
+          <ListboxOptions className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-ui-border-base bg-white p-1 shadow-lg focus:outline-none">
+            {SORT_OPTIONS.map((option) => (
+              <ListboxOption
+                key={option.value}
+                value={option.value}
+                className={({ selected, active }) =>
+                  clx(
+                    "flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm font-medium",
+                    active && "bg-ui-bg-field text-ui-fg-base",
+                    selected && "text-ui-fg-base",
+                    !active && !selected && "text-ui-fg-muted"
+                  )
+                }
+              >
+                {({ selected }) => (
+                  <>
+                    <span>{option.label}</span>
+                    {selected ? <Check className="h-4 w-4 text-ui-fg-base" aria-hidden /> : null}
+                  </>
+                )}
+              </ListboxOption>
+            ))}
+          </ListboxOptions>
+        </Transition>
+      </div>
+    )}
+  </Listbox>
+)

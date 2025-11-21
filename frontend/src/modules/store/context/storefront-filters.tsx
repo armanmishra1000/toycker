@@ -42,6 +42,8 @@ type StorefrontFiltersProviderProps = {
   initialProducts: HttpTypes.StoreProduct[]
   initialCount: number
   pageSize?: number
+  fixedCategoryId?: string
+  fixedCollectionId?: string
 }
 
 type StorefrontFiltersContextValue = {
@@ -74,6 +76,8 @@ export const StorefrontFiltersProvider = ({
   initialProducts,
   initialCount,
   pageSize = STORE_PRODUCT_PAGE_SIZE,
+  fixedCategoryId,
+  fixedCollectionId,
 }: StorefrontFiltersProviderProps) => {
   const [filters, setFilters] = useState<FilterState>(initialFilters)
   const filtersRef = useRef(initialFilters)
@@ -99,6 +103,9 @@ export const StorefrontFiltersProvider = ({
       setIsFetching(true)
       setError(undefined)
 
+      const effectiveCategoryId = nextFilters.categoryId ?? fixedCategoryId
+      const effectiveCollectionId = nextFilters.collectionId ?? fixedCollectionId
+
       try {
         const response = await fetch("/api/storefront/products", {
           method: "POST",
@@ -110,8 +117,8 @@ export const StorefrontFiltersProvider = ({
             countryCode,
             page: nextFilters.page,
             sortBy: nextFilters.sortBy,
-            categoryId: nextFilters.categoryId,
-        collectionId: nextFilters.collectionId,
+            categoryId: effectiveCategoryId,
+            collectionId: effectiveCollectionId,
             searchQuery: nextFilters.searchQuery,
             limit: pageSize,
             filters: {
@@ -154,7 +161,7 @@ export const StorefrontFiltersProvider = ({
         }
       }
     },
-    [countryCode, pageSize]
+    [countryCode, pageSize, fixedCategoryId, fixedCollectionId]
   )
 
   const triggerFetch = useCallback(
@@ -164,7 +171,11 @@ export const StorefrontFiltersProvider = ({
       }
 
       startTransition(() => {
-        void fetchProducts(next)
+        fetchProducts(next).catch((error) => {
+          if ((error as Error)?.name !== "AbortError") {
+            console.error("Failed to load products", error)
+          }
+        })
       })
     },
     [fetchProducts]

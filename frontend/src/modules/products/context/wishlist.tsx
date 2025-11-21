@@ -79,3 +79,5 @@ export const useWishlist = () => {
 
   return context
 }
+
+export const useOptionalWishlist = () => useContext(WishlistContext)

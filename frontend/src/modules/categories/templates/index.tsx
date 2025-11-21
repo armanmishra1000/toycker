@@ -10,6 +10,7 @@ import { StorefrontFiltersProvider } from "@modules/store/context/storefront-fil
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
 import { fetchAvailabilityCounts } from "@modules/store/utils/availability"
 import FilterDrawer from "@modules/store/components/filter-drawer"
+import Breadcrumbs from "@modules/common/components/breadcrumbs"
 
 export default async function CategoryTemplate({
   category,
@@ -59,6 +60,14 @@ export default async function CategoryTemplate({
 
   getParents(category)
 
+  const breadcrumbTrail = parents.length ? [...parents].reverse() : []
+  const breadcrumbItems = [
+    { label: "Store", href: "/store" },
+    { label: "Categories", href: "/categories" },
+    ...breadcrumbTrail.map((parent) => ({ label: parent.name, href: `/categories/${parent.handle}` })),
+    { label: category.name },
+  ]
+
   return (
     <StorefrontFiltersProvider
       countryCode={countryCode}
@@ -66,37 +75,23 @@ export default async function CategoryTemplate({
         sortBy: sort,
         page: pageNumber,
         viewMode: defaultViewMode,
-        categoryId: category.id,
       }}
       initialProducts={initialProducts}
       initialCount={initialCount}
       pageSize={STORE_PRODUCT_PAGE_SIZE}
+      fixedCategoryId={category.id}
     >
       <FilterDrawer filterOptions={{ availability: availabilityOptions }}>
-        <div className="content-container py-6" data-testid="category-container">
-          <div className="flex flex-row mb-8 text-2xl-semi gap-4">
-            {parents &&
-              parents.map((parent) => (
-                <span key={parent.id} className="text-ui-fg-subtle">
-                  <LocalizedClientLink
-                    className="mr-4 hover:text-black"
-                    href={`/categories/${parent.handle}`}
-                    data-testid="sort-by-link"
-                  >
-                    {parent.name}
-                  </LocalizedClientLink>
-                  /
-                </span>
-              ))}
-            <h1 data-testid="category-page-title">{category.name}</h1>
-          </div>
+        <div className="mx-auto p-4 max-w-[1440px]" data-testid="category-container">
+          <Breadcrumbs items={breadcrumbItems} className="mb-6" />
+          <h1 className="mb-4 text-3xl font-semibold" data-testid="category-page-title">{category.name}</h1>
           {category.description && (
             <div className="mb-8 text-base-regular">
               <p>{category.description}</p>
             </div>
           )}
           {category.category_children && (
-            <div className="mb-8 text-base-large">
+            <div className="text-base-large">
               <ul className="grid grid-cols-1 gap-2">
                 {category.category_children?.map((c) => (
                   <li key={c.id}>
