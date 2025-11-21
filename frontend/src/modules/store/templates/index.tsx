@@ -12,6 +12,7 @@ import { ageCategories } from "@modules/layout/config/navigation"
 import { StorefrontFiltersProvider } from "@modules/store/context/storefront-filters"
 import ProductGridSection from "@modules/store/components/product-grid-section"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
+import { fetchAvailabilityCounts } from "@modules/store/utils/availability"
 
 const StoreHero = ({ totalCount }: { totalCount: number }) => (
   <section className="rounded-2xl border border-ui-border-base bg-ui-bg-subtle px-6 py-8 shadow-elevation-card-rest">
@@ -181,15 +182,3 @@ const StoreTemplate = async ({
 }
 
 export default StoreTemplate
-
-const fetchAvailabilityCounts = async (countryCode: string) => {
-  const [inStock, outOfStock] = await Promise.all([
-    listPaginatedProducts({ countryCode, availability: "in_stock", limit: 1 }),
-    listPaginatedProducts({ countryCode, availability: "out_of_stock", limit: 1 }),
-  ])
-
-  return {
-    inStock: inStock.response.count,
-    outOfStock: outOfStock.response.count,
-  }
-}

@@ -28,6 +28,7 @@ type FilterState = {
   priceRange?: PriceRangeFilter
   age?: string
   categoryId?: string
+  collectionId?: string
   sortBy: SortOptions
   page: number
   searchQuery?: string
@@ -110,6 +111,7 @@ export const StorefrontFiltersProvider = ({
             page: nextFilters.page,
             sortBy: nextFilters.sortBy,
             categoryId: nextFilters.categoryId,
+        collectionId: nextFilters.collectionId,
             searchQuery: nextFilters.searchQuery,
             limit: pageSize,
             filters: {
