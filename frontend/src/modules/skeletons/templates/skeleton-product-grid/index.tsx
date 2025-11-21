@@ -1,16 +1,30 @@
 import repeat from "@lib/util/repeat"
 import SkeletonProductPreview from "@modules/skeletons/components/skeleton-product-preview"
+import { ViewMode } from "@modules/store/components/refinement-list/types"
 
-const SkeletonProductGrid = ({
-  numberOfProducts = 8,
-}: {
+type SkeletonProductGridProps = {
   numberOfProducts?: number
-}) => {
+  viewMode?: ViewMode
+}
+
+const SkeletonProductGrid = ({ numberOfProducts = 8, viewMode = "grid-3" }: SkeletonProductGridProps) => {
+  const isListView = viewMode === "list"
+  const gridClassName = getGridClassName(viewMode)
+
+  if (isListView) {
+    return (
+      <div className={gridClassName} data-testid="products-list-loader">
+        {repeat(numberOfProducts).map((index) => (
+          <div key={index}>
+            <SkeletonProductPreview />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <ul
-      className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8 flex-1"
-      data-testid="products-list-loader"
-    >
+    <ul className={gridClassName} data-testid="products-list-loader">
       {repeat(numberOfProducts).map((index) => (
         <li key={index}>
           <SkeletonProductPreview />
@@ -18,6 +32,18 @@ const SkeletonProductGrid = ({
       ))}
     </ul>
   )
+}
+
+const getGridClassName = (viewMode: ViewMode) => {
+  if (viewMode === "grid-4") {
+    return "grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8 flex-1"
+  }
+
+  if (viewMode === "list") {
+    return "flex w-full flex-col gap-5 flex-1"
+  }
+
+  return "grid grid-cols-2 small:grid-cols-3 medium:grid-cols-3 gap-x-6 gap-y-8 flex-1"
 }
 
 export default SkeletonProductGrid

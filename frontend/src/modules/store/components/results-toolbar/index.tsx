@@ -8,6 +8,7 @@ import { ChevronDown, Grid3x3, LayoutGrid, Rows } from "lucide-react"
 
 import { SORT_OPTIONS } from "@modules/store/components/refinement-list/sort-products"
 import { SortOptions, ViewMode } from "@modules/store/components/refinement-list/types"
+import { useOptionalStorefrontFilters } from "@modules/store/context/storefront-filters"
 
 type ResultsToolbarProps = {
   totalCount: number
@@ -25,6 +26,11 @@ const ResultsToolbar = ({ totalCount, viewMode, sortBy }: ResultsToolbarProps) =
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const storefrontFilters = useOptionalStorefrontFilters()
+
+  const effectiveCount = storefrontFilters ? storefrontFilters.totalCount : totalCount
+  const effectiveViewMode = storefrontFilters ? storefrontFilters.filters.viewMode : viewMode
+  const effectiveSortBy = storefrontFilters ? storefrontFilters.filters.sortBy : sortBy
 
   const pushParams = (nextParams: URLSearchParams) => {
     const query = nextParams.toString()
@@ -41,16 +47,24 @@ const ResultsToolbar = ({ totalCount, viewMode, sortBy }: ResultsToolbarProps) =
   }
 
   const handleViewChange = (nextMode: ViewMode) => {
+    if (storefrontFilters) {
+      storefrontFilters.setViewMode(nextMode)
+      return
+    }
     setParam("view", nextMode)
   }
 
   const handleSortChange = (nextSort: SortOptions) => {
+    if (storefrontFilters) {
+      storefrontFilters.setSort(nextSort)
+      return
+    }
     setParam("sortBy", nextSort)
   }
 
   const countText = (() => {
-    const noun = totalCount === 1 ? "result" : "results"
-    return `There ${totalCount === 1 ? "is" : "are"} ${totalCount} ${noun} in total`
+    const noun = effectiveCount === 1 ? "result" : "results"
+    return `There ${effectiveCount === 1 ? "is" : "are"} ${effectiveCount} ${noun} in total`
   })()
 
   return (
@@ -62,7 +76,7 @@ const ResultsToolbar = ({ totalCount, viewMode, sortBy }: ResultsToolbarProps) =
       <div className="flex w-full flex-1 flex-wrap items-center justify-end gap-4 text-sm text-ui-fg-base small:flex-nowrap">
         <div className="flex items-center gap-2" aria-label="Toggle product layout">
           {viewModes.map((mode) => {
-            const isActive = viewMode === mode.value
+            const isActive = effectiveViewMode === mode.value
             const Icon = mode.icon
             return (
               <button
@@ -89,7 +103,7 @@ const ResultsToolbar = ({ totalCount, viewMode, sortBy }: ResultsToolbarProps) =
           <label className="relative inline-flex items-center">
             <select
               className="cursor-pointer appearance-none bg-transparent pr-6 text-sm font-semibold text-ui-fg-base focus:outline-none"
-              value={sortBy}
+              value={effectiveSortBy}
               onChange={(event) => handleSortChange(event.target.value as SortOptions)}
             >
               {SORT_OPTIONS.map((option) => (

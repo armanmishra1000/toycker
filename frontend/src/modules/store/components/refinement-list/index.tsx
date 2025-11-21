@@ -4,6 +4,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ChangeEvent, ReactNode, useEffect, useMemo, useState } from "react"
 import { Minus, Plus } from "lucide-react"
 
+import { useOptionalStorefrontFilters } from "@modules/store/context/storefront-filters"
+
 import { AvailabilityFilter, PRICE_SLIDER_LIMITS } from "./types"
 
 type ActiveFilter = {
@@ -91,13 +93,31 @@ const RefinementList = ({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const storefrontFilters = useOptionalStorefrontFilters()
 
   const sliderBounds = PRICE_SLIDER_LIMITS
+  const fallbackFilters = selectedFilters ?? {}
+  const effectiveFilters = storefrontFilters
+    ? {
+        availability: storefrontFilters.filters.availability,
+        age: storefrontFilters.filters.age,
+        category: storefrontFilters.filters.categoryId,
+        priceMin: storefrontFilters.filters.priceRange?.min,
+        priceMax: storefrontFilters.filters.priceRange?.max,
+      }
+    : fallbackFilters
+  const resolvedSearchQuery = storefrontFilters?.filters.searchQuery ?? searchQuery ?? undefined
+  const selectedAvailability = effectiveFilters.availability
+  const selectedAge = effectiveFilters.age
+  const selectedCategory = effectiveFilters.category
+  const selectedPriceMin = effectiveFilters.priceMin
+  const selectedPriceMax = effectiveFilters.priceMax
+
   const [priceRange, setPriceRange] = useState<PriceRangeState>(() =>
     normalizePriceRange(
       {
-        min: selectedFilters?.priceMin ?? sliderBounds.min,
-        max: selectedFilters?.priceMax ?? sliderBounds.max,
+        min: selectedPriceMin ?? sliderBounds.min,
+        max: selectedPriceMax ?? sliderBounds.max,
       },
       sliderBounds
     )
@@ -107,13 +127,13 @@ const RefinementList = ({
     setPriceRange(
       normalizePriceRange(
         {
-          min: selectedFilters?.priceMin ?? sliderBounds.min,
-          max: selectedFilters?.priceMax ?? sliderBounds.max,
+          min: selectedPriceMin ?? sliderBounds.min,
+          max: selectedPriceMax ?? sliderBounds.max,
         },
         sliderBounds
       )
     )
-  }, [selectedFilters?.priceMin, selectedFilters?.priceMax, sliderBounds])
+  }, [selectedPriceMin, selectedPriceMax, sliderBounds])
 
   const pushWithParams = (params: URLSearchParams) => {
     const queryString = params.toString()
@@ -121,6 +141,21 @@ const RefinementList = ({
   }
 
   const toggleCheckboxParam = (name: string, value: string) => {
+    if (storefrontFilters) {
+      if (name === "availability") {
+        const typedValue = value as AvailabilityFilter
+        const nextValue = storefrontFilters.filters.availability === typedValue ? undefined : typedValue
+        storefrontFilters.setAvailability(nextValue)
+      } else if (name === "age") {
+        const nextValue = storefrontFilters.filters.age === value ? undefined : value
+        storefrontFilters.setAge(nextValue)
+      } else if (name === "category") {
+        const nextValue = storefrontFilters.filters.categoryId === value ? undefined : value
+        storefrontFilters.setCategory(nextValue)
+      }
+      return
+    }
+
     const params = new URLSearchParams(searchParams)
     const currentValue = params.get(name)
 
@@ -135,6 +170,20 @@ const RefinementList = ({
   }
 
   const commitPriceRange = (range: PriceRangeState) => {
+    if (storefrontFilters) {
+      const min = range.min !== undefined && range.min > sliderBounds.min ? Math.round(range.min) : undefined
+      const max = range.max !== undefined && range.max < sliderBounds.max ? Math.round(range.max) : undefined
+      storefrontFilters.setPriceRange(
+        min === undefined && max === undefined
+          ? undefined
+          : {
+              min,
+              max,
+            }
+      )
+      return
+    }
+
     const params = new URLSearchParams(searchParams)
 
     if (range.min !== undefined && range.min > sliderBounds.min) {
@@ -189,32 +238,69 @@ const RefinementList = ({
       })
     }
 
-    appendChip("availability", selectedFilters?.availability, filterOptions?.availability)
-    appendChip("age", selectedFilters?.age, filterOptions?.ages)
-    appendChip("category", selectedFilters?.category, filterOptions?.categories)
+    appendChip("availability", selectedAvailability, filterOptions?.availability)
+    appendChip("age", selectedAge, filterOptions?.ages)
+    appendChip("category", selectedCategory, filterOptions?.categories)
 
-    if (selectedFilters?.priceMin !== undefined || selectedFilters?.priceMax !== undefined) {
-      const formattedMin = formatCurrency(selectedFilters?.priceMin ?? sliderBounds.min)
-      const formattedMax = formatCurrency(selectedFilters?.priceMax ?? sliderBounds.max)
+    if (selectedPriceMin !== undefined || selectedPriceMax !== undefined) {
+      const formattedMin = formatCurrency(selectedPriceMin ?? sliderBounds.min)
+      const formattedMax = formatCurrency(selectedPriceMax ?? sliderBounds.max)
       chips.push({
         label: `Price: ${formattedMin} – ${formattedMax}`,
-        value: `${selectedFilters?.priceMin ?? sliderBounds.min}-${selectedFilters?.priceMax ?? sliderBounds.max}`,
+        value: `${selectedPriceMin ?? sliderBounds.min}-${selectedPriceMax ?? sliderBounds.max}`,
         paramKey: ["price_min", "price_max"],
       })
     }
 
-    if (searchQuery) {
+    if (resolvedSearchQuery) {
       chips.push({
-        label: `Search: "${searchQuery}"`,
-        value: searchQuery,
+        label: `Search: "${resolvedSearchQuery}"`,
+        value: resolvedSearchQuery,
         paramKey: "q",
       })
     }
 
     return chips
-  }, [activeFilters, filterOptions, searchQuery, selectedFilters, sliderBounds])
+  }, [
+    activeFilters,
+    filterOptions,
+    resolvedSearchQuery,
+    selectedAvailability,
+    selectedAge,
+    selectedCategory,
+    selectedPriceMin,
+    selectedPriceMax,
+    sliderBounds,
+  ])
 
   const clearFilter = (paramKey: string | string[]) => {
+    if (storefrontFilters) {
+      const keys = Array.isArray(paramKey) ? paramKey : [paramKey]
+      keys.forEach((key) => {
+        switch (key) {
+          case "availability":
+            storefrontFilters.setAvailability(undefined)
+            break
+          case "age":
+            storefrontFilters.setAge(undefined)
+            break
+          case "category":
+            storefrontFilters.setCategory(undefined)
+            break
+          case "price_min":
+          case "price_max":
+            storefrontFilters.setPriceRange(undefined)
+            break
+          case "q":
+            storefrontFilters.setSearchQuery(undefined)
+            break
+          default:
+            break
+        }
+      })
+      return
+    }
+
     const params = new URLSearchParams(searchParams)
     const keys = Array.isArray(paramKey) ? paramKey : [paramKey]
     keys.forEach((key) => params.delete(key))
@@ -247,7 +333,7 @@ const RefinementList = ({
             <AccordionSection title="Availability" defaultOpen>
               <CheckboxGroup
                 options={filterOptions.availability}
-                selectedValue={selectedFilters?.availability}
+                  selectedValue={selectedAvailability}
                 onChange={(value) => toggleCheckboxParam("availability", value)}
               />
             </AccordionSection>
@@ -265,7 +351,7 @@ const RefinementList = ({
             <AccordionSection title="Shop by age" defaultOpen>
               <CheckboxGroup
                 options={filterOptions.ages}
-                selectedValue={selectedFilters?.age}
+                selectedValue={selectedAge}
                 onChange={(value) => toggleCheckboxParam("age", value)}
               />
             </AccordionSection>
@@ -275,7 +361,7 @@ const RefinementList = ({
             <AccordionSection title="Category" defaultOpen>
               <CheckboxGroup
                 options={filterOptions.categories}
-                selectedValue={selectedFilters?.category}
+                selectedValue={selectedCategory}
                 onChange={(value) => toggleCheckboxParam("category", value)}
               />
             </AccordionSection>

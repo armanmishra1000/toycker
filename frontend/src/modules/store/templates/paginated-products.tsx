@@ -1,16 +1,13 @@
 import { listPaginatedProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
-import ProductPreview from "@modules/products/components/product-preview"
-import { Pagination } from "@modules/store/components/pagination"
-import ResultsToolbar from "@modules/store/components/results-toolbar"
 import {
   AvailabilityFilter,
   PriceRangeFilter,
   SortOptions,
   ViewMode,
 } from "@modules/store/components/refinement-list/types"
-
-const PRODUCT_LIMIT = 12
+import ProductGridSection from "@modules/store/components/product-grid-section"
+import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
 
 type PaginatedProductsParams = {
   limit: number
@@ -38,17 +35,6 @@ type PaginatedProductsProps = {
   viewMode?: ViewMode
 }
 
-const EmptyState = ({ heading }: { heading: string }) => (
-  <div className="rounded-xl border border-dashed border-ui-border-strong bg-ui-bg-base px-6 py-12 text-center">
-    <p className="text-lg font-medium text-ui-fg-base">
-      {`We couldn't find any ${heading.toLowerCase()}.`}
-    </p>
-    <p className="mt-2 text-sm text-ui-fg-subtle">
-      Try adjusting your filters or add new products from the Medusa admin.
-    </p>
-  </div>
-)
-
 export default async function PaginatedProducts({
   sortBy,
   page,
@@ -63,7 +49,7 @@ export default async function PaginatedProducts({
   viewMode,
 }: PaginatedProductsProps) {
   const queryParams: PaginatedProductsParams = {
-    limit: PRODUCT_LIMIT,
+    limit: STORE_PRODUCT_PAGE_SIZE,
   }
 
   if (collectionId) {
@@ -92,7 +78,7 @@ export default async function PaginatedProducts({
     response: { products, count },
   } = await listPaginatedProducts({
     page,
-    limit: PRODUCT_LIMIT,
+    limit: STORE_PRODUCT_PAGE_SIZE,
     queryParams,
     sortBy,
     countryCode,
@@ -102,54 +88,19 @@ export default async function PaginatedProducts({
   })
 
   const totalCount = typeof count === "number" ? count : totalCountHint ?? 0
-  const totalPages = Math.ceil(totalCount / PRODUCT_LIMIT) || 1
-  const hasProducts = products.length > 0
   const resolvedViewMode = viewMode || "grid-3"
   const resolvedSort = sortBy || "featured"
 
-  const gridClassName = (() => {
-    if (resolvedViewMode === "grid-4") {
-      return "grid w-full grid-cols-1 gap-x-6 gap-y-10 small:grid-cols-2 medium:grid-cols-4"
-    }
-
-    if (resolvedViewMode === "list") {
-      return "flex w-full flex-col gap-5"
-    }
-
-    return "grid w-full grid-cols-1 gap-x-6 gap-y-10 small:grid-cols-2 medium:grid-cols-3"
-  })()
-
   return (
-    <section className="space-y-6">
-      <ResultsToolbar totalCount={totalCount} viewMode={resolvedViewMode} sortBy={resolvedSort} />
-      {hasProducts ? (
-        <>
-          {resolvedViewMode === "list" ? (
-            <div className={gridClassName} data-testid="products-list">
-              {products.map((p) => (
-                <ProductPreview key={p.id} product={p} viewMode={resolvedViewMode} />
-              ))}
-            </div>
-          ) : (
-            <ul className={gridClassName} data-testid="products-list">
-              {products.map((p) => (
-                <li key={p.id}>
-                  <ProductPreview product={p} viewMode={resolvedViewMode} />
-                </li>
-              ))}
-            </ul>
-          )}
-          {totalPages > 1 && (
-            <Pagination
-              data-testid="product-pagination"
-              page={page}
-              totalPages={totalPages}
-            />
-          )}
-        </>
-      ) : (
-        <EmptyState heading={title} />
-      )}
-    </section>
+    <ProductGridSection
+      title={title}
+      products={products}
+      totalCount={totalCount}
+      page={page}
+      viewMode={resolvedViewMode}
+      sortBy={resolvedSort}
+      pageSize={STORE_PRODUCT_PAGE_SIZE}
+      totalCountHint={totalCountHint}
+    />
   )
 }

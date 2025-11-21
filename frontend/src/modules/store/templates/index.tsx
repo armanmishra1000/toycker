@@ -1,8 +1,6 @@
-import { Suspense } from "react"
-
 import { listCategories } from "@lib/data/categories"
 import { getStoreStats, listPaginatedProducts } from "@lib/data/products"
-import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
+import type { HttpTypes } from "@medusajs/types"
 import RefinementList from "@modules/store/components/refinement-list"
 import {
   AvailabilityFilter,
@@ -11,8 +9,9 @@ import {
   ViewMode,
 } from "@modules/store/components/refinement-list/types"
 import { ageCategories } from "@modules/layout/config/navigation"
-
-import PaginatedProducts from "./paginated-products"
+import { StorefrontFiltersProvider } from "@modules/store/context/storefront-filters"
+import ProductGridSection from "@modules/store/components/product-grid-section"
+import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
 
 const StoreHero = ({ totalCount }: { totalCount: number }) => (
   <section className="rounded-2xl border border-ui-border-base bg-ui-bg-subtle px-6 py-8 shadow-elevation-card-rest">
@@ -61,6 +60,32 @@ const StoreTemplate = async ({
     fetchAvailabilityCounts(countryCode),
   ])
 
+  const productQueryParams: HttpTypes.FindParams & HttpTypes.StoreProductListParams = {}
+
+  if (categoryId) {
+    productQueryParams["category_id"] = [categoryId]
+  }
+
+  if (searchQuery) {
+    productQueryParams["q"] = searchQuery
+  }
+
+  const effectiveProductQueryParams: (HttpTypes.FindParams & HttpTypes.StoreProductListParams) | undefined =
+    Object.keys(productQueryParams).length ? productQueryParams : undefined
+
+  const {
+    response: { products: initialProducts, count: initialCount },
+  } = await listPaginatedProducts({
+    page: pageNumber,
+    limit: STORE_PRODUCT_PAGE_SIZE,
+    queryParams: effectiveProductQueryParams,
+    sortBy: sort,
+    countryCode,
+    availability,
+    priceFilter: priceRange,
+    ageFilter,
+  })
+
   const prioritizedCategories = ["Merch", "Pants", "Shirts", "Sweatshirts"]
 
   const categoryOptions = categories
@@ -101,47 +126,57 @@ const StoreTemplate = async ({
   ]
 
   return (
-    <div className="content-container space-y-8 py-6" data-testid="category-container">
-      <StoreHero totalCount={count} />
-      <div className="flex flex-col gap-10 small:flex-row">
-        <div className="small:min-w-[260px] small:max-w-xs">
-          <RefinementList
-            searchQuery={searchQuery}
-            selectedFilters={{
-              availability,
-              priceMin: priceRange?.min,
-              priceMax: priceRange?.max,
-              age: ageFilter,
-              category: categoryId,
-            }}
-            filterOptions={{
-              availability: availabilityOptions,
-              ages: ageOptions,
-              categories: categoryOptions,
-            }}
-          />
-        </div>
-        <div className="w-full">
-          <Suspense fallback={<SkeletonProductGrid />}>
-            <PaginatedProducts
-              sortBy={sort}
-              page={pageNumber}
-              countryCode={countryCode}
+    <StorefrontFiltersProvider
+      countryCode={countryCode}
+      initialFilters={{
+        sortBy: sort,
+        page: pageNumber,
+        searchQuery,
+        availability,
+        priceRange,
+        age: ageFilter,
+        categoryId,
+        viewMode: resolvedViewMode,
+      }}
+      initialProducts={initialProducts}
+      initialCount={initialCount}
+      pageSize={STORE_PRODUCT_PAGE_SIZE}
+    >
+      <div className="content-container space-y-8 py-6" data-testid="category-container">
+        <StoreHero totalCount={count} />
+        <div className="flex flex-col gap-10 small:flex-row">
+          <div className="small:min-w-[260px] small:max-w-xs">
+            <RefinementList
               searchQuery={searchQuery}
-              title="All products"
-              totalCountHint={count}
-              categoryId={categoryId}
-              filters={{
+              selectedFilters={{
                 availability,
-                price: priceRange,
+                priceMin: priceRange?.min,
+                priceMax: priceRange?.max,
                 age: ageFilter,
+                category: categoryId,
               }}
-              viewMode={resolvedViewMode}
+              filterOptions={{
+                availability: availabilityOptions,
+                ages: ageOptions,
+                categories: categoryOptions,
+              }}
             />
-          </Suspense>
+          </div>
+          <div className="w-full">
+            <ProductGridSection
+              title="All products"
+              products={initialProducts}
+              totalCount={initialCount}
+              page={pageNumber}
+              viewMode={resolvedViewMode}
+              sortBy={sort}
+              pageSize={STORE_PRODUCT_PAGE_SIZE}
+              totalCountHint={count}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </StorefrontFiltersProvider>
   )
 }
 
