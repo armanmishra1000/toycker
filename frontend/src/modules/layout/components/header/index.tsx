@@ -13,6 +13,7 @@ import MainNavigation from "@modules/layout/components/main-navigation"
 import MobileMenu from "@modules/layout/components/mobile-menu"
 import SearchModal from "@modules/layout/components/search-modal"
 import CartSidebar from "@modules/layout/components/cart-sidebar"
+import { useWishlistCount } from "@modules/products/hooks/use-wishlist-count"
 import {
   AgeCategory,
   NavLink,
@@ -74,6 +75,7 @@ const Header = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const [isCartSidebarOpen, setIsCartSidebarOpen] = useState(false)
+  const wishlistCount = useWishlistCount()
 
   const cartItemCount = cart?.items?.length || 0
   const resolvedNavLinks = navLinks && navLinks.length ? navLinks : defaultNavLinks
@@ -165,9 +167,9 @@ const Header = ({
                 <IconButton
                   icon={HeartIcon}
                   label="Wishlist"
-                  count={0}
+                  count={wishlistCount}
                   href="/wishlist"
-                  ariaLabel="Wishlist (0 items)"
+                  ariaLabel={`Wishlist (${wishlistCount} items)`}
                 />
               </div>
 

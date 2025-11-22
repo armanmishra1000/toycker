@@ -12,6 +12,7 @@ import { HttpTypes } from "@medusajs/types"
 import ProductActionsWrapper from "./product-actions-wrapper"
 import CustomerReviews from "@modules/products/components/customer-reviews"
 import OrderInformation from "@modules/products/components/order-information"
+import RecentlyViewedTracker from "@modules/products/components/recently-viewed-tracker"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -62,6 +63,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           <RelatedProducts product={product} countryCode={countryCode} />
         </Suspense>
       </div>
+      <RecentlyViewedTracker productId={product.id} />
     </>
   )
 }

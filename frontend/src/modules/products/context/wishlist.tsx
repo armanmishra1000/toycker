@@ -12,9 +12,12 @@ import {
 import { useRouter } from "next/navigation"
 
 type WishlistContextValue = {
+  items: string[]
   isInWishlist: (productId: string) => boolean
   toggleWishlist: (productId: string) => void
 }
+
+export const WISHLIST_UPDATED_EVENT = "toycker:wishlist:update"
 
 const WishlistContext = createContext<WishlistContextValue | null>(null)
 
@@ -62,6 +65,18 @@ export const WishlistProvider = ({
     }
   }, [items])
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const event = new CustomEvent(WISHLIST_UPDATED_EVENT, {
+      detail: { items, count: items.length },
+    })
+
+    window.dispatchEvent(event)
+  }, [items])
+
   const buildLoginRedirect = useCallback(() => {
     if (typeof window === "undefined") {
       return loginPath
@@ -106,6 +121,7 @@ export const WishlistProvider = ({
 
   const value = useMemo<WishlistContextValue>(
     () => ({
+      items,
       isInWishlist: (productId: string) => items.includes(productId),
       toggleWishlist,
     }),
