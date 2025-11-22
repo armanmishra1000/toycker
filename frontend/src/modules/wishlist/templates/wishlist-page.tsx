@@ -5,10 +5,16 @@ import WishlistPageClient from "@modules/wishlist/components/wishlist-page-clien
 type WishlistPageTemplateProps = {
   countryCode: string
   customerName: string
-  loginPath: string
+  loginRedirect: string
+  isCustomerLoggedIn: boolean
 }
 
-const WishlistPageTemplate = ({ countryCode, customerName, loginPath }: WishlistPageTemplateProps) => {
+const WishlistPageTemplate = ({
+  countryCode,
+  customerName,
+  loginRedirect,
+  isCustomerLoggedIn,
+}: WishlistPageTemplateProps) => {
   return (
     <div className="content-container py-6 lg:py-10" data-testid="wishlist-page">
       <Breadcrumbs
@@ -34,7 +40,11 @@ const WishlistPageTemplate = ({ countryCode, customerName, loginPath }: Wishlist
         </LocalizedClientLink>
       </div>
       <div className="mt-8">
-        <WishlistPageClient countryCode={countryCode} loginPath={loginPath} />
+        <WishlistPageClient
+          countryCode={countryCode}
+          loginRedirect={loginRedirect}
+          isCustomerLoggedIn={isCustomerLoggedIn}
+        />
       </div>
     </div>
   )

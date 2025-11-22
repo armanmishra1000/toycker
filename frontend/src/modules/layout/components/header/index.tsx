@@ -159,17 +159,6 @@ const Header = ({
                 <MagnifyingGlassIcon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
               </button>
 
-              {/* Desktop Search Icon */}
-              <div className="hidden lg:block">
-                <IconButton
-                  icon={MagnifyingGlassIcon}
-                  label="Search"
-                  ariaLabel={isSearchOpen ? "Close search" : "Open search"}
-                  onClick={toggleSearch}
-                  ariaPressed={isSearchOpen}
-                />
-              </div>
-
               {/* Login Button - Desktop Only */}
               <div className="hidden lg:block ">
                 <LocalizedClientLink href="/account" className="group relative">
