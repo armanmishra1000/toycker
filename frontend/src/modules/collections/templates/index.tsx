@@ -1,3 +1,4 @@
+import { retrieveCustomer } from "@lib/data/customer"
 import { listPaginatedProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions, ViewMode } from "@modules/store/components/refinement-list/types"
@@ -23,9 +24,7 @@ export default async function CollectionTemplate({
   const sort = sortBy || "featured"
   const defaultViewMode: ViewMode = "grid-4"
 
-  const [{ inStock, outOfStock }, {
-    response: { products: initialProducts, count: initialCount },
-  }] = await Promise.all([
+  const [availabilityCounts, productListing, customer] = await Promise.all([
     fetchAvailabilityCounts(countryCode),
     listPaginatedProducts({
       page: pageNumber,
@@ -36,12 +35,20 @@ export default async function CollectionTemplate({
         collection_id: [collection.id],
       },
     }),
+    retrieveCustomer(),
   ])
+
+  const { inStock, outOfStock } = availabilityCounts
+  const {
+    response: { products: initialProducts, count: initialCount },
+  } = productListing
 
   const availabilityOptions = [
     { value: "in_stock", label: "In stock", count: inStock },
     { value: "out_of_stock", label: "Out of stock", count: outOfStock },
   ]
+
+  const accountPath = `/${countryCode}/account`
 
   return (
     <StorefrontFiltersProvider
@@ -75,6 +82,8 @@ export default async function CollectionTemplate({
             viewMode={defaultViewMode}
             sortBy={sort}
             pageSize={STORE_PRODUCT_PAGE_SIZE}
+            isCustomerLoggedIn={Boolean(customer)}
+            loginPath={accountPath}
           />
         </div>
       </FilterDrawer>

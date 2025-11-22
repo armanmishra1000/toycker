@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 import { Bars3Icon, HeartIcon, ShoppingBagIcon, MagnifyingGlassIcon, UserIcon, EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/outline"
 import { HttpTypes } from "@medusajs/types"
 
@@ -11,8 +12,9 @@ import Search from "@modules/layout/components/search"
 import IconButton from "@modules/layout/components/icon-button"
 import MainNavigation from "@modules/layout/components/main-navigation"
 import MobileMenu from "@modules/layout/components/mobile-menu"
-import SearchModal from "@modules/layout/components/search-modal"
+import SearchDrawer from "@modules/layout/components/search-drawer"
 import CartSidebar from "@modules/layout/components/cart-sidebar"
+import { useWishlistCount } from "@modules/products/hooks/use-wishlist-count"
 import {
   AgeCategory,
   NavLink,
@@ -72,9 +74,17 @@ const Header = ({
   shopMenuPromo,
 }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isCartSidebarOpen, setIsCartSidebarOpen] = useState(false)
+  const pathname = usePathname()
+  const wishlistCount = useWishlistCount()
 
+  const openSearch = () => setIsSearchOpen(true)
+  const toggleSearch = () => setIsSearchOpen((prev) => !prev)
+
+  useEffect(() => {
+    setIsSearchOpen(false)
+  }, [pathname])
   const cartItemCount = cart?.items?.length || 0
   const resolvedNavLinks = navLinks && navLinks.length ? navLinks : defaultNavLinks
   const resolvedAgeCategories = ageCategories && ageCategories.length ? ageCategories : defaultAgeCategories
@@ -129,7 +139,7 @@ const Header = ({
 
             {/* Search Bar - Desktop */}
             <div className="hidden lg:flex flex-1 max-w-xl">
-              <Search placeholder="Search for toys..." />
+              <Search placeholder="Search for toys..." onActivate={openSearch} />
             </div>
 
             {/* Contact Info */}
@@ -141,12 +151,24 @@ const Header = ({
             <div className="flex items-center gap-2">
               {/* Mobile Search Icon */}
               <button
-                onClick={() => setIsMobileSearchOpen(true)}
+                onClick={toggleSearch}
                 className="lg:hidden w-10 h-10 bg-foreground rounded-full transition-colors relative flex justify-center items-center"
-                aria-label="Open search"
+                aria-label={isSearchOpen ? "Close search" : "Open search"}
+                aria-pressed={isSearchOpen}
               >
                 <MagnifyingGlassIcon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
               </button>
+
+              {/* Desktop Search Icon */}
+              <div className="hidden lg:block">
+                <IconButton
+                  icon={MagnifyingGlassIcon}
+                  label="Search"
+                  ariaLabel={isSearchOpen ? "Close search" : "Open search"}
+                  onClick={toggleSearch}
+                  ariaPressed={isSearchOpen}
+                />
+              </div>
 
               {/* Login Button - Desktop Only */}
               <div className="hidden lg:block ">
@@ -165,9 +187,9 @@ const Header = ({
                 <IconButton
                   icon={HeartIcon}
                   label="Wishlist"
-                  count={0}
+                  count={wishlistCount}
                   href="/wishlist"
-                  ariaLabel="Wishlist (0 items)"
+                  ariaLabel={`Wishlist (${wishlistCount} items)`}
                 />
               </div>
 
@@ -185,15 +207,9 @@ const Header = ({
 
         {/* Mobile Search - Expandable */}
         <div className="lg:hidden hidden mx-auto px-4 max-w-[1440px] pb-3">
-          <Search placeholder="Search toys..." />
+          <Search placeholder="Search toys..." onActivate={openSearch} />
         </div>
       </header>
-
-      {/* Mobile Search Modal */}
-      <SearchModal
-        isOpen={isMobileSearchOpen}
-        onClose={() => setIsMobileSearchOpen(false)}
-      />
 
       {/* Row 2 - Navigation with White Background - Desktop Only */}
       <div className="hidden lg:block bg-white border-b border-gray-200">
@@ -233,6 +249,8 @@ const Header = ({
         onClose={() => setIsCartSidebarOpen(false)}
         cart={cart}
       />
+
+      <SearchDrawer isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   )
 }

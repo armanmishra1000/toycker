@@ -23,6 +23,8 @@ type ProductGridSectionProps = {
   sortBy: SortOptions
   pageSize: number
   totalCountHint?: number
+  isCustomerLoggedIn?: boolean
+  loginPath?: string
 }
 
 const ProductGridSection = ({
@@ -34,6 +36,8 @@ const ProductGridSection = ({
   sortBy,
   pageSize,
   totalCountHint,
+  isCustomerLoggedIn = false,
+  loginPath = "/account",
 }: ProductGridSectionProps) => {
   const context = useOptionalStorefrontFilters()
 
@@ -69,7 +73,7 @@ const ProductGridSection = ({
   const emptyStateHeading = useMemo(() => title || "Products", [title])
 
   return (
-    <WishlistProvider>
+    <WishlistProvider isAuthenticated={isCustomerLoggedIn} loginPath={loginPath}>
       <section className="space-y-6">
         <ResultsToolbar totalCount={effectiveCount} viewMode={derived.viewMode} sortBy={derived.sortBy} />
 

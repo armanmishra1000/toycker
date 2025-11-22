@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 
+import { retrieveCustomer } from "@lib/data/customer"
 import { listPaginatedProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import InteractiveLink from "@modules/common/components/interactive-link"
@@ -29,9 +30,7 @@ export default async function CategoryTemplate({
   const sort = sortBy || "featured"
   const defaultViewMode: ViewMode = "grid-4"
 
-  const [{ inStock, outOfStock }, {
-    response: { products: initialProducts, count: initialCount },
-  }] = await Promise.all([
+  const [availabilityCounts, productListing, customer] = await Promise.all([
     fetchAvailabilityCounts(countryCode),
     listPaginatedProducts({
       page: pageNumber,
@@ -42,7 +41,13 @@ export default async function CategoryTemplate({
         category_id: [category.id],
       },
     }),
+    retrieveCustomer(),
   ])
+
+  const { inStock, outOfStock } = availabilityCounts
+  const {
+    response: { products: initialProducts, count: initialCount },
+  } = productListing
 
   const availabilityOptions = [
     { value: "in_stock", label: "In stock", count: inStock },
@@ -67,6 +72,8 @@ export default async function CategoryTemplate({
     ...breadcrumbTrail.map((parent) => ({ label: parent.name, href: `/categories/${parent.handle}` })),
     { label: category.name },
   ]
+
+  const accountPath = `/${countryCode}/account`
 
   return (
     <StorefrontFiltersProvider
@@ -111,6 +118,8 @@ export default async function CategoryTemplate({
             viewMode={defaultViewMode}
             sortBy={sort}
             pageSize={STORE_PRODUCT_PAGE_SIZE}
+            isCustomerLoggedIn={Boolean(customer)}
+            loginPath={accountPath}
           />
         </div>
       </FilterDrawer>

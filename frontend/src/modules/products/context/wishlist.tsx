@@ -9,11 +9,15 @@ import {
   useMemo,
   useState,
 } from "react"
+import { useRouter } from "next/navigation"
 
 type WishlistContextValue = {
+  items: string[]
   isInWishlist: (productId: string) => boolean
   toggleWishlist: (productId: string) => void
 }
+
+export const WISHLIST_UPDATED_EVENT = "toycker:wishlist:update"
 
 const WishlistContext = createContext<WishlistContextValue | null>(null)
 
@@ -32,8 +36,19 @@ const readFromStorage = (): string[] => {
   }
 }
 
-export const WishlistProvider = ({ children }: { children: ReactNode }) => {
+type WishlistProviderProps = {
+  children: ReactNode
+  isAuthenticated?: boolean
+  loginPath?: string
+}
+
+export const WishlistProvider = ({
+  children,
+  isAuthenticated = false,
+  loginPath = "/account",
+}: WishlistProviderProps) => {
   const [items, setItems] = useState<string[]>([])
+  const router = useRouter()
 
   useEffect(() => {
     setItems(readFromStorage())
@@ -50,17 +65,63 @@ export const WishlistProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [items])
 
-  const toggleWishlist = useCallback((productId: string) => {
-    setItems((prev) => {
-      if (prev.includes(productId)) {
-        return prev.filter((id) => id !== productId)
-      }
-      return [...prev, productId]
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const event = new CustomEvent(WISHLIST_UPDATED_EVENT, {
+      detail: { items, count: items.length },
     })
-  }, [])
+
+    window.dispatchEvent(event)
+  }, [items])
+
+  const buildLoginRedirect = useCallback(() => {
+    if (typeof window === "undefined") {
+      return loginPath
+    }
+
+    const redirectTarget = `${window.location.pathname}${window.location.search}`
+    const separator = loginPath.includes("?") ? "&" : "?"
+    const encoded = encodeURIComponent(redirectTarget)
+    return `${loginPath}${separator}redirect=${encoded}`
+  }, [loginPath])
+
+  const redirectToLogin = useCallback(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const target = buildLoginRedirect()
+
+    try {
+      router.push(target)
+    } catch {
+      window.location.assign(target)
+    }
+  }, [buildLoginRedirect, router])
+
+  const toggleWishlist = useCallback(
+    (productId: string) => {
+      if (!isAuthenticated) {
+        redirectToLogin()
+        return
+      }
+
+      setItems((prev) => {
+        if (prev.includes(productId)) {
+          return prev.filter((id) => id !== productId)
+        }
+        return [...prev, productId]
+      })
+    },
+    [isAuthenticated, redirectToLogin]
+  )
 
   const value = useMemo<WishlistContextValue>(
     () => ({
+      items,
       isInWishlist: (productId: string) => items.includes(productId),
       toggleWishlist,
     }),

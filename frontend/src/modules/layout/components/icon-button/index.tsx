@@ -11,6 +11,7 @@ interface IconButtonProps {
   href?: string
   ariaLabel?: string
   onClick?: () => void
+  ariaPressed?: boolean
 }
 
 const IconButton = ({
@@ -20,6 +21,7 @@ const IconButton = ({
   href,
   ariaLabel,
   onClick,
+  ariaPressed,
 }: IconButtonProps) => {
   const content = (
     <div
@@ -53,6 +55,7 @@ const IconButton = ({
       className="group relative"
       onClick={onClick}
       aria-label={ariaLabel || label}
+      aria-pressed={ariaPressed}
     >
       {content}
     </button>

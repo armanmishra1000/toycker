@@ -1,4 +1,5 @@
 import { listCategories } from "@lib/data/categories"
+import { retrieveCustomer } from "@lib/data/customer"
 import { getStoreStats, listPaginatedProducts } from "@lib/data/products"
 import type { HttpTypes } from "@medusajs/types"
 import {
@@ -40,10 +41,11 @@ const StoreTemplate = async ({
   const sort = sortBy || "featured"
   const resolvedViewMode = viewMode || "grid-4"
 
-  const [{ count }, categories, availabilityCounts] = await Promise.all([
+  const [{ count }, categories, availabilityCounts, customer] = await Promise.all([
     getStoreStats({ countryCode }),
     listCategories({ limit: 100, include_descendants_tree: true }),
     fetchAvailabilityCounts(countryCode),
+    retrieveCustomer(),
   ])
 
   const productQueryParams: HttpTypes.FindParams & HttpTypes.StoreProductListParams = {}
@@ -111,6 +113,8 @@ const StoreTemplate = async ({
     },
   ]
 
+  const accountPath = `/${countryCode}/account`
+
   return (
     <StorefrontFiltersProvider
       countryCode={countryCode}
@@ -164,6 +168,8 @@ const StoreTemplate = async ({
             sortBy={sort}
             pageSize={STORE_PRODUCT_PAGE_SIZE}
             totalCountHint={count}
+            isCustomerLoggedIn={Boolean(customer)}
+            loginPath={accountPath}
           />
         </div>
       </FilterDrawer>
