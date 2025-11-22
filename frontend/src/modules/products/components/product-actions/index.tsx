@@ -6,6 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import Modal from "@modules/common/components/modal"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
+import { useOptionalWishlist } from "@modules/products/context/wishlist"
 import { isEqual } from "lodash"
 import {
   FormEvent,
@@ -55,7 +56,8 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
   const [isAdding, setIsAdding] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [giftWrap, setGiftWrap] = useState(false)
-  const [wishlistSaved, setWishlistSaved] = useState(false)
+  const wishlist = useOptionalWishlist()
+  const [localWishlistSaved, setLocalWishlistSaved] = useState(false)
   const [isQuestionOpen, setIsQuestionOpen] = useState(false)
   const [questionStatus, setQuestionStatus] = useState<"idle" | "success">(
     "idle"
@@ -89,12 +91,12 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
   }, [product.variants, options])
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (wishlist || typeof window === "undefined") {
       return
     }
     const saved = window.localStorage.getItem(`wishlist-${product.id}`)
-    setWishlistSaved(saved === "true")
-  }, [product.id])
+    setLocalWishlistSaved(saved === "true")
+  }, [product.id, wishlist])
 
   // update the options when a variant is selected
   const setOptionValue = (optionId: string, value: string) => {
@@ -188,14 +190,22 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
     })
   }
 
-  const toggleWishlist = useCallback(() => {
+  const toggleLocalWishlist = useCallback(() => {
     if (typeof window === "undefined") {
       return
     }
-    const next = !wishlistSaved
+    const next = !localWishlistSaved
     window.localStorage.setItem(`wishlist-${product.id}`, String(next))
-    setWishlistSaved(next)
-  }, [product.id, wishlistSaved])
+    setLocalWishlistSaved(next)
+  }, [product.id, localWishlistSaved])
+
+  const handleWishlistClick = useCallback(() => {
+    if (wishlist) {
+      wishlist.toggleWishlist(product.id)
+      return
+    }
+    toggleLocalWishlist()
+  }, [product.id, toggleLocalWishlist, wishlist])
 
   // add the selected variant to the cart
   const handleAddToCart = async (mode: "add" | "buy" = "add") => {
@@ -294,6 +304,10 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
     : isAdding
     ? "Adding..."
     : "Add to Cart"
+
+  const isWishlistActive = wishlist
+    ? wishlist.isInWishlist(product.id)
+    : localWishlistSaved
 
   return (
     <section className="flex flex-col gap-6 rounded-[32px] border border-ui-border-base/70 bg-white p-6 shadow-[0_12px_45px_rgba(15,23,42,0.08)] lg:p-8">
@@ -418,13 +432,14 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
           </button>
           <button
             type="button"
-            onClick={toggleWishlist}
+            onClick={handleWishlistClick}
             className={`flex h-14 w-14 items-center justify-center rounded-full border text-[#E7353A] transition ${
-              wishlistSaved ? "border-[#E7353A] bg-[#FFF5F5]" : "border-ui-border-base"
+              isWishlistActive ? "border-[#E7353A] bg-[#FFF5F5]" : "border-ui-border-base"
             }`}
             aria-label="Toggle wishlist"
+            aria-pressed={isWishlistActive}
           >
-            <Heart className={`h-5 w-5 ${wishlistSaved ? "fill-current" : ""}`} />
+            <Heart className={`h-5 w-5 ${isWishlistActive ? "fill-current" : ""}`} />
           </button>
           <button
             type="button"

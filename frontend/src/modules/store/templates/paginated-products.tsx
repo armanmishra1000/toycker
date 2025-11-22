@@ -1,5 +1,6 @@
 import { listPaginatedProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
+import { retrieveCustomer } from "@lib/data/customer"
 import {
   AvailabilityFilter,
   PriceRangeFilter,
@@ -68,7 +69,10 @@ export default async function PaginatedProducts({
     queryParams["q"] = searchQuery
   }
 
-  const region = await getRegion(countryCode)
+  const [region, customer] = await Promise.all([
+    getRegion(countryCode),
+    retrieveCustomer(),
+  ])
 
   if (!region) {
     return null
@@ -91,6 +95,8 @@ export default async function PaginatedProducts({
   const resolvedViewMode = viewMode || "grid-4"
   const resolvedSort = sortBy || "featured"
 
+  const accountPath = `/${countryCode}/account`
+
   return (
     <ProductGridSection
       title={title}
@@ -101,6 +107,8 @@ export default async function PaginatedProducts({
       sortBy={resolvedSort}
       pageSize={STORE_PRODUCT_PAGE_SIZE}
       totalCountHint={totalCountHint}
+      isCustomerLoggedIn={Boolean(customer)}
+      loginPath={accountPath}
     />
   )
 }
