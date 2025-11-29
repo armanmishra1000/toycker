@@ -4,9 +4,11 @@ import ExclusiveCollections from "@modules/home/components/exclusive-collections
 import FeaturedProducts from "@modules/home/components/featured-products"
 import Hero from "@modules/home/components/hero"
 import PopularToySet from "@modules/home/components/popular-toy-set"
+import BestSelling from "@modules/home/components/best-selling"
 import ShopByAge from "@modules/home/components/shop-by-age"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
+import { retrieveCustomer } from "@lib/data/customer"
 
 export const metadata: Metadata = {
   title: "Medusa Next.js Starter Template",
@@ -21,11 +23,16 @@ export default async function Home(props: {
 
   const { countryCode } = params
 
-  const region = await getRegion(countryCode)
+  const [region, collectionsResult, customer] = await Promise.all([
+    getRegion(countryCode),
+    listCollections({
+      fields: "id, handle, title",
+    }),
+    retrieveCustomer(),
+  ])
 
-  const { collections } = await listCollections({
-    fields: "id, handle, title",
-  })
+  const collections = collectionsResult?.collections
+  const isCustomerLoggedIn = Boolean(customer)
 
   if (!collections || !region) {
     return null
@@ -35,13 +42,22 @@ export default async function Home(props: {
     <>
       <Hero />
       <ShopByAge />
-      <PopularToySet />
+      <PopularToySet
+        regionId={region.id}
+        countryCode={countryCode}
+        isCustomerLoggedIn={isCustomerLoggedIn}
+      />
       <ExclusiveCollections />
       <div className="py-12">
         <ul className="flex flex-col gap-x-6">
-          <FeaturedProducts collections={collections} region={region} />
+          {/* <FeaturedProducts collections={collections} region={region} /> */}
         </ul>
       </div>
+      <BestSelling
+        regionId={region.id}
+        countryCode={countryCode}
+        isCustomerLoggedIn={isCustomerLoggedIn}
+      />
     </>
   )
 }

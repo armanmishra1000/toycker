@@ -61,7 +61,18 @@ export const buildCollectionCardItems = (
   collections: HttpTypes.StoreCollection[]
 ): CatalogCardItem[] => {
   return collections
-    .filter((collection) => !!collection.handle)
+    .filter((collection) => {
+      if (!collection.handle) {
+        return false
+      }
+
+      const normalizedHandle = collection.handle.toLowerCase()
+      if (normalizedHandle === "popular" || normalizedHandle === "best_selling") {
+        return false
+      }
+
+      return true
+    })
     .map<CatalogCardItem>((collection) => {
       const metadata = collection.metadata as Record<string, unknown> | null | undefined
       const featuredFlag = Boolean(metadata?.["featured"])
