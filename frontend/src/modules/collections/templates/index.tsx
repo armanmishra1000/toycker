@@ -24,6 +24,11 @@ export default async function CollectionTemplate({
   const sort = sortBy || "featured"
   const defaultViewMode: ViewMode = "grid-4"
 
+  const normalizedHandle = (collection.handle ?? "").toLowerCase()
+  if (normalizedHandle === "popular" || normalizedHandle === "best_selling") {
+    return null
+  }
+
   const [availabilityCounts, productListing, customer] = await Promise.all([
     fetchAvailabilityCounts(countryCode),
     listPaginatedProducts({
