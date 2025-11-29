@@ -101,10 +101,10 @@ export type CTAContent = {
 
 export const heroContent: HeroContent = {
   eyebrow: "Play starts here",
-  title: "Premium toys. Honest prices. Endless imagination.",
-  subtitle: "Discover carefully curated toys that blend fun, learning, and lasting quality.",
+  title: "Welcome to Toycker.com – Elevating the Art of Play",
+  subtitle: "Premium-quality toys for joyful, meaningful play.",
   description:
-    "From newborn essentials to advanced playsets, Toycker.com handpicks toys for safety, craftsmanship, and pure joy—so you can shop with confidence and let kids play without limits.",
+    "At Toycker.com, our passion is simple yet profound: to infuse every household with joy, creativity, and wonder through our carefully curated collection of premium-quality toys. We believe play is more than just entertainment—it’s the foundation of learning, imagination, and lifelong memories.",
   primaryCta: {
     label: "Shop toys",
     href: "/store",
