@@ -15,7 +15,10 @@ type PaymentContainerProps = {
   paymentProviderId: string
   selectedPaymentOptionId: string | null
   disabled?: boolean
-  paymentInfoMap: Record<string, { title: string; icon: JSX.Element }>
+  paymentInfoMap: Record<
+    string,
+    { title: string; icon: JSX.Element; description?: string }
+  >
   children?: React.ReactNode
 }
 
@@ -58,6 +61,12 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
       {isManual(paymentProviderId) && isDevelopment && (
         <PaymentTest className="small:hidden text-[10px]" />
       )}
+      {selectedPaymentOptionId === paymentProviderId &&
+        paymentInfoMap[paymentProviderId]?.description && (
+          <Text className="text-ui-fg-muted text-small">
+            {paymentInfoMap[paymentProviderId]?.description}
+          </Text>
+        )}
       {children}
     </RadioGroupOption>
   )
