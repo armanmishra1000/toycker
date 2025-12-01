@@ -14,6 +14,16 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 
+type LineItemMetadataValue = string | number | boolean | null
+
+export type GiftWrapMetadata = {
+  gift_wrap: true
+  gift_wrap_fee: number
+  gift_wrap_packages: number
+}
+
+type LineItemMetadata = Record<string, LineItemMetadataValue> | GiftWrapMetadata
+
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
  * @param cartId - optional - The ID of the cart to retrieve.
@@ -114,7 +124,7 @@ export async function addToCart({
   variantId: string
   quantity: number
   countryCode: string
-  metadata?: Record<string, string | number | boolean | null>
+  metadata?: LineItemMetadata
 }) {
   if (!variantId) {
     throw new Error("Missing variant ID when adding to cart")
@@ -131,7 +141,7 @@ export async function addToCart({
   }
 
   const lineItemPayload: HttpTypes.StoreAddCartLineItem & {
-    metadata?: Record<string, string | number | boolean | null>
+    metadata?: LineItemMetadata
   } = {
     variant_id: variantId,
     quantity,

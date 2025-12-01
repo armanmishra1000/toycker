@@ -227,6 +227,7 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
           ? {
               gift_wrap: true,
               gift_wrap_fee: GIFT_WRAP_FEE,
+              gift_wrap_packages: Math.max(1, quantity),
             }
           : undefined,
       })

@@ -12,6 +12,8 @@ import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Spinner from "@modules/common/icons/spinner"
 import Thumbnail from "@modules/products/components/thumbnail"
+import Image from "next/image"
+import { isGiftWrapLine } from "@modules/cart/utils/gift-wrap"
 import { useState } from "react"
 
 type ItemProps = {
@@ -23,6 +25,10 @@ type ItemProps = {
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const giftWrapLine = isGiftWrapLine(item.metadata)
+  const displayTitle = giftWrapLine ? "Gift Wrap" : item.product_title
+  const canNavigate = Boolean(item.product_handle && !giftWrapLine)
 
   const changeQuantity = async (quantity: number) => {
     setError(null)
@@ -42,34 +48,84 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
 
   // TODO: Update this to grab the actual max inventory
   const maxQtyFromInventory = 10
-  const maxQuantity = item.variant?.manage_inventory ? 10 : maxQtyFromInventory
+  const maxQuantity = giftWrapLine
+    ? 10
+    : item.variant?.manage_inventory
+    ? 10
+    : maxQtyFromInventory
+
+  const thumbnailWrapperClass = clx("flex", {
+    "w-16": type === "preview",
+    "small:w-24 w-12": type === "full",
+  })
+
+  const renderThumbnail = () => {
+    if (giftWrapLine) {
+      return (
+        <div
+          className={`${thumbnailWrapperClass} items-center justify-center rounded-xl bg-slate-50 border border-slate-200  p-4`}
+        >
+          <Image
+            src="/assets/images/gift-wrap.png"
+            alt="Gift wrap"
+            width={200}
+            height={200}
+            className="h-16 w-16 object-contain"
+          />
+        </div>
+      )
+    }
+
+    const thumb = (
+      <Thumbnail
+        thumbnail={item.thumbnail}
+        images={item.variant?.product?.images}
+        size="square"
+      />
+    )
+
+    if (!canNavigate) {
+      return <div className={thumbnailWrapperClass}>{thumb}</div>
+    }
+
+    return (
+      <LocalizedClientLink
+        href={`/products/${item.product_handle}`}
+        className={thumbnailWrapperClass}
+      >
+        {thumb}
+      </LocalizedClientLink>
+    )
+  }
 
   return (
     <Table.Row className="w-full" data-testid="product-row">
-      <Table.Cell className="!pl-0 p-4 w-24">
-        <LocalizedClientLink
-          href={`/products/${item.product_handle}`}
-          className={clx("flex", {
-            "w-16": type === "preview",
-            "small:w-24 w-12": type === "full",
-          })}
-        >
-          <Thumbnail
-            thumbnail={item.thumbnail}
-            images={item.variant?.product?.images}
-            size="square"
-          />
-        </LocalizedClientLink>
-      </Table.Cell>
+      <Table.Cell className="!pl-0 p-4 w-24">{renderThumbnail()}</Table.Cell>
 
       <Table.Cell className="text-left">
-        <Text
-          className="txt-medium-plus text-ui-fg-base"
-          data-testid="product-title"
-        >
-          {item.product_title}
-        </Text>
-        <LineItemOptions variant={item.variant} data-testid="product-variant" />
+        {canNavigate ? (
+          <LocalizedClientLink
+            href={`/products/${item.product_handle}`}
+            className="inline-block"
+          >
+            <Text
+              className="txt-medium-plus text-ui-fg-base hover:underline"
+              data-testid="product-title"
+            >
+              {displayTitle}
+            </Text>
+          </LocalizedClientLink>
+        ) : (
+          <Text
+            className="txt-medium-plus text-ui-fg-base"
+            data-testid="product-title"
+          >
+            {displayTitle}
+          </Text>
+        )}
+        {!giftWrapLine && (
+          <LineItemOptions variant={item.variant} data-testid="product-variant" />
+        )}
       </Table.Cell>
 
       {type === "full" && (
@@ -83,20 +139,11 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               data-testid="product-select-button"
             >
               {/* TODO: Update this with the v2 way of managing inventory */}
-              {Array.from(
-                {
-                  length: Math.min(maxQuantity, 10),
-                },
-                (_, i) => (
-                  <option value={i + 1} key={i}>
-                    {i + 1}
-                  </option>
-                )
-              )}
-
-              <option value={1} key={1}>
-                1
-              </option>
+              {Array.from({ length: Math.min(maxQuantity, 10) }, (_, i) => (
+                <option value={i + 1} key={i + 1}>
+                  {i + 1}
+                </option>
+              ))}
             </CartItemSelect>
             {updating && <Spinner />}
           </div>
