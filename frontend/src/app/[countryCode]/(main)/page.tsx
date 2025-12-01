@@ -6,6 +6,8 @@ import Hero from "@modules/home/components/hero"
 import PopularToySet from "@modules/home/components/popular-toy-set"
 import BestSelling from "@modules/home/components/best-selling"
 import ShopByAge from "@modules/home/components/shop-by-age"
+import WhyChooseUs from "@modules/home/components/why-choose-us"
+import CustomerSay from "@modules/home/components/customer-say"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
 import { retrieveCustomer } from "@lib/data/customer"
@@ -58,6 +60,8 @@ export default async function Home(props: {
         countryCode={countryCode}
         isCustomerLoggedIn={isCustomerLoggedIn}
       />
+      <CustomerSay />
+      <WhyChooseUs />
     </>
   )
 }

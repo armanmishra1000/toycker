@@ -51,8 +51,7 @@ const Payment = ({
   const paidByGiftcard =
     cart?.gift_cards && cart?.gift_cards?.length > 0 && cart?.total === 0
 
-  const paymentReady =
-    (activeSession && cart?.shipping_methods.length !== 0) || paidByGiftcard
+  const paymentReady = Boolean(activeSession) || paidByGiftcard
 
   const createQueryString = useCallback(
     (name: string, value: string) => {

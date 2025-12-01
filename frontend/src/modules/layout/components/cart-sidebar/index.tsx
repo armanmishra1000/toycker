@@ -4,7 +4,6 @@ import { Fragment } from "react"
 import { Dialog, Transition } from "@headlessui/react"
 import { XMarkIcon, ShoppingBagIcon } from "@heroicons/react/24/outline"
 import { Button } from "@medusajs/ui"
-import { HttpTypes } from "@medusajs/types"
 import { convertToLocale } from "@lib/util/money"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "@modules/products/components/thumbnail"
@@ -12,14 +11,15 @@ import LineItemOptions from "@modules/common/components/line-item-options"
 import LineItemPrice from "@modules/common/components/line-item-price"
 import DeleteButton from "@modules/common/components/delete-button"
 import { useBodyScrollLock } from "@modules/layout/hooks/useBodyScrollLock"
+import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
 
 type CartSidebarProps = {
   isOpen: boolean
   onClose: () => void
-  cart?: HttpTypes.StoreCart | null
 }
 
-const CartSidebar = ({ isOpen, onClose, cart }: CartSidebarProps) => {
+const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
+  const { cart } = useCartSidebar()
   useBodyScrollLock({ isLocked: isOpen })
 
   const totalItems = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0
@@ -165,7 +165,7 @@ const CartSidebar = ({ isOpen, onClose, cart }: CartSidebarProps) => {
                   <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">Calculated at checkout</span>
                 </div>
                 <div className="grid gap-3 pt-1">
-                  <LocalizedClientLink href="/checkout" onClick={onClose} passHref>
+                  <LocalizedClientLink href="/checkout?step=address" onClick={onClose} passHref>
                     <Button className="w-full" size="large">
                       Proceed to checkout
                     </Button>

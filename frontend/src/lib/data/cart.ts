@@ -197,12 +197,21 @@ export async function deleteLineItem(lineId: string) {
     throw new Error("Missing cart ID when deleting line item")
   }
 
+  const cart = await retrieveCart(cartId, "id,completed_at")
+
+  if (cart?.completed_at) {
+    await removeCartId()
+    throw new Error(
+      "This order has already been placed. Please refresh to start a new cart."
+    )
+  }
+
   const headers = {
     ...(await getAuthHeaders()),
   }
 
   await sdk.store.cart
-    .deleteLineItem(cartId, lineId, headers)
+    .deleteLineItem(cartId, lineId, {}, headers)
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
@@ -378,7 +387,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
   }
 
   redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
+    `/${formData.get("shipping_address.country_code")}/checkout?step=payment`
   )
 }
 

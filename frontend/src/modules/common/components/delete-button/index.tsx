@@ -1,7 +1,7 @@
-import { deleteLineItem } from "@lib/data/cart"
 import { Spinner, Trash } from "@medusajs/icons"
 import { clx } from "@medusajs/ui"
-import { useState } from "react"
+import { ReactNode, useState } from "react"
+import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
 
 const DeleteButton = ({
   id,
@@ -9,16 +9,20 @@ const DeleteButton = ({
   className,
 }: {
   id: string
-  children?: React.ReactNode
+  children?: ReactNode
   className?: string
 }) => {
   const [isDeleting, setIsDeleting] = useState(false)
+  const { removeLineItem } = useCartSidebar()
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (lineItemId: string) => {
     setIsDeleting(true)
-    await deleteLineItem(id).catch((err) => {
+
+    try {
+      await removeLineItem(lineItemId)
+    } finally {
       setIsDeleting(false)
-    })
+    }
   }
 
   return (

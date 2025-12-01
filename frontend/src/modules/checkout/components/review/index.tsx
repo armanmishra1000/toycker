@@ -15,7 +15,6 @@ const Review = ({ cart }: { cart: any }) => {
 
   const previousStepsCompleted =
     cart.shipping_address &&
-    cart.shipping_methods.length > 0 &&
     (cart.payment_collection || paidByGiftcard)
 
   return (

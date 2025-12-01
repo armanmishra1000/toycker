@@ -14,6 +14,7 @@ import MainNavigation from "@modules/layout/components/main-navigation"
 import MobileMenu from "@modules/layout/components/mobile-menu"
 import SearchDrawer from "@modules/layout/components/search-drawer"
 import CartSidebar from "@modules/layout/components/cart-sidebar"
+import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
 import { useWishlistCount } from "@modules/products/hooks/use-wishlist-count"
 import {
   AgeCategory,
@@ -75,9 +76,19 @@ const Header = ({
 }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [isCartSidebarOpen, setIsCartSidebarOpen] = useState(false)
+  const {
+    isOpen: isCartSidebarOpen,
+    openCart,
+    closeCart,
+    cart: sharedCart,
+    setCart,
+  } = useCartSidebar()
   const pathname = usePathname()
   const wishlistCount = useWishlistCount()
+
+  useEffect(() => {
+    setCart(cart ?? null)
+  }, [cart, setCart])
 
   const openSearch = () => setIsSearchOpen(true)
   const toggleSearch = () => setIsSearchOpen((prev) => !prev)
@@ -85,7 +96,9 @@ const Header = ({
   useEffect(() => {
     setIsSearchOpen(false)
   }, [pathname])
-  const cartItemCount = cart?.items?.length || 0
+  const resolvedCart = sharedCart ?? cart
+  const cartItemCount =
+    resolvedCart?.items?.reduce((total, item) => total + item.quantity, 0) || 0
   const resolvedNavLinks = navLinks && navLinks.length ? navLinks : defaultNavLinks
   const resolvedAgeCategories = ageCategories && ageCategories.length ? ageCategories : defaultAgeCategories
   const fallbackSections = defaultShopMenuSections.map((section) =>
@@ -188,7 +201,7 @@ const Header = ({
                 label="Shopping Bag"
                 count={cartItemCount}
                 ariaLabel={`Shopping bag (${cartItemCount} items)`}
-                onClick={() => setIsCartSidebarOpen(true)}
+                onClick={openCart}
               />
             </div>
           </div>
@@ -233,11 +246,7 @@ const Header = ({
         shopMenuPromo={resolvedShopMenuPromo}
       />
 
-      <CartSidebar
-        isOpen={isCartSidebarOpen}
-        onClose={() => setIsCartSidebarOpen(false)}
-        cart={cart}
-      />
+      <CartSidebar isOpen={isCartSidebarOpen} onClose={closeCart} />
 
       <SearchDrawer isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
