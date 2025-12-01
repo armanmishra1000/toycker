@@ -32,6 +32,26 @@ const HERO_SLIDES: HeroSlide[] = [
     imageSrc: "/assets/images/slider_3.png",
     alt: "Main hero promotion 3",
   },
+  {
+    id: 4,
+    imageSrc: "/assets/images/slider_4.png",
+    alt: "Main hero promotion 4",
+  },
+  {
+    id: 5,
+    imageSrc: "/assets/images/slider_5.png",
+    alt: "Main hero promotion 5",
+  },
+  {
+    id: 6,
+    imageSrc: "/assets/images/slider_6.png",
+    alt: "Main hero promotion 6",
+  },
+  {
+    id: 7,
+    imageSrc: "/assets/images/slider_7.png",
+    alt: "Main hero promotion 7",
+  }
 ]
 
 const HERO_SWIPER_OPTIONS = {
@@ -92,7 +112,7 @@ const Hero = () => {
                       alt={slide.alt}
                       fill
                       priority={slide.id === 1}
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 60vw, 100vw"
+                      sizes="(min-width: 2024px) 33vw, (min-width: 1040px) 100vw"
                       className="object-cover"
                     />
                   </div>
