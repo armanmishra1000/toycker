@@ -38,11 +38,11 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         data-testid="product-container"
       >
         <Breadcrumbs className="mb-6" items={getProductBreadcrumbs(product)} />
-        <div className="flex items-start gap-8 xl:gap-10">
-          <div className="w-1/2">
+        <div className="flex flex-col gap-10 xl:flex-row xl:items-start">
+          <div className="w-full xl:w-1/2">
             <ImageGallery images={images} />
           </div>
-          <div className="w-1/2">
+          <div className="w-full xl:w-1/2">
             <Suspense
               fallback={<ProductActions disabled={true} product={product} />}
             >
@@ -52,12 +52,14 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
                 countryCode={countryCode}
               />
             </Suspense>
-            <OrderInformation />
+            <div className="mt-6">
+              <OrderInformation />
+            </div>
           </div>
         </div>
-        <div className="mt-5">
-            <ProductTabs product={product} />
-            <CustomerReviews />
+        <div className="mt-8 space-y-5">
+          <ProductTabs product={product} />
+          <CustomerReviews />
         </div>
       </div>
       <div
