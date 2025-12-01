@@ -319,7 +319,7 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
     : localWishlistSaved
 
   return (
-    <section className="flex flex-col gap-6 rounded-[32px] border border-ui-border-base/70 bg-white p-6 shadow-[0_12px_45px_rgba(15,23,42,0.08)] lg:p-8">
+    <section className="flex flex-col gap-6">
       <div className="space-y-4">
         <div className="space-y-2">
           <h1 className="text-[32px] font-semibold leading-tight text-slate-900">
@@ -449,13 +449,6 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
             aria-pressed={isWishlistActive}
           >
             <Heart className={`h-5 w-5 ${isWishlistActive ? "fill-current" : ""}`} />
-          </button>
-          <button
-            type="button"
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-ui-border-base text-ui-fg-base transition hover:bg-ui-bg-subtle"
-            aria-label="Compare"
-          >
-            <GitCompare className="h-5 w-5" />
           </button>
         </div>
         <button

@@ -29,7 +29,7 @@ const CustomerReviews = () => {
   }
 
   return (
-    <section className="rounded-[28px] border border-slate-200 bg-white px-6 py-8 text-center shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+    <section className="rounded-xl border border-slate-200 bg-white px-6 py-8 text-center">
       <h3 className="text-2xl font-semibold text-slate-900">Customer Reviews</h3>
       <div className="mt-3 flex items-center justify-center gap-1">
         {Array.from({ length: 5 }).map((_, index) => (

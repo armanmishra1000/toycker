@@ -68,12 +68,12 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
 
   return (
     <div className="flex w-full flex-col gap-4 lg:flex-row lg:gap-6">
-      <div className="hidden w-[110px] flex-col lg:flex">
-        <div className="rounded-[32px] border border-slate-200 bg-white/90 p-3 shadow-[0_18px_35px_rgba(15,23,42,0.08)]">
+      <div className="hidden w-[80px] flex-col lg:flex">
+        <div className="bg-white/90">
         <Swiper
           direction="vertical"
           modules={[FreeMode, Thumbs]}
-          spaceBetween={16}
+          spaceBetween={0}
           slidesPerView={Math.min(images.length, 5)}
           freeMode
           slideToClickedSlide
@@ -86,10 +86,10 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               <button
                 type="button"
                 onClick={() => mainSwiper?.slideTo(index)}
-                className={`group relative flex h-[88px] w-full items-center justify-center overflow-hidden rounded-[26px] border bg-[#FBFBFB] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A]/60 ${
+                className={`group relative flex h-[80px] w-full items-center justify-center overflow-hidden rounded-xl border bg-[#FBFBFB] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A]/60 ${
                   activeIndex === index
-                    ? "border-[#E7353A] shadow-[0_10px_22px_rgba(231,53,58,0.18)]"
-                    : "border-transparent shadow-sm"
+                    ? "border-[#E7353A]"
+                    : "border-transparent"
                 }`}
               >
                 <ImageThumb image={image} index={index} />
@@ -100,7 +100,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
         </div>
       </div>
 
-      <div className="relative flex-1 overflow-hidden rounded-[36px] border border-slate-200 bg-gradient-to-br from-[#FBF9FF] via-white to-[#EEF9F4] shadow-[0_30px_65px_rgba(15,23,42,0.08)]">
+      <div className="relative flex-1 overflow-hidden rounded-xl">
         <Swiper
           modules={[Navigation, Thumbs]}
           navigation={{
@@ -117,7 +117,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
         >
           {images.map((image, index) => (
             <SwiperSlide key={image.id ?? index}>
-              <div className="relative aspect-[4/4.4] w-full overflow-hidden rounded-[34px] bg-white">
+              <div className="relative aspect-[4/4.4] w-full overflow-hidden rounded-xl bg-white">
                 {image.url ? (
                   <Image
                     src={image.url}

@@ -52,28 +52,37 @@ export async function generateStaticParams() {
   }
 }
 
+type VariantWithImages = HttpTypes.StoreProductVariant & {
+  images?: HttpTypes.StoreProductImage[] | null
+}
+
 function getImagesForVariant(
   product?: HttpTypes.StoreProduct,
   selectedVariantId?: string
-) {
+): HttpTypes.StoreProductImage[] {
   if (!product) {
     return []
   }
 
-  const allImages = product.images ?? []
+  const allImages: HttpTypes.StoreProductImage[] = product.images ?? []
 
   if (!selectedVariantId || !product.variants?.length) {
     return allImages
   }
 
-  const variant = product.variants.find((v) => v.id === selectedVariantId)
-  const variantImages = variant?.images ?? []
+  const variant = product.variants.find(
+    (v) => v.id === selectedVariantId
+  ) as VariantWithImages | undefined
+
+  const variantImages: HttpTypes.StoreProductImage[] = variant?.images ?? []
 
   if (!variant || variantImages.length === 0) {
     return allImages
   }
 
-  const imageIdsMap = new Map(variantImages.map((image) => [image.id, true]))
+  const imageIdsMap = new Map(
+    variantImages.map((image) => [image.id, true] as const)
+  )
   return allImages.filter((image) => imageIdsMap.has(image.id))
 }
 
