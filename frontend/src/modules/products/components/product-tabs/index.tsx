@@ -20,7 +20,7 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   ]
 
   return (
-    <div className="w-full rounded-[26px] border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
+    <div className="w-full rounded-xl border border-slate-200 bg-white mb-5">
       <Accordion type="multiple">
         {tabs.map((tab, i) => (
           <Accordion.Item
@@ -38,7 +38,11 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   )
 }
 
-const DescriptionTab = ({ description }: { description?: string }) => (
+const DescriptionTab = ({
+  description,
+}: {
+  description?: string | null
+}) => (
   <div className="py-6 text-sm text-slate-600 whitespace-pre-line">
     {description || "Product description will be updated shortly."}
   </div>

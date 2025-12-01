@@ -10,6 +10,8 @@ import Thumbnail from "@modules/products/components/thumbnail"
 import LineItemOptions from "@modules/common/components/line-item-options"
 import LineItemPrice from "@modules/common/components/line-item-price"
 import DeleteButton from "@modules/common/components/delete-button"
+import { isGiftWrapLine } from "@modules/cart/utils/gift-wrap"
+import Image from "next/image"
 import { useBodyScrollLock } from "@modules/layout/hooks/useBodyScrollLock"
 import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
 
@@ -76,59 +78,107 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                   <div className="space-y-5">
                     {cart!.items!
                       .sort((a, b) => ((a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1))
-                      .map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex gap-4 rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm"
-                        >
-                          <LocalizedClientLink
-                            href={`/products/${item.product_handle}`}
-                            className="w-24 flex-shrink-0"
-                            onClick={onClose}
-                          >
+                      .map((item) => {
+                        const giftWrapLine = isGiftWrapLine(item.metadata)
+
+                        const renderThumbnail = () => {
+                          if (giftWrapLine) {
+                            return (
+                              <div className="w-24 flex-shrink-0 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center">
+                                <Image
+                                  src="/assets/images/gift-wrap.png"
+                                  alt="Gift wrap"
+                                  width={64}
+                                  height={64}
+                                  className="h-12 w-12 object-contain"
+                                />
+                              </div>
+                            )
+                          }
+
+                          const thumb = (
                             <Thumbnail
                               thumbnail={item.thumbnail}
                               images={item.variant?.product?.images}
                               size="square"
                               className="rounded-xl"
                             />
-                          </LocalizedClientLink>
+                          )
 
-                          <div className="flex flex-1 flex-col gap-2">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex flex-col">
-                                <LocalizedClientLink
-                                  href={`/products/${item.product_handle}`}
-                                  className="text-base font-semibold text-slate-900 line-clamp-2"
-                                  onClick={onClose}
-                                >
-                                  {item.title}
-                                </LocalizedClientLink>
-                                <LineItemOptions variant={item.variant} />
-                                <span className="text-sm text-slate-500">
-                                  Quantity: {item.quantity}
-                                </span>
+                          if (!item.product_handle) {
+                            return <div className="w-24 flex-shrink-0">{thumb}</div>
+                          }
+
+                          return (
+                            <LocalizedClientLink
+                              href={`/products/${item.product_handle}`}
+                              className="w-24 flex-shrink-0"
+                              onClick={onClose}
+                            >
+                              {thumb}
+                            </LocalizedClientLink>
+                          )
+                        }
+
+                        const renderTitle = () => {
+                          if (!item.product_handle || giftWrapLine) {
+                            return (
+                              <p className="text-base font-semibold text-slate-900 line-clamp-2">
+                                {giftWrapLine ? "Gift Wrap" : item.title}
+                              </p>
+                            )
+                          }
+
+                          return (
+                            <LocalizedClientLink
+                              href={`/products/${item.product_handle}`}
+                              className="text-base font-semibold text-slate-900 line-clamp-2"
+                              onClick={onClose}
+                            >
+                              {item.title}
+                            </LocalizedClientLink>
+                          )
+                        }
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="flex gap-4 rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm"
+                          >
+                            {renderThumbnail()}
+
+                            <div className="flex flex-1 flex-col gap-2">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex flex-col">
+                                  {renderTitle()}
+                                  {!giftWrapLine && <LineItemOptions variant={item.variant} />}
+                                  <span className="text-sm text-slate-500">
+                                    Quantity: {item.quantity}
+                                  </span>
+                                </div>
+                                <LineItemPrice item={item} style="tight" currencyCode={cart!.currency_code} />
                               </div>
-                              <LineItemPrice item={item} style="tight" currencyCode={cart!.currency_code} />
-                            </div>
 
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                              <span className="rounded-full bg-slate-100 px-2 py-1">
-                                Ships in 1-2 days
-                              </span>
-                              {item.variant?.inventory_quantity === 0 && (
-                                <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-800">
-                                  Backorder
-                                </span>
+                              {!giftWrapLine && (
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                  <span className="rounded-full bg-slate-100 px-2 py-1">
+                                    Ships in 1-2 days
+                                  </span>
+                                  {item.variant?.inventory_quantity === 0 && (
+                                    <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-800">
+                                      Backorder
+                                    </span>
+                                  )}
+                                </div>
                               )}
-                            </div>
 
-                            <div className="flex items-center justify-between pt-2">
-                              <DeleteButton id={item.id}>Remove</DeleteButton>
+                              <div className="flex items-center justify-between pt-2">
+                                <DeleteButton id={item.id}>Remove</DeleteButton>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-slate-200 bg-white/70 px-6 py-16 text-center text-slate-500">

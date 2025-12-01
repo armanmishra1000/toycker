@@ -12,11 +12,13 @@ import {
   FormEvent,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useState,
 } from "react"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
+  Check,
   Gift,
   GitCompare,
   Heart,
@@ -72,6 +74,7 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
   const [shareCopied, setShareCopied] = useState(false)
   const countryCode = useParams().countryCode as string
   const { openCart, refreshCart } = useCartSidebar()
+  const giftWrapInputId = useId()
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
@@ -224,6 +227,7 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
           ? {
               gift_wrap: true,
               gift_wrap_fee: GIFT_WRAP_FEE,
+              gift_wrap_packages: Math.max(1, quantity),
             }
           : undefined,
       })
@@ -319,7 +323,7 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
     : localWishlistSaved
 
   return (
-    <section className="flex flex-col gap-6 rounded-[32px] border border-ui-border-base/70 bg-white p-6 shadow-[0_12px_45px_rgba(15,23,42,0.08)] lg:p-8">
+    <section className="flex flex-col gap-6">
       <div className="space-y-4">
         <div className="space-y-2">
           <h1 className="text-[32px] font-semibold leading-tight text-slate-900">
@@ -373,24 +377,37 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
 
       <div className="space-y-3">
         <span className="text-sm font-medium text-slate-700">Add-ons</span>
-        <button
-          type="button"
-          onClick={() => setGiftWrap((prev) => !prev)}
-          aria-pressed={giftWrap}
-          className={`flex w-full items-center justify-between gap-3 rounded-[24px] border px-5 py-4 text-left text-sm transition ${
-            giftWrap
-              ? "border-[#E7353A] bg-[#FFF5F5]"
-              : "border-slate-200 hover:border-slate-300"
+        <label
+          htmlFor={giftWrapInputId}
+          className={`flex w-full cursor-pointer items-center justify-between rounded-2xl border bg-white px-4 py-3 text-sm shadow-[0_1px_3px_rgba(15,23,42,0.08)] transition ${
+            giftWrap ? "border-[#FF6B6B] shadow-[0_4px_12px_rgba(255,107,107,0.15)]" : "border-slate-200"
           }`}
         >
-          <span className="flex items-center gap-3 text-base font-semibold text-slate-800">
-            <Gift className="h-5 w-5 text-[#E7353A]" />
-            Add a Gift Wrap
+          <input
+            id={giftWrapInputId}
+            type="checkbox"
+            checked={giftWrap}
+            onChange={(event) => setGiftWrap(event.target.checked)}
+            className="peer sr-only"
+          />
+          <span className="flex items-center gap-3">
+            <span
+              className={`flex h-5 w-5 items-center justify-center rounded border text-white transition ${
+                giftWrap ? "border-[#FF6B6B] bg-[#FF6B6B]" : "border-slate-300 bg-white"
+              }`}
+              aria-hidden
+            >
+              <Check className={`h-3 w-3 ${giftWrap ? "opacity-100" : "opacity-0"}`} />
+            </span>
+            <Gift className="h-5 w-5 text-[#FF6B6B]" aria-hidden />
+            <span className="text-base font-medium text-slate-800">
+              Add a Gift Wrap
+            </span>
           </span>
-          <span className="text-sm font-semibold text-[#E7353A]">
+          <span className="text-sm font-semibold text-slate-500">
             + ₹{GIFT_WRAP_FEE}
           </span>
-        </button>
+        </label>
       </div>
 
       <div className="space-y-2">
@@ -449,13 +466,6 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
             aria-pressed={isWishlistActive}
           >
             <Heart className={`h-5 w-5 ${isWishlistActive ? "fill-current" : ""}`} />
-          </button>
-          <button
-            type="button"
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-ui-border-base text-ui-fg-base transition hover:bg-ui-bg-subtle"
-            aria-label="Compare"
-          >
-            <GitCompare className="h-5 w-5" />
           </button>
         </div>
         <button

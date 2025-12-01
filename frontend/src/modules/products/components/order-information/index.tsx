@@ -23,7 +23,7 @@ const ORDER_MESSAGES = [
 
 const OrderInformation = () => {
   return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
+    <div className="rounded-xl border border-slate-200 bg-white p-6 mt-4">
       {ORDER_MESSAGES.map(({ icon: Icon, lead, highlight, helper }, index) => (
         <div
           key={lead}

@@ -33,18 +33,16 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
 
   return (
     <>
-      <div className="content-container py-6 lg:py-10" data-testid="product-container">
-        <Breadcrumbs
-          className="mb-6"
-          items={getProductBreadcrumbs(product)}
-        />
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,_720px)_minmax(360px,_460px)] xl:gap-16">
-          <div className="flex flex-col gap-8">
+      <div
+        className="content-container py-6 lg:py-10"
+        data-testid="product-container"
+      >
+        <Breadcrumbs className="mb-6" items={getProductBreadcrumbs(product)} />
+        <div className="flex flex-col gap-10 xl:flex-row xl:items-start">
+          <div className="w-full xl:w-1/2">
             <ImageGallery images={images} />
-            <ProductTabs product={product} />
-            <CustomerReviews />
           </div>
-          <div className="flex flex-col gap-6 lg:sticky lg:top-24">
+          <div className="w-full xl:w-1/2">
             <Suspense
               fallback={<ProductActions disabled={true} product={product} />}
             >
@@ -54,11 +52,20 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
                 countryCode={countryCode}
               />
             </Suspense>
-            <OrderInformation />
+            <div className="mt-6">
+              <OrderInformation />
+            </div>
           </div>
         </div>
+        <div className="mt-8 space-y-5">
+          <ProductTabs product={product} />
+          <CustomerReviews />
+        </div>
       </div>
-      <div className="content-container my-16" data-testid="related-products-container">
+      <div
+        className="content-container my-16"
+        data-testid="related-products-container"
+      >
         <Suspense fallback={<SkeletonRelatedProducts />}>
           <RelatedProducts product={product} countryCode={countryCode} />
         </Suspense>
@@ -73,12 +80,17 @@ export default ProductTemplate
 const getProductBreadcrumbs = (product: HttpTypes.StoreProduct) => {
   const firstCollection = product.collection
 
-  const items: { label: string; href?: string }[] = [{ label: "Store", href: "/store" }]
+  const items: { label: string; href?: string }[] = [
+    { label: "Store", href: "/store" },
+  ]
 
   if (firstCollection) {
     items.push({ label: "Collections", href: "/collections" })
     if (firstCollection.handle) {
-      items.push({ label: firstCollection.title, href: `/collections/${firstCollection.handle}` })
+      items.push({
+        label: firstCollection.title,
+        href: `/collections/${firstCollection.handle}`,
+      })
     } else {
       items.push({ label: firstCollection.title })
     }
