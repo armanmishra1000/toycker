@@ -7,6 +7,7 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { ViewMode } from "@modules/store/components/refinement-list/types"
 import WishlistButton from "@modules/products/components/wishlist-button"
+import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
 
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
@@ -31,6 +32,7 @@ export default function ProductPreview({
   const params = useParams<{ countryCode?: string }>()
   const [isPending, startTransition] = useTransition()
   const [status, setStatus] = useState<"idle" | "added" | "error">("idle")
+  const { openCart, refreshCart } = useCartSidebar()
   const countryCodeParam = Array.isArray(params?.countryCode)
     ? params.countryCode[0]
     : params?.countryCode
@@ -138,6 +140,8 @@ export default function ProductPreview({
                   startTransition,
                   setStatus,
                   router,
+                  openCart,
+                  refreshCart,
                 })
               }
               className={clx(
@@ -179,6 +183,8 @@ const handleAddToCart = (
     startTransition,
     setStatus,
     router,
+    openCart,
+    refreshCart,
   }: {
     multipleVariants: boolean
     defaultVariantId?: string | null
@@ -187,6 +193,8 @@ const handleAddToCart = (
     startTransition: TransitionStartFunction
     setStatus: (value: "idle" | "added" | "error") => void
     router: ReturnType<typeof useRouter>
+    openCart?: () => void
+    refreshCart?: () => Promise<void>
   }
 ) => {
   event.preventDefault()
@@ -200,8 +208,11 @@ const handleAddToCart = (
   startTransition(async () => {
     try {
       await addToCart({ variantId: defaultVariantId, quantity: 1, countryCode })
+      await refreshCart?.()
+      router.refresh()
       setStatus("added")
       setTimeout(() => setStatus("idle"), 2000)
+      openCart?.()
     } catch (error) {
       console.error("Failed to add to cart", error)
       setStatus("error")

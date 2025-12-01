@@ -25,6 +25,7 @@ import {
   Plus,
   Share2,
 } from "lucide-react"
+import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
 
 const GIFT_WRAP_FEE = 50
 
@@ -70,6 +71,7 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
   })
   const [shareCopied, setShareCopied] = useState(false)
   const countryCode = useParams().countryCode as string
+  const { openCart, refreshCart } = useCartSidebar()
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
@@ -225,6 +227,13 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
             }
           : undefined,
       })
+
+      await refreshCart()
+      router.refresh()
+
+      if (mode === "add") {
+        openCart()
+      }
 
       if (mode === "buy") {
         router.push(`/${countryCode}/checkout`)
