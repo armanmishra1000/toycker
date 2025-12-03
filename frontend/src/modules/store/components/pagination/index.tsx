@@ -45,10 +45,14 @@ export function Pagination({
   ) => (
     <button
       key={p}
-      className={clx("txt-xlarge-plus text-ui-fg-muted", {
-        "text-ui-fg-base hover:text-ui-fg-subtle": isCurrent,
-      })}
+      className={clx(
+        "h-10 min-w-[2.5rem] rounded-full px-3 text-sm font-semibold transition",
+        isCurrent
+          ? "bg-ui-fg-base text-ui-fg-on-inverted shadow-sm"
+          : "bg-transparent text-ui-fg-muted hover:bg-ui-bg-base hover:text-ui-fg-base"
+      )}
       disabled={isCurrent}
+      aria-current={isCurrent ? "page" : undefined}
       onClick={() => handlePageChange(p)}
     >
       {label}
@@ -59,9 +63,9 @@ export function Pagination({
   const renderEllipsis = (key: string) => (
     <span
       key={key}
-      className="txt-xlarge-plus text-ui-fg-muted items-center cursor-default"
+      className="px-2 text-base font-semibold text-ui-fg-muted"
     >
-      ...
+      …
     </span>
   )
 
@@ -116,9 +120,47 @@ export function Pagination({
   }
 
   // Render the component
+  const isFirstPage = currentPage <= 1
+  const isLastPage = currentPage >= pagesCount
+
+  const goToPrevious = () => {
+    if (!isFirstPage) {
+      handlePageChange(currentPage - 1)
+    }
+  }
+
+  const goToNext = () => {
+    if (!isLastPage) {
+      handlePageChange(currentPage + 1)
+    }
+  }
+
   return (
-    <div className="flex justify-center w-full mt-12">
-      <div className="flex gap-3 items-end" data-testid={dataTestid}>{renderPageButtons()}</div>
+    <div className="mt-12 flex w-full flex-col items-center gap-3" data-testid={dataTestid}>
+      <div className="flex items-center gap-2 text-sm text-ui-fg-subtle">
+        <span>Page {currentPage}</span>
+        <span aria-hidden className="h-4 w-px bg-ui-border-subtle" />
+        <span>of {pagesCount}</span>
+      </div>
+      <div className="flex items-center gap-2 rounded-full border border-ui-border-subtle bg-ui-bg-base px-2 py-1 shadow-sm">
+        <button
+          type="button"
+          onClick={goToPrevious}
+          disabled={isFirstPage}
+          className="h-9 rounded-full px-4 text-sm font-semibold text-ui-fg-base transition disabled:opacity-40"
+        >
+          Prev
+        </button>
+        <div className="flex items-center gap-1">{renderPageButtons()}</div>
+        <button
+          type="button"
+          onClick={goToNext}
+          disabled={isLastPage}
+          className="h-9 rounded-full px-4 text-sm font-semibold text-ui-fg-base transition disabled:opacity-40"
+        >
+          Next
+        </button>
+      </div>
     </div>
   )
 }
