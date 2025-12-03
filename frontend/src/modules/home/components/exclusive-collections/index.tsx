@@ -138,7 +138,7 @@ const ExclusiveCollections = () => {
                       >
                         Your browser does not support the video tag.
                       </video>
-                      <div className="flex items-center gap-3 bg-[#dbfca7] p-3 text-[#3a5017] absolute inset-x-0 bottom-0 z-10">
+                      <div className="flex items-center gap-3 bg-[#dbfca7] p-3 text-[#3a5017] z-10">
                       <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-white/60">
                         <Image
                           src={item.productImageSrc}
