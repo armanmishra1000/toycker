@@ -89,18 +89,15 @@ function getImagesForVariant(
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
   const { handle } = params
-  const region = await getRegion(params.countryCode)
+  const [region, product] = await Promise.all([
+    getRegion(params.countryCode),
+    listProducts({
+      countryCode: params.countryCode,
+      queryParams: { handle },
+    }).then(({ response }) => response.products[0]),
+  ])
 
-  if (!region) {
-    notFound()
-  }
-
-  const product = await listProducts({
-    countryCode: params.countryCode,
-    queryParams: { handle },
-  }).then(({ response }) => response.products[0])
-
-  if (!product) {
+  if (!region || !product) {
     notFound()
   }
 
@@ -117,23 +114,21 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function ProductPage(props: Props) {
   const params = await props.params
-  const region = await getRegion(params.countryCode)
   const searchParams = await props.searchParams
 
   const selectedVariantId = searchParams.v_id
 
-  if (!region) {
-    notFound()
-  }
-
-  const pricedProduct = await listProducts({
-    countryCode: params.countryCode,
-    queryParams: { handle: params.handle },
-  }).then(({ response }) => response.products[0])
+  const [region, pricedProduct] = await Promise.all([
+    getRegion(params.countryCode),
+    listProducts({
+      countryCode: params.countryCode,
+      queryParams: { handle: params.handle },
+    }).then(({ response }) => response.products[0]),
+  ])
 
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
 
-  if (!pricedProduct) {
+  if (!region || !pricedProduct) {
     notFound()
   }
 

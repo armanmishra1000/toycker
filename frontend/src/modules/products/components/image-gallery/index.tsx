@@ -51,17 +51,30 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
 
   if (!images?.length) {
     return (
-      <div className="flex w-full flex-col gap-y-4">
-        <div className="h-[420px] w-full animate-pulse rounded-2xl bg-ui-bg-subtle" />
-        <div className="h-20 w-full animate-pulse rounded-2xl bg-ui-bg-subtle" />
+      <div className="flex w-full flex-col gap-4">
+        <div className="flex h-[420px] w-full items-center justify-center rounded-3xl border border-dashed border-ui-border-base text-sm text-ui-fg-muted">
+          Images coming soon
+        </div>
       </div>
     )
   }
 
   if (!isMounted) {
+    const firstImage = images[0]
     return (
       <div className="flex flex-col gap-4">
-        <div className="h-[420px] w-full animate-pulse rounded-3xl bg-ui-bg-subtle" />
+        <div className="relative h-[420px] w-full overflow-hidden rounded-3xl bg-ui-bg-subtle">
+          {firstImage?.url && (
+            <Image
+              src={firstImage.url}
+              alt="Primary product image"
+              fill
+              priority
+              sizes="(min-width: 1024px) 620px, 100vw"
+              className="object-cover"
+            />
+          )}
+        </div>
       </div>
     )
   }

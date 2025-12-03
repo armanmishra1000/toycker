@@ -1,4 +1,6 @@
 import { Metadata } from "next"
+import { cookies } from "next/headers"
+import dynamic from "next/dynamic"
 
 import ExclusiveCollections from "@modules/home/components/exclusive-collections"
 import FeaturedProducts from "@modules/home/components/featured-products"
@@ -7,10 +9,10 @@ import PopularToySet from "@modules/home/components/popular-toy-set"
 import BestSelling from "@modules/home/components/best-selling"
 import ShopByAge from "@modules/home/components/shop-by-age"
 import WhyChooseUs from "@modules/home/components/why-choose-us"
-import CustomerSay from "@modules/home/components/customer-say"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
-import { retrieveCustomer } from "@lib/data/customer"
+
+const CustomerSay = dynamic(() => import("@modules/home/components/customer-say"))
 
 export const metadata: Metadata = {
   title: "Medusa Next.js Starter Template",
@@ -25,16 +27,17 @@ export default async function Home(props: {
 
   const { countryCode } = params
 
-  const [region, collectionsResult, customer] = await Promise.all([
+  const [region, collectionsResult] = await Promise.all([
     getRegion(countryCode),
     listCollections({
       fields: "id, handle, title",
     }),
-    retrieveCustomer(),
   ])
 
+  const cookieStore = await cookies()
+
   const collections = collectionsResult?.collections
-  const isCustomerLoggedIn = Boolean(customer)
+  const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
 
   if (!collections || !region) {
     return null

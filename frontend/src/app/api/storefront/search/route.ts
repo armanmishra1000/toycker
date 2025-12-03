@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get("q") ?? ""
     const countryParam = searchParams.get("countryCode")
-    const cookieCountry = cookies().get("country_code")?.value
+    const cookieCountry = (await cookies()).get("country_code")?.value
     const countryCode = countryParam || cookieCountry
     const productLimit = Number(searchParams.get("productLimit")) || 6
     const taxonomyLimit = Number(searchParams.get("taxonomyLimit")) || 5

@@ -1,5 +1,7 @@
 "use server"
 
+import { cache } from "react"
+
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
@@ -29,7 +31,7 @@ type LineItemMetadata = Record<string, LineItemMetadataValue> | GiftWrapMetadata
  * @param cartId - optional - The ID of the cart to retrieve.
  * @returns The cart object if found, or null if not found.
  */
-export async function retrieveCart(cartId?: string, fields?: string) {
+export const retrieveCart = cache(async (cartId?: string, fields?: string) => {
   const id = cartId || (await getCartId())
   fields ??= "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
 
@@ -52,7 +54,7 @@ export async function retrieveCart(cartId?: string, fields?: string) {
     })
     .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
     .catch(() => null)
-}
+})
 
 export async function getOrSetCart(countryCode: string) {
   const region = await getRegion(countryCode)
@@ -61,7 +63,7 @@ export async function getOrSetCart(countryCode: string) {
     throw new Error(`Region not found for country code: ${countryCode}`)
   }
 
-  let cart = await retrieveCart(undefined, 'id,region_id')
+  let cart = await retrieveCart(undefined, "id,region_id")
 
   const headers = {
     ...(await getAuthHeaders()),
@@ -468,7 +470,7 @@ export async function updateRegion(countryCode: string, currentPath: string) {
   redirect(`/${countryCode}${currentPath}`)
 }
 
-export async function listCartOptions() {
+export const listCartOptions = cache(async () => {
   const cartId = await getCartId()
   const headers = {
     ...(await getAuthHeaders()),
@@ -480,4 +482,4 @@ export async function listCartOptions() {
     headers,
     cache: "no-store",
   })
-}
+})

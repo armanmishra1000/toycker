@@ -14,6 +14,8 @@ const R2_PATHNAME = process.env.NEXT_PUBLIC_R2_MEDIA_PATHNAME
 /**
  * @type {import('next').NextConfig}
  */
+const IMAGE_QUALITIES = [50, 75, 90]
+
 const nextConfig = {
   reactStrictMode: true,
   logging: {
@@ -64,6 +66,7 @@ const nextConfig = {
           ]
         : []),
     ],
+    qualities: IMAGE_QUALITIES,
   },
 }
 

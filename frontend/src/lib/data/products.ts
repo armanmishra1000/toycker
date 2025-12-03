@@ -22,7 +22,7 @@ const PRODUCT_CACHE_MODE: ProductCacheMode = (() => {
     return override
   }
 
-  return process.env.NODE_ENV === "production" ? "no-store" : "force-cache"
+  return "force-cache"
 })()
 
 const DEFAULT_PRODUCT_FIELDS =

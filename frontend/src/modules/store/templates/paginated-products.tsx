@@ -1,6 +1,7 @@
+import { cookies } from "next/headers"
+
 import { listPaginatedProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
-import { retrieveCustomer } from "@lib/data/customer"
 import {
   AvailabilityFilter,
   PriceRangeFilter,
@@ -69,10 +70,7 @@ export default async function PaginatedProducts({
     queryParams["q"] = searchQuery
   }
 
-  const [region, customer] = await Promise.all([
-    getRegion(countryCode),
-    retrieveCustomer(),
-  ])
+  const region = await getRegion(countryCode)
 
   if (!region) {
     return null
@@ -96,6 +94,8 @@ export default async function PaginatedProducts({
   const resolvedSort = sortBy || "featured"
 
   const accountPath = `/${countryCode}/account`
+  const cookieStore = await cookies()
+  const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
 
   return (
     <ProductGridSection
@@ -107,7 +107,7 @@ export default async function PaginatedProducts({
       sortBy={resolvedSort}
       pageSize={STORE_PRODUCT_PAGE_SIZE}
       totalCountHint={totalCountHint}
-      isCustomerLoggedIn={Boolean(customer)}
+      isCustomerLoggedIn={isCustomerLoggedIn}
       loginPath={accountPath}
     />
   )
