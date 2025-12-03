@@ -2,6 +2,8 @@
 
 import { addToCart } from "@lib/data/cart"
 import { getProductPrice } from "@lib/util/get-product-price"
+import { buildDisplayPrice } from "@lib/util/display-price"
+import { extractPlainText } from "@lib/util/sanitize-html"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import Modal from "@modules/common/components/modal"
@@ -45,11 +47,6 @@ const optionsAsKeymap = (
   }, {})
 }
 
-const formatPriceForDisplay = (price?: string) => {
-  if (!price) return ""
-  return price.replace("₹", "Rs. ")
-}
-
 export default function ProductActions({ product, disabled }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -75,6 +72,7 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
   const countryCode = useParams().countryCode as string
   const { openCart, refreshCart } = useCartSidebar()
   const giftWrapInputId = useId()
+  const plainDescription = extractPlainText(product.description)
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
@@ -291,13 +289,9 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
     }
   }, [product, selectedVariant?.id])
 
-  const displayPrice = selectedVariant
-    ? priceMeta.variantPrice
-    : priceMeta.cheapestPrice
-
-  const showOriginalPrice =
-    (displayPrice?.price_type === "sale" && !!displayPrice.original_price) ||
-    (displayPrice?.original_price_number || 0) > (displayPrice?.calculated_price_number || 0)
+  const normalizedPrice = buildDisplayPrice(
+    selectedVariant ? priceMeta.variantPrice : priceMeta.cheapestPrice
+  )
 
   const requiresSelection = (product.options?.length ?? 0) > 0 && !selectedVariant
 
@@ -330,19 +324,24 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
             {product.title}
           </h1>
           <p className="text-base text-slate-500">
-            {product.subtitle || product.description || "Playful accessories curated for everyday wonder."}
+            {product.subtitle || plainDescription || "Playful accessories curated for everyday wonder."}
           </p>
         </div>
 
         <div className="flex flex-wrap items-baseline gap-3">
-          {displayPrice ? (
+          {normalizedPrice ? (
             <>
               <span className="text-3xl font-bold text-[#E7353A]">
-                {formatPriceForDisplay(displayPrice.calculated_price)}
+                {normalizedPrice.current.raw}
               </span>
-              {showOriginalPrice && displayPrice?.original_price && (
+              {normalizedPrice.original && (
                 <span className="text-lg text-slate-400 line-through">
-                  {formatPriceForDisplay(displayPrice.original_price)}
+                  {normalizedPrice.original.raw}
+                </span>
+              )}
+              {normalizedPrice.percentageText && (
+                <span className="text-sm font-semibold text-[#E7353A]">
+                  {normalizedPrice.percentageText}
                 </span>
               )}
             </>

@@ -1,29 +1,33 @@
 import { Text, clx } from "@medusajs/ui"
 import { VariantPrice } from "types/global"
+import { buildDisplayPrice } from "@lib/util/display-price"
 
-export default function PreviewPrice({ price }: { price: VariantPrice }) {
-  if (!price) {
+export default function PreviewPrice({ price }: { price: VariantPrice | null }) {
+  const displayPrice = buildDisplayPrice(price)
+
+  if (!displayPrice) {
     return null
   }
 
   return (
-    <>
-      {price.price_type === "sale" && (
+    <div className="flex flex-col leading-tight">
+      <Text
+        className={clx("text-lg font-semibold", {
+          "text-[#E7353A]": displayPrice.isDiscounted,
+          "text-ui-fg-base": !displayPrice.isDiscounted,
+        })}
+        data-testid="price"
+      >
+        {displayPrice.current.raw}
+      </Text>
+      {displayPrice.original && (
         <Text
-          className={clx("text-ui-fg-muted font-semibold text-lg", {
-            "text-primary": price.price_type === "sale",
-          })}
-          data-testid="price"
+          className="text-sm text-ui-fg-muted line-through"
+          data-testid="original-price"
         >
-          {price.calculated_price}
+          {displayPrice.original.raw}
         </Text>
       )}
-      <Text
-        className="line-through text-ui-fg-muted"
-        data-testid="original-price"
-      >
-        {price.original_price}
-      </Text>
-    </>
+    </div>
   )
 }

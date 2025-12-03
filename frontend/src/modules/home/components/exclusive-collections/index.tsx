@@ -62,7 +62,7 @@ const ExclusiveCollections = () => {
               seeing the drape in motion.
             </p>
           </div>
-          {isMounted && (
+          {/* {isMounted && (
             <button
               type="button"
               className="inline-flex items-center gap-2 self-start rounded-full border border-[#d6b39c] bg-white px-4 py-2 text-sm font-semibold text-[#8b5e34] shadow-sm transition hover:bg-[#f8ede6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d6b39c]"
@@ -77,7 +77,7 @@ const ExclusiveCollections = () => {
               )}
               {isAutoplaying ? "Pause autoplay" : "Resume autoplay"}
             </button>
-          )}
+          )} */}
         </header>
 
         {!isMounted ? (
@@ -124,7 +124,7 @@ const ExclusiveCollections = () => {
                   role="group"
                   aria-label={`Video ${index + 1} of ${exclusiveCollectionItems.length}`}
                 >
-                  <article className="flex h-full flex-col rounded-xl border">
+                  <article className="flex h-full flex-col rounded-xl overflow-hidden">
                     <div className="relative overflow-hidden rounded-xl">
                       <video
                         className="h-full w-full object-cover d-block"
@@ -138,9 +138,7 @@ const ExclusiveCollections = () => {
                       >
                         Your browser does not support the video tag.
                       </video>
-                    </div>
-
-                    <div className="flex items-center gap-3 rounded-xl bg-[#dcc3af] p-3 text-[#463226]">
+                      <div className="flex items-center gap-3 bg-[#dbfca7] p-3 text-[#3a5017] absolute inset-x-0 bottom-0 z-10">
                       <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-white/60">
                         <Image
                           src={item.productImageSrc}
@@ -152,10 +150,11 @@ const ExclusiveCollections = () => {
                       </div>
                       <div className="flex min-h-[3.5rem] flex-1 flex-col justify-center">
                         <p className="text-sm font-semibold leading-tight">{item.name}</p>
-                        <p className="text-xs font-semibold uppercase tracking-widest text-[#7b4a2b]">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-primary">
                           {item.priceLabel}
                         </p>
                       </div>
+                    </div>
                     </div>
                   </article>
                 </SwiperSlide>

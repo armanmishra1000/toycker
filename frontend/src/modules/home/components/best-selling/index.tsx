@@ -4,7 +4,7 @@ import { WishlistProvider } from "@modules/products/context/wishlist"
 import { getCollectionProductsByHandle } from "@modules/home/lib/get-collection-products"
 
 const BEST_SELLING_COLLECTION_HANDLE = "best_selling"
-const BEST_SELLING_SECTION_LIMIT = 5
+const BEST_SELLING_SECTION_LIMIT = 10
 
 type BestSellingProps = {
   regionId: string

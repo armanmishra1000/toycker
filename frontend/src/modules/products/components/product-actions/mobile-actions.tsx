@@ -7,6 +7,7 @@ import ChevronDown from "@modules/common/icons/chevron-down"
 import X from "@modules/common/icons/x"
 
 import { getProductPrice } from "@lib/util/get-product-price"
+import { buildDisplayPrice } from "@lib/util/display-price"
 import OptionSelect from "./option-select"
 import { HttpTypes } from "@medusajs/types"
 import { isSimpleProduct } from "@lib/util/product"
@@ -50,6 +51,8 @@ const MobileActions: React.FC<MobileActionsProps> = ({
     return variantPrice || cheapestPrice || null
   }, [price])
 
+  const normalizedPrice = useMemo(() => buildDisplayPrice(selectedPrice), [selectedPrice])
+
   const isSimple = isSimpleProduct(product)
 
   return (
@@ -76,26 +79,24 @@ const MobileActions: React.FC<MobileActionsProps> = ({
             <div className="flex items-center gap-x-2">
               <span data-testid="mobile-title">{product.title}</span>
               <span>—</span>
-              {selectedPrice ? (
+              {normalizedPrice ? (
                 <div className="flex items-end gap-x-2 text-ui-fg-base">
-                  {selectedPrice.price_type === "sale" && (
-                    <p>
-                      <span className="line-through text-small-regular">
-                        {selectedPrice.original_price}
-                      </span>
-                    </p>
-                  )}
                   <span
-                    className={clx({
-                      "text-ui-fg-interactive":
-                        selectedPrice.price_type === "sale",
+                    className={clx("text-lg font-semibold", {
+                      "text-[#E7353A]": normalizedPrice.isDiscounted,
+                      "text-slate-900": !normalizedPrice.isDiscounted,
                     })}
                   >
-                    {selectedPrice.calculated_price}
+                    {normalizedPrice.current.raw}
                   </span>
+                  {normalizedPrice.original && (
+                    <span className="text-sm text-slate-500 line-through">
+                      {normalizedPrice.original.raw}
+                    </span>
+                  )}
                 </div>
               ) : (
-                <div></div>
+                <div className="h-4 w-20 rounded bg-slate-100" />
               )}
             </div>
             <div className={clx("grid grid-cols-2 w-full gap-x-4", {

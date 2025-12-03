@@ -8,6 +8,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { ViewMode } from "@modules/store/components/refinement-list/types"
 import WishlistButton from "@modules/products/components/wishlist-button"
 import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
+import SafeRichText from "@modules/common/components/safe-rich-text"
 
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
@@ -75,9 +76,7 @@ export default function ProductPreview({
     isListView ? "line-clamp-2" : "line-clamp-1",
     titleSizeMap[viewMode] ?? "text-lg"
   )
-  const descriptionPreview = isListView
-    ? product.description?.trim()
-    : undefined
+  const descriptionPreview = isListView && product.description ? product.description : undefined
 
   return (
     <LocalizedClientLink
@@ -114,9 +113,10 @@ export default function ProductPreview({
               </Text>
             </div>
             {descriptionPreview && (
-              <p className="text-sm text-ui-fg-muted line-clamp-4 whitespace-pre-line">
-                {descriptionPreview}
-              </p>
+              <SafeRichText
+                html={descriptionPreview}
+                className="text-sm text-ui-fg-muted line-clamp-4 rich-text-muted"
+              />
             )}
           </div>
           <div className="mt-auto flex items-center justify-between gap-4">

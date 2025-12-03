@@ -136,4 +136,38 @@ body {
   .text-3xl-semi {
     @apply text-[32px] leading-[44px] font-semibold;
   }
+
+  .rich-text-block {
+    max-width: none;
+    line-height: 1.65;
+  }
+
+  .rich-text-block p {
+    margin-bottom: 0.75rem;
+  }
+
+  .rich-text-block ul,
+  .rich-text-block ol {
+    padding-left: 1.25rem;
+    margin: 0.5rem 0 0.75rem;
+  }
+
+  .rich-text-block li {
+    margin-bottom: 0.25rem;
+  }
+
+  .rich-text-muted {
+    max-width: none;
+    line-height: 1.5;
+  }
+
+  .rich-text-muted ul,
+  .rich-text-muted ol {
+    padding-left: 1.25rem;
+    margin: 0.25rem 0 0.5rem;
+  }
+
+  .rich-text-muted li {
+    list-style: disc;
+  }
 }

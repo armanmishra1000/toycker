@@ -2,6 +2,7 @@
 
 import Accordion from "./accordion"
 import { HttpTypes } from "@medusajs/types"
+import SafeRichText from "@modules/common/components/safe-rich-text"
 
 type ProductTabsProps = {
   product: HttpTypes.StoreProduct
@@ -42,11 +43,16 @@ const DescriptionTab = ({
   description,
 }: {
   description?: string | null
-}) => (
-  <div className="py-6 text-sm text-slate-600 whitespace-pre-line">
-    {description || "Product description will be updated shortly."}
-  </div>
-)
+}) => {
+  const hasDescription = Boolean(description && description.trim())
+
+  return (
+    <div className="space-y-3 py-6 text-sm text-slate-600">
+      <SafeRichText html={description} className="rich-text-block text-slate-600" />
+      {!hasDescription && <p>Product description will be updated shortly.</p>}
+    </div>
+  )
+}
 
 const ShippingReturnsTab = () => (
   <div className="space-y-4 py-6 text-sm text-slate-700">
