@@ -39,17 +39,126 @@ const ensureVariantMetadataSelection = (fields?: string) => {
   return parts.length ? `${parts.join(",")},+variants.metadata` : "+variants.metadata"
 }
 
-export const listProducts = async ({
-  pageParam = 1,
-  queryParams,
-  countryCode,
-  regionId,
-}: {
-  pageParam?: number
-  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
-  countryCode?: string
-  regionId?: string
-}): Promise<{
+const fetchCollectionProductIds = async (
+  collectionIds: string[],
+  headers: Record<string, string>
+) => {
+  if (!collectionIds.length) {
+    return [] as string[]
+  }
+
+  const identifierSet = new Set<string>()
+
+  await Promise.all(
+    collectionIds.map(async (collectionId) => {
+      try {
+        const response = await sdk.client.fetch<{ product_ids?: string[] }>(
+          `/store/collections/${collectionId}/product-ids`,
+          {
+            method: "GET",
+            headers,
+            cache: "no-store",
+          }
+        )
+
+        response.product_ids?.forEach((productId) => {
+          if (productId) {
+            identifierSet.add(productId)
+          }
+        })
+      } catch (error) {
+        console.warn(`Unable to load products for collection ${collectionId}`, error)
+      }
+    })
+  )
+
+  return Array.from(identifierSet)
+}
+
+const prepareCollectionAwareQuery = async (
+  query: (HttpTypes.FindParams & HttpTypes.StoreProductListParams) | undefined,
+  headers: Record<string, string>,
+  skipExpansion?: boolean
+) => {
+  if (!query || skipExpansion || !query.collection_id?.length) {
+    return { query }
+  }
+
+  const productIds = await fetchCollectionProductIds(query.collection_id, headers)
+
+  if (!productIds.length) {
+    return { query: null }
+  }
+
+  const nextQuery: HttpTypes.FindParams & HttpTypes.StoreProductListParams = {
+    ...query,
+  }
+
+  delete nextQuery.collection_id
+
+  if (nextQuery.id?.length) {
+    const combined = new Set([...nextQuery.id, ...productIds])
+    nextQuery.id = Array.from(combined)
+  } else {
+    nextQuery.id = productIds
+  }
+
+  return { query: nextQuery }
+}
+
+const hydrateProductsWithCollections = async (
+  products: HttpTypes.StoreProduct[],
+  headers: Record<string, string>
+) => {
+  const productIds = products.map((product) => product.id).filter(Boolean)
+
+  if (!productIds.length) {
+    return
+  }
+
+  try {
+    const payload = await sdk.client.fetch<{
+      items: { product_id: string; collections: HttpTypes.StoreProductCollection[] }[]
+    }>("/store/product-multi-collections", {
+      method: "GET",
+      query: {
+        product_id: productIds,
+      },
+      headers,
+      cache: "no-store",
+    })
+
+    const collectionMap = new Map(
+      (payload.items ?? []).map((item) => [item.product_id, item.collections ?? []])
+    )
+
+    products.forEach((product) => {
+      const assigned = collectionMap.get(product.id)
+      if (assigned?.length) {
+        ;(product as HttpTypes.StoreProduct & {
+          additional_collections?: HttpTypes.StoreProductCollection[]
+        }).additional_collections = assigned
+      }
+    })
+  } catch (error) {
+    console.warn("Unable to hydrate product collections", error)
+  }
+}
+
+export const listProducts = async (
+  {
+    pageParam = 1,
+    queryParams,
+    countryCode,
+    regionId,
+  }: {
+    pageParam?: number
+    queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
+    countryCode?: string
+    regionId?: string
+  },
+  options?: { headers?: Record<string, string>; skipCollectionExpansion?: boolean }
+): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
@@ -89,7 +198,7 @@ export const listProducts = async ({
     }
   }
 
-  const headers = {
+  const headers = options?.headers ?? {
     ...(await getAuthHeaders()),
   }
 
@@ -102,6 +211,22 @@ export const listProducts = async ({
 
   const { fields: requestedFields, ...restQuery } = queryParams ?? {}
 
+  const preparedQueryResult = await prepareCollectionAwareQuery(
+    restQuery,
+    headers,
+    options?.skipCollectionExpansion
+  )
+
+  if (!preparedQueryResult.query) {
+    return {
+      response: { products: [], count: 0 },
+      nextPage: null,
+      queryParams,
+    }
+  }
+
+  const normalizedQuery = preparedQueryResult.query
+
   const requestOptions: SdkFetchOptions = {
     method: "GET",
     query: {
@@ -109,7 +234,7 @@ export const listProducts = async ({
       offset,
       region_id: region?.id,
       fields: ensureVariantMetadataSelection(requestedFields),
-      ...restQuery,
+      ...normalizedQuery,
     },
     headers,
     cache: PRODUCT_CACHE_MODE,
@@ -124,7 +249,8 @@ export const listProducts = async ({
       `/store/products`,
       requestOptions
     )
-    .then(({ products, count }) => {
+    .then(async ({ products, count }) => {
+      await hydrateProductsWithCollections(products, headers)
       const nextPage = count > offset + limit ? pageParam + 1 : null
 
       return {
@@ -266,22 +392,44 @@ export const listPaginatedProducts = async ({
   const requiresClientSideFiltering = Boolean(availability || priceFilter || ageFilter)
   const needsFullScan = requiresClientSideFiltering || requiresClientSideSorting
   const order = ORDER_MAP[sortBy]
-  const baseQuery = {
-    ...queryParams,
+  const baseQuery: HttpTypes.FindParams & HttpTypes.StoreProductListParams = {
+    ...(queryParams ?? {}),
     ...(order ? { order } : {}),
+  }
+
+  const authHeaders = await getAuthHeaders()
+  const preparedQueryResult = await prepareCollectionAwareQuery(baseQuery, authHeaders)
+
+  if (!preparedQueryResult.query) {
+    return {
+      response: { products: [], count: 0 },
+      pagination: {
+        page: normalizedPage,
+        limit,
+      },
+    }
+  }
+
+  const normalizedQuery = preparedQueryResult.query
+  const sharedListOptions = {
+    headers: authHeaders,
+    skipCollectionExpansion: true,
   }
 
   if (!needsFullScan) {
     const {
       response: { products, count },
-    } = await listProducts({
-      pageParam: normalizedPage,
-      queryParams: {
-        ...baseQuery,
-        limit,
+    } = await listProducts(
+      {
+        pageParam: normalizedPage,
+        queryParams: {
+          ...normalizedQuery,
+          limit,
+        },
+        countryCode,
       },
-      countryCode,
-    })
+      sharedListOptions
+    )
 
     return {
       response: {
@@ -302,14 +450,17 @@ export const listPaginatedProducts = async ({
 
   while (iterations < CLIENT_SCAN_MAX_PAGES && aggregated.length < CLIENT_SCAN_LIMIT) {
     iterations += 1
-    const { response, nextPage } = await listProducts({
-      pageParam: cursor,
-      queryParams: {
-        ...baseQuery,
-        limit: chunkSize,
+    const { response, nextPage } = await listProducts(
+      {
+        pageParam: cursor,
+        queryParams: {
+          ...normalizedQuery,
+          limit: chunkSize,
+        },
+        countryCode,
       },
-      countryCode,
-    })
+      sharedListOptions
+    )
 
     aggregated.push(...response.products)
 

@@ -1,8 +1,8 @@
 import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
+import type { HttpTypes } from "@medusajs/types"
 import Product from "../product-preview"
-
 type RelatedProductsProps = {
   product: HttpTypes.StoreProduct
   countryCode: string
@@ -23,8 +23,15 @@ export default async function RelatedProducts({
   if (region?.id) {
     queryParams.region_id = region.id
   }
-  if (product.collection_id) {
-    queryParams.collection_id = [product.collection_id]
+  const collectionCandidates = [
+    ...(product.collection_id ? [product.collection_id] : []),
+    ...(((product as HttpTypes.StoreProduct & {
+      additional_collections?: HttpTypes.StoreProductCollection[]
+    }).additional_collections || []).map((collection) => collection.id)),
+  ].filter(Boolean)
+
+  if (collectionCandidates.length) {
+    queryParams.collection_id = Array.from(new Set(collectionCandidates))
   }
   if (product.tags) {
     queryParams.tag_id = product.tags
