@@ -2,16 +2,13 @@
 
 import { convertToLocale } from "@lib/util/money"
 import { CheckCircleSolid, XMark } from "@medusajs/icons"
-import {
-  HttpTypes,
-  StoreCart,
-  StoreCartShippingOption,
-  StorePrice,
-} from "@medusajs/types"
+import { HttpTypes, StoreCart, StoreCartShippingOption, StorePrice } from "@medusajs/types"
 import { Button, clx } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useState } from "react"
 import { StoreFreeShippingPrice } from "types/global"
+
+import { useLayoutData } from "@modules/layout/context/layout-data-context"
 
 const computeTarget = (
   cart: HttpTypes.StoreCart,
@@ -72,17 +69,11 @@ const computeTarget = (
   }
 }
 
-export default function ShippingPriceNudge({
-  variant = "inline",
-  cart,
-  shippingOptions,
-}: {
-  variant?: "popup" | "inline"
-  cart: StoreCart
-  shippingOptions: StoreCartShippingOption[]
-}) {
+export default function ShippingPriceNudge({ variant = "inline" }: { variant?: "popup" | "inline" }) {
+  const { cart, shippingOptions } = useLayoutData()
+
   if (!cart || !shippingOptions?.length) {
-    return
+    return null
   }
 
   // Check if any shipping options have a conditional price based on item_total
@@ -91,7 +82,7 @@ export default function ShippingPriceNudge({
       const calculatedPrice = shippingOption.calculated_price
 
       if (!calculatedPrice) {
-        return
+        return null
       }
 
       // Get all prices that are:
@@ -120,7 +111,7 @@ export default function ShippingPriceNudge({
     .find((price) => price?.amount === 0)
 
   if (!freeShippingPrice) {
-    return
+    return null
   }
 
   if (variant === "popup") {

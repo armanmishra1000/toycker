@@ -2,20 +2,18 @@
 
 import { transferCart } from "@lib/data/customer"
 import { ExclamationCircleSolid } from "@medusajs/icons"
-import { StoreCart, StoreCustomer } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useState } from "react"
 
-function CartMismatchBanner(props: {
-  customer: StoreCustomer
-  cart: StoreCart
-}) {
-  const { customer, cart } = props
+import { useLayoutData } from "@modules/layout/context/layout-data-context"
+
+function CartMismatchBanner() {
+  const { customer, cart, refresh } = useLayoutData()
   const [isPending, setIsPending] = useState(false)
   const [actionText, setActionText] = useState("Run transfer again")
 
-  if (!customer || !!cart.customer_id) {
-    return
+  if (!customer || !cart || cart.customer_id) {
+    return null
   }
 
   const handleSubmit = async () => {
@@ -24,8 +22,10 @@ function CartMismatchBanner(props: {
       setActionText("Transferring..")
 
       await transferCart()
+      await refresh()
     } catch {
       setActionText("Run transfer again")
+    } finally {
       setIsPending(false)
     }
   }

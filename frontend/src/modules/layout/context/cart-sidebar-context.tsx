@@ -3,14 +3,9 @@
 import { deleteLineItem } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { useRouter } from "next/navigation"
-import {
-  ReactNode,
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react"
+import { ReactNode, createContext, useCallback, useContext, useMemo, useState } from "react"
+
+import { useLayoutData } from "./layout-data-context"
 
 type CartSidebarContextValue = {
   isOpen: boolean
@@ -28,8 +23,8 @@ const CartSidebarContext = createContext<CartSidebarContextValue | undefined>(
 
 export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const [cart, setCart] = useState<HttpTypes.StoreCart | null>(null)
   const router = useRouter()
+  const { cart, setCart, refresh } = useLayoutData()
 
   const openCart = useCallback(() => {
     setIsOpen(true)
@@ -41,16 +36,11 @@ export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshCart = useCallback(async () => {
     try {
-      const response = await fetch("/api/cart", { cache: "no-store" })
-      if (!response.ok) {
-        throw new Error("Failed to refresh cart")
-      }
-      const data = (await response.json()) as { cart: HttpTypes.StoreCart | null }
-      setCart(data.cart)
+      await refresh()
     } catch (error) {
-      console.error(error)
+      console.error("Failed to refresh cart", error)
     }
-  }, [])
+  }, [refresh])
 
   const removeLineItem = useCallback(
     async (lineItemId: string) => {
@@ -76,7 +66,7 @@ export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
       refreshCart,
       removeLineItem,
     }),
-    [cart, closeCart, isOpen, openCart, refreshCart, removeLineItem],
+    [cart, closeCart, isOpen, openCart, refreshCart, removeLineItem, setCart],
   )
 
   return (
