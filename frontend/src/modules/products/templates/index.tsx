@@ -78,24 +78,5 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
 export default ProductTemplate
 
 const getProductBreadcrumbs = (product: HttpTypes.StoreProduct) => {
-  const firstCollection = product.collection
-
-  const items: { label: string; href?: string }[] = [
-    { label: "Store", href: "/store" },
-  ]
-
-  if (firstCollection) {
-    items.push({ label: "Collections", href: "/collections" })
-    if (firstCollection.handle) {
-      items.push({
-        label: firstCollection.title,
-        href: `/collections/${firstCollection.handle}`,
-      })
-    } else {
-      items.push({ label: firstCollection.title })
-    }
-  }
-
-  items.push({ label: product.title })
-  return items
+  return [{ label: product.title }]
 }

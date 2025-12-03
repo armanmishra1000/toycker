@@ -1,6 +1,7 @@
 import { clx } from "@medusajs/ui"
 
 import { getProductPrice } from "@lib/util/get-product-price"
+import { buildDisplayPrice } from "@lib/util/display-price"
 import { HttpTypes } from "@medusajs/types"
 
 export default function ProductPrice({
@@ -16,8 +17,9 @@ export default function ProductPrice({
   })
 
   const selectedPrice = variant ? variantPrice : cheapestPrice
+  const displayPrice = buildDisplayPrice(selectedPrice)
 
-  if (!selectedPrice) {
+  if (!displayPrice) {
     return <div className="block w-32 h-9 bg-gray-100 animate-pulse" />
   }
 
@@ -25,33 +27,33 @@ export default function ProductPrice({
     <div className="flex flex-col text-ui-fg-base">
       <span
         className={clx("text-xl-semi", {
-          "text-ui-fg-interactive": selectedPrice.price_type === "sale",
+          "text-[#E7353A]": displayPrice.isDiscounted,
+          "text-ui-fg-base": !displayPrice.isDiscounted,
         })}
       >
         {!variant && "From "}
         <span
           data-testid="product-price"
-          data-value={selectedPrice.calculated_price_number}
+          data-value={displayPrice.current.value}
         >
-          {selectedPrice.calculated_price}
+          {displayPrice.current.raw}
         </span>
       </span>
-      {selectedPrice.price_type === "sale" && (
-        <>
-          <p>
-            <span className="text-ui-fg-subtle">Original: </span>
-            <span
-              className="line-through"
-              data-testid="original-product-price"
-              data-value={selectedPrice.original_price_number}
-            >
-              {selectedPrice.original_price}
-            </span>
-          </p>
-          <span className="text-ui-fg-interactive">
-            -{selectedPrice.percentage_diff}%
+      {displayPrice.original && (
+        <div className="flex items-baseline gap-2">
+          <span
+            className="text-ui-fg-muted line-through"
+            data-testid="original-product-price"
+            data-value={displayPrice.original.value}
+          >
+            {displayPrice.original.raw}
           </span>
-        </>
+          {displayPrice.percentageText && (
+            <span className="text-ui-fg-interactive text-sm font-semibold">
+              {displayPrice.percentageText}
+            </span>
+          )}
+        </div>
       )}
     </div>
   )

@@ -25,6 +25,20 @@ const PRODUCT_CACHE_MODE: ProductCacheMode = (() => {
   return process.env.NODE_ENV === "production" ? "no-store" : "force-cache"
 })()
 
+const DEFAULT_PRODUCT_FIELDS =
+  "*variants.calculated_price,+variants.metadata,+variants.inventory_quantity,*variants.images,+metadata,+tags"
+
+const ensureVariantMetadataSelection = (fields?: string) => {
+  const normalized = (fields ?? DEFAULT_PRODUCT_FIELDS).replace(/,+$/g, "")
+  const parts = normalized.split(",").map((part) => part.trim()).filter(Boolean)
+
+  if (parts.includes("+variants.metadata")) {
+    return parts.join(",")
+  }
+
+  return parts.length ? `${parts.join(",")},+variants.metadata` : "+variants.metadata"
+}
+
 export const listProducts = async ({
   pageParam = 1,
   queryParams,
@@ -86,15 +100,16 @@ export const listProducts = async ({
         }
       : undefined
 
+  const { fields: requestedFields, ...restQuery } = queryParams ?? {}
+
   const requestOptions: SdkFetchOptions = {
     method: "GET",
     query: {
       limit,
       offset,
       region_id: region?.id,
-      fields:
-        "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
-      ...queryParams,
+      fields: ensureVariantMetadataSelection(requestedFields),
+      ...restQuery,
     },
     headers,
     cache: PRODUCT_CACHE_MODE,
