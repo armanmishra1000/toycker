@@ -1,11 +1,11 @@
-import { retrieveCustomer } from "@lib/data/customer"
+import { cookies } from "next/headers"
+
 import { listPaginatedProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions, ViewMode } from "@modules/store/components/refinement-list/types"
 import ProductGridSection from "@modules/store/components/product-grid-section"
 import { StorefrontFiltersProvider } from "@modules/store/context/storefront-filters"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
-import { fetchAvailabilityCounts } from "@modules/store/utils/availability"
 import FilterDrawer from "@modules/store/components/filter-drawer"
 import Breadcrumbs from "@modules/common/components/breadcrumbs"
 
@@ -29,8 +29,7 @@ export default async function CollectionTemplate({
     return null
   }
 
-  const [availabilityCounts, productListing, customer] = await Promise.all([
-    fetchAvailabilityCounts(countryCode),
+  const [productListing] = await Promise.all([
     listPaginatedProducts({
       page: pageNumber,
       limit: STORE_PRODUCT_PAGE_SIZE,
@@ -40,20 +39,19 @@ export default async function CollectionTemplate({
         collection_id: [collection.id],
       },
     }),
-    retrieveCustomer(),
   ])
-
-  const { inStock, outOfStock } = availabilityCounts
   const {
     response: { products: initialProducts, count: initialCount },
   } = productListing
 
   const availabilityOptions = [
-    { value: "in_stock", label: "In stock", count: inStock },
-    { value: "out_of_stock", label: "Out of stock", count: outOfStock },
+    { value: "in_stock", label: "In stock" },
+    { value: "out_of_stock", label: "Out of stock" },
   ]
 
   const accountPath = `/${countryCode}/account`
+  const cookieStore = await cookies()
+  const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
 
   return (
     <StorefrontFiltersProvider
@@ -87,7 +85,7 @@ export default async function CollectionTemplate({
             viewMode={defaultViewMode}
             sortBy={sort}
             pageSize={STORE_PRODUCT_PAGE_SIZE}
-            isCustomerLoggedIn={Boolean(customer)}
+            isCustomerLoggedIn={isCustomerLoggedIn}
             loginPath={accountPath}
           />
         </div>

@@ -50,19 +50,26 @@ export const LayoutDataProvider = ({ children }: { children: ReactNode }) => {
 
   const refresh = useCallback(async () => {
     abortController.current?.abort()
+
     const controller = new AbortController()
     abortController.current = controller
+    setLoading(true)
 
     try {
-      setLoading(true)
       const payload = await fetchLayoutState(controller.signal)
       setCart(payload.cart)
       setCustomer(payload.customer)
       setShippingOptions(payload.shippingOptions)
     } catch (error) {
+      if ((error as Error)?.name === "AbortError") {
+        return
+      }
       console.error("Failed to refresh layout data", error)
     } finally {
-      setLoading(false)
+      if (abortController.current === controller) {
+        setLoading(false)
+        abortController.current = null
+      }
     }
   }, [])
 

@@ -1,6 +1,7 @@
+import { cookies } from "next/headers"
+
 import { listCategories } from "@lib/data/categories"
-import { retrieveCustomer } from "@lib/data/customer"
-import { getStoreStats, listPaginatedProducts } from "@lib/data/products"
+import { listPaginatedProducts } from "@lib/data/products"
 import type { HttpTypes } from "@medusajs/types"
 import {
   AvailabilityFilter,
@@ -12,7 +13,6 @@ import { ageCategories } from "@modules/layout/config/navigation"
 import { StorefrontFiltersProvider } from "@modules/store/context/storefront-filters"
 import ProductGridSection from "@modules/store/components/product-grid-section"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
-import { fetchAvailabilityCounts } from "@modules/store/utils/availability"
 import FilterDrawer from "@modules/store/components/filter-drawer"
 import Breadcrumbs from "@modules/common/components/breadcrumbs"
 
@@ -41,13 +41,6 @@ const StoreTemplate = async ({
   const sort = sortBy || "featured"
   const resolvedViewMode = viewMode || "grid-4"
 
-  const [{ count }, categories, availabilityCounts, customer] = await Promise.all([
-    getStoreStats({ countryCode }),
-    listCategories({ limit: 100, include_descendants_tree: true }),
-    fetchAvailabilityCounts(countryCode),
-    retrieveCustomer(),
-  ])
-
   const productQueryParams: HttpTypes.FindParams & HttpTypes.StoreProductListParams = {}
 
   if (categoryId) {
@@ -61,18 +54,23 @@ const StoreTemplate = async ({
   const effectiveProductQueryParams: (HttpTypes.FindParams & HttpTypes.StoreProductListParams) | undefined =
     Object.keys(productQueryParams).length ? productQueryParams : undefined
 
+  const [categories, productListing] = await Promise.all([
+    listCategories({ limit: 100, include_descendants_tree: true }),
+    listPaginatedProducts({
+      page: pageNumber,
+      limit: STORE_PRODUCT_PAGE_SIZE,
+      queryParams: effectiveProductQueryParams,
+      sortBy: sort,
+      countryCode,
+      availability,
+      priceFilter: priceRange,
+      ageFilter,
+    }),
+  ])
+
   const {
     response: { products: initialProducts, count: initialCount },
-  } = await listPaginatedProducts({
-    page: pageNumber,
-    limit: STORE_PRODUCT_PAGE_SIZE,
-    queryParams: effectiveProductQueryParams,
-    sortBy: sort,
-    countryCode,
-    availability,
-    priceFilter: priceRange,
-    ageFilter,
-  })
+  } = productListing
 
   const prioritizedCategories = ["Merch", "Pants", "Shirts", "Sweatshirts"]
 
@@ -104,16 +102,16 @@ const StoreTemplate = async ({
     {
       value: "in_stock" as AvailabilityFilter,
       label: "In stock",
-      count: availabilityCounts.inStock,
     },
     {
       value: "out_of_stock" as AvailabilityFilter,
       label: "Out of stock",
-      count: availabilityCounts.outOfStock,
     },
   ]
 
   const accountPath = `/${countryCode}/account`
+  const cookieStore = await cookies()
+  const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
 
   return (
     <StorefrontFiltersProvider
@@ -167,8 +165,8 @@ const StoreTemplate = async ({
             viewMode={resolvedViewMode}
             sortBy={sort}
             pageSize={STORE_PRODUCT_PAGE_SIZE}
-            totalCountHint={count}
-            isCustomerLoggedIn={Boolean(customer)}
+            totalCountHint={initialCount}
+            isCustomerLoggedIn={isCustomerLoggedIn}
             loginPath={accountPath}
           />
         </div>

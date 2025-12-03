@@ -170,12 +170,10 @@ export const StorefrontFiltersProvider = ({
         return
       }
 
-      startTransition(() => {
-        fetchProducts(next).catch((error) => {
-          if ((error as Error)?.name !== "AbortError") {
-            console.error("Failed to load products", error)
-          }
-        })
+      fetchProducts(next).catch((error) => {
+        if ((error as Error)?.name !== "AbortError") {
+          console.error("Failed to load products", error)
+        }
       })
     },
     [fetchProducts]
@@ -184,7 +182,7 @@ export const StorefrontFiltersProvider = ({
   const commitFilters = useCallback(
     (next: FilterState, { shouldFetch = true }: { shouldFetch?: boolean } = {}) => {
       filtersRef.current = next
-      setFilters(next)
+      startTransition(() => setFilters(next))
       triggerFetch(next, { shouldFetch })
     },
     [triggerFetch]

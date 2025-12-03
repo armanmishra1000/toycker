@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { cookies } from "next/headers"
 import dynamic from "next/dynamic"
 
 import ExclusiveCollections from "@modules/home/components/exclusive-collections"
@@ -10,18 +11,8 @@ import ShopByAge from "@modules/home/components/shop-by-age"
 import WhyChooseUs from "@modules/home/components/why-choose-us"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
-import { retrieveCustomer } from "@lib/data/customer"
 
-const CustomerSay = dynamic(() => import("@modules/home/components/customer-say"), {
-  loading: () => (
-    <section className="w-full bg-[#fff8eb]">
-      <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 px-4 py-16">
-        <div className="h-5 w-48 animate-pulse rounded-full bg-[#f2d2a0]" />
-        <div className="h-72 w-full animate-pulse rounded-3xl bg-white/70" />
-      </div>
-    </section>
-  ),
-})
+const CustomerSay = dynamic(() => import("@modules/home/components/customer-say"))
 
 export const metadata: Metadata = {
   title: "Medusa Next.js Starter Template",
@@ -36,16 +27,17 @@ export default async function Home(props: {
 
   const { countryCode } = params
 
-  const [region, collectionsResult, customer] = await Promise.all([
+  const [region, collectionsResult] = await Promise.all([
     getRegion(countryCode),
     listCollections({
       fields: "id, handle, title",
     }),
-    retrieveCustomer(),
   ])
 
+  const cookieStore = await cookies()
+
   const collections = collectionsResult?.collections
-  const isCustomerLoggedIn = Boolean(customer)
+  const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
 
   if (!collections || !region) {
     return null

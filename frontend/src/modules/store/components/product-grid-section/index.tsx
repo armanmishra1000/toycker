@@ -2,7 +2,6 @@
 
 import { useMemo } from "react"
 
-import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import ProductPreview from "@modules/products/components/product-preview"
 import ResultsToolbar from "@modules/store/components/results-toolbar"
 import { Pagination } from "@modules/store/components/pagination"
@@ -68,14 +67,20 @@ const ProductGridSection = ({
   const hasProducts = derived.products.length > 0
   const gridClassName = getGridClassName(derived.viewMode)
 
-  const shouldShowSkeleton = derived.isLoading && context !== null
+  const isLoading = derived.isLoading && context !== null
 
   const emptyStateHeading = useMemo(() => title || "Products", [title])
 
   return (
     <WishlistProvider isAuthenticated={isCustomerLoggedIn} loginPath={loginPath}>
-      <section className="space-y-6">
+      <section className="space-y-6" data-loading={isLoading ? "true" : undefined}>
         <ResultsToolbar totalCount={effectiveCount} viewMode={derived.viewMode} sortBy={derived.sortBy} />
+
+        {isLoading && hasProducts && !derived.error && (
+          <p className="text-sm text-ui-fg-subtle" aria-live="polite">
+            Updating results…
+          </p>
+        )}
 
         {derived.error && (
           <p className="rounded-md border border-ui-border-danger bg-ui-bg-base px-4 py-3 text-sm text-ui-fg-danger" role="alert">
@@ -83,9 +88,7 @@ const ProductGridSection = ({
           </p>
         )}
 
-        {shouldShowSkeleton ? (
-          <SkeletonProductGrid numberOfProducts={pageSize} viewMode={derived.viewMode} />
-        ) : hasProducts ? (
+        {hasProducts ? (
           derived.viewMode === "list" ? (
             <div className={gridClassName} data-testid="products-list">
               {derived.products.map((product) => (

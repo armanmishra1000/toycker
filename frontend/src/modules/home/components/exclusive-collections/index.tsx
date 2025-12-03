@@ -81,7 +81,23 @@ const ExclusiveCollections = () => {
         </header>
 
         {!isMounted ? (
-          <div className="h-[22rem] w-full rounded-xl bg-[#f8ede6]" />
+          <div className="grid gap-4 rounded-xl bg-[#f8ede6] p-6 sm:grid-cols-2 lg:grid-cols-3">
+            {exclusiveCollectionItems.slice(0, 3).map((item) => (
+              <article key={item.id} className="flex flex-col rounded-xl bg-white/80 p-4 shadow-sm">
+                <div className="relative mb-4 h-40 w-full overflow-hidden rounded-lg">
+                  <Image
+                    src={item.posterSrc}
+                    alt={item.name}
+                    fill
+                    sizes="(min-width: 1024px) 360px, 100vw"
+                    className="object-cover"
+                  />
+                </div>
+                <p className="text-base font-semibold text-[#4b2b1c]">{item.name}</p>
+                <p className="text-sm text-[#725747]">{item.priceLabel}</p>
+              </article>
+            ))}
+          </div>
         ) : (
           <div className="relative overflow-hidden rounded-xl">
             <Swiper
