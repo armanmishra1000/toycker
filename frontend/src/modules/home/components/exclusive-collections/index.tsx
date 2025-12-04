@@ -108,7 +108,7 @@ const ExclusiveCollections = () => {
               slidesPerView={1.05}
               breakpoints={{
                 540: {
-                  slidesPerView: 1.4,
+                  slidesPerView: 1.75,
                 },
                 768: {
                   slidesPerView: 2.75,
