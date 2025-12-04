@@ -7,7 +7,7 @@ import {
   PhoneIcon,
   PrinterIcon,
 } from "@heroicons/react/24/outline"
-import { Facebook, Instagram, Linkedin, LucideIcon, Music2, Twitter } from "lucide-react"
+import { Facebook, Instagram, Linkedin, LucideIcon, Music2, Twitter, Youtube } from "lucide-react"
 import { Text } from "@medusajs/ui"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -32,6 +32,7 @@ const socialIconMap: Record<string, LucideIcon> = {
   linkedin: Linkedin,
   instagram: Instagram,
   tiktok: Music2,
+  youtube: Youtube,
 }
 
 const SectionHeading = ({ children }: { children: ReactNode }) => (
@@ -42,9 +43,19 @@ const SectionHeading = ({ children }: { children: ReactNode }) => (
 )
 
 const floatingClouds = [
-  { id: "cloud-1", className: "left-[-4rem] top-14 hidden sm:block w-48" },
+  {
+    id: "cloud-1",
+    className: "left-[-4rem] top-14 hidden sm:block w-48",
+    animation: "animate-cloud-marquee-left",
+    style: { animationDelay: "0s" },
+  },
   { id: "cloud-2", className: "left-0 bottom-48 hidden lg:block w-56" },
-  { id: "cloud-3", className: "right-24 top-16 w-40" },
+  {
+    id: "cloud-3",
+    className: "right-24 top-16 w-40",
+    animation: "animate-cloud-marquee-right",
+    style: { animationDelay: "4s" },
+  },
   { id: "cloud-4", className: "right-0 bottom-48 hidden lg:block w-56" },
 ]
 
@@ -67,7 +78,8 @@ const FloatingDecor = () => (
         aria-hidden="true"
         width={200}
         height={120}
-        className={`absolute h-auto ${cloud.className}`}
+        className={`absolute h-auto ${cloud.className} ${cloud.animation ?? ""}`.trim()}
+        style={cloud.style}
         loading="lazy"
       />
     ))}
@@ -88,7 +100,7 @@ const FloatingDecor = () => (
 
 const DecorativeGround = ({ year }: { year: number }) => (
   <div className="relative mt-12 w-full bg-transparent">
-    <div className="relative mx-auto flex w-full max-w-[1920px] items-end justify-center">
+    <div className="relative flex w-full items-end justify-center">
       <Image
         src="/assets/images/footer-bottom-shape.svg"
         alt="Playful landscape"
@@ -99,14 +111,14 @@ const DecorativeGround = ({ year }: { year: number }) => (
         sizes="100vw"
       />
     </div>
-    <div className="pointer-events-none absolute inset-0 flex items-end justify-between px-[5%]">
+    <div className="pointer-events-none absolute inset-2 flex items-end justify-between px-[5%]">
       <Image
         src="/assets/images/footer-doll-left.svg"
         alt="Smiling girl illustration"
         width={260}
         height={260}
         priority
-        className="h-auto w-[200px] max-w-[24vw] sm:w-[240px]"
+        className="h-auto max-w-[20vw] w-[180px] animate-float-bob"
         sizes="(max-width: 768px) 24vw, (max-width: 1024px) 200px, 240px"
       />
       <Image
@@ -115,7 +127,8 @@ const DecorativeGround = ({ year }: { year: number }) => (
         width={260}
         height={260}
         priority
-        className="h-auto w-[200px] max-w-[24vw] sm:w-[240px]"
+        className="h-auto w-[200px] max-w-[24vw] sm:w-[240px] animate-float-bob"
+        style={{ animationDelay: "1.5s" }}
         sizes="(max-width: 768px) 24vw, (max-width: 1024px) 200px, 240px"
       />
     </div>
@@ -129,8 +142,8 @@ export default function Footer() {
     <footer className="relative overflow-hidden bg-gradient-to-b from-primary/10 via-[#f6fbff] to-white">
       <FloatingDecor />
 
-      <div className="content-container relative z-10 pb-16 pt-12 lg:pb-24">
-        <div className="grid gap-10 lg:grid-cols-4">
+      <div className="content-container relative z-10 pb-16 pt-12 xl:pb-28 md:pb-32">
+        <div className="grid gap-10 lg:[grid-template-columns:1.8fr_0.9fr_0.9fr_1.8fr]">
           <div className="space-y-6">
             <LocalizedClientLink href="/" className="inline-flex items-center gap-3">
               <Image
@@ -138,7 +151,7 @@ export default function Footer() {
                 alt="Toycker logo"
                 width={150}
                 height={48}
-                className="h-12 w-auto drop-shadow"
+                className="h-16 w-auto rounded-lg"
                 priority
               />
             </LocalizedClientLink>
@@ -148,22 +161,24 @@ export default function Footer() {
                 const Icon = contactIconMap[contact.type]
 
                 return (
-                  <li key={contact.id} className="flex items-center gap-4">
-                    <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#18a8b3] shadow-sm ring-1 ring-[#cdeef3]">
+                  <li key={contact.id} className="flex items-start gap-4">
+                    <span className="relative flex h-10 w-10 shrink-0 items-center justify-center self-start rounded-full bg-white/80 text-primary shadow-sm ring-1 ring-primary/10">
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </span>
-                    {contact.href ? (
-                      <a
-                        href={contact.href}
-                        target={contact.href.startsWith("http") ? "_blank" : undefined}
-                        rel={contact.href.startsWith("http") ? "noreferrer" : undefined}
-                        className="text-base font-medium text-grey-70 transition-colors hover:text-primary"
-                      >
-                        {contact.label}
-                      </a>
-                    ) : (
-                      <p className="text-base font-medium text-grey-70">{contact.label}</p>
-                    )}
+                    <div className="space-y-1 text-base font-medium text-grey-70 leading-relaxed">
+                      {contact.href ? (
+                        <a
+                          href={contact.href}
+                          target={contact.href.startsWith("http") ? "_blank" : undefined}
+                          rel={contact.href.startsWith("http") ? "noreferrer" : undefined}
+                          className="text-base font-medium text-grey-70 transition-colors hover:text-primary"
+                        >
+                          {contact.label}
+                        </a>
+                      ) : (
+                        <p className="text-base font-medium text-grey-70">{contact.label}</p>
+                      )}
+                    </div>
                   </li>
                 )
               })}
@@ -208,7 +223,7 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-secondary text-white shadow-lg transition hover:scale-105"
+                className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-secondary text-white  transition hover:scale-105"
                 aria-label="Submit email for newsletter"
               >
                 <ArrowUpRightIcon className="h-5 w-5" />
@@ -239,7 +254,7 @@ export default function Footer() {
 
       <DecorativeGround year={year} />
       <div className="bg-primary">
-        <p className="flex items-end justify-center pb-7 text-center text-sm text-white drop-shadow">
+        <p className="flex items-end justify-center py-4 text-center text-sm text-white drop-shadow">
         © {year} Toycker. All Rights Reserved by Toycker Studio
       </p>
       </div>
