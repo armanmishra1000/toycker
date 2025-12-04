@@ -324,7 +324,6 @@ const ReviewMediaHub = () => {
   const prevRef = useRef<HTMLButtonElement | null>(null)
   const nextRef = useRef<HTMLButtonElement | null>(null)
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false)
-  const [isAudioModalRendered, setIsAudioModalRendered] = useState(false)
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({})
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null)
   const activeAudioRef = useRef<string | null>(null)
@@ -385,10 +384,7 @@ const ReviewMediaHub = () => {
   }
 
   const openAudioModal = () => {
-    setIsAudioModalRendered(true)
-    requestAnimationFrame(() => {
-      setIsAudioModalOpen(true)
-    })
+    setIsAudioModalOpen(true)
   }
 
   const closeAudioModal = () => {
@@ -496,7 +492,7 @@ const ReviewMediaHub = () => {
           <button
             type="button"
             onClick={openAudioModal}
-            className="inline-flex items-center gap-2 rounded-full border border-[#111827] px-5 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#111827] hover:text-white"
+            className="hidden items-center gap-2 rounded-full border border-[#111827] px-5 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#111827] hover:text-white lg:inline-flex"
           >
             Listen to audio stories
           </button>
@@ -528,7 +524,7 @@ const ReviewMediaHub = () => {
             ))}
           </Swiper>
 
-          <div className="pointer-events-none absolute -bottom-20 right-0 flex gap-4 pb-4 pr-4 z-10">
+          <div className="pointer-events-none absolute -bottom-20 left-0 right-0 flex justify-between px-4 pb-4 z-10 sm:left-auto sm:flex-none sm:justify-normal sm:gap-4 sm:pr-4">
             <button
               type="button"
               ref={prevRef}
@@ -547,34 +543,39 @@ const ReviewMediaHub = () => {
             </button>
           </div>
         </div>
+
+        <div className="mt-24 flex justify-center sm:mt-20 lg:hidden">
+          <button
+            type="button"
+            onClick={openAudioModal}
+            className="inline-flex w-full max-w-sm items-center justify-center gap-2 rounded-full border border-[#111827] px-5 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#111827] hover:text-white"
+          >
+            Listen to audio stories
+          </button>
+        </div>
       </div>
 
-      {isAudioModalRendered && (
+      {isAudioModalOpen && (
         <div
-          className={`audio-modal-overlay ${isAudioModalOpen ? "enter" : "exit"}`}
+          className="fixed inset-0 z-50 flex items-stretch justify-stretch bg-black/45 p-0 sm:items-center sm:justify-center sm:px-4 sm:py-8"
           onClick={closeAudioModal}
-          onAnimationEnd={() => {
-            if (!isAudioModalOpen) {
-              setIsAudioModalRendered(false)
-            }
-          }}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="audio-modal-title"
-            className={`audio-modal-panel ${isAudioModalOpen ? "enter" : "exit"}`}
+            className="relative h-full w-full max-w-none overflow-y-auto rounded-none border-none bg-gradient-to-b from-white via-[#fff8ec] to-white p-5 sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-[32px] sm:border sm:border-white/60 sm:p-7 md:p-8"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={closeAudioModal}
-              className="audio-modal-close inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#e5e7eb] text-[#111827] transition hover:bg-[#111827] hover:text-white"
+              className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#e5e7eb] bg-white text-[#111827] transition hover:bg-[#111827] hover:text-white sm:right-6 sm:top-6"
               aria-label="Close audio reviews"
             >
               <X className="h-5 w-5" />
             </button>
-            <div className="flex flex-col gap-4 pt-12 sm:flex-row sm:items-start sm:justify-between sm:pt-0">
+            <div className="flex flex-col gap-4 pt-12 sm:flex-row sm:items-start sm:justify-between sm:pt-2">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#c45700]">Audio reviews</p>
                 <h3 id="audio-modal-title" className="mt-2 text-3xl font-semibold text-[#111827]">
@@ -685,133 +686,6 @@ const ReviewMediaHub = () => {
         </div>
       )}
       </section>
-      <style jsx>{`
-        .audio-modal-overlay {
-          position: fixed;
-          inset: 0;
-          z-index: 50;
-          display: flex;
-          align-items: stretch;
-          justify-content: stretch;
-          padding: 0;
-          background-color: rgba(0, 0, 0, 0.45);
-          animation-duration: 0.28s;
-          animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
-          animation-fill-mode: forwards;
-        }
-
-        @media (min-width: 640px) {
-          .audio-modal-overlay {
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 1rem;
-          }
-        }
-
-        .audio-modal-overlay.enter {
-          animation-name: modalFadeIn;
-        }
-
-        .audio-modal-overlay.exit {
-          animation-name: modalFadeOut;
-        }
-
-        .audio-modal-panel {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          max-width: none;
-          max-height: none;
-          overflow-y: auto;
-          border-radius: 0;
-          border: none;
-          background-image: linear-gradient(180deg, #ffffff 0%, #fff8ec 60%, #ffffff 100%);
-          padding: 1.25rem;
-          animation-duration: 0.3s;
-          animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
-          animation-fill-mode: forwards;
-          will-change: transform, opacity;
-        }
-
-        @media (min-width: 640px) {
-          .audio-modal-panel {
-            height: auto;
-            max-width: 48rem;
-            max-height: 90vh;
-            border-radius: 32px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            padding: 1.75rem;
-          }
-        }
-
-        @media (min-width: 768px) {
-          .audio-modal-panel {
-            padding: 2rem;
-          }
-        }
-
-        .audio-modal-close {
-          position: absolute;
-          right: 1rem;
-          top: 1rem;
-          z-index: 10;
-        }
-
-        @media (min-width: 640px) {
-          .audio-modal-close {
-            right: 1.5rem;
-            top: 1.5rem;
-          }
-        }
-
-        .audio-modal-panel.enter {
-          animation-name: modalRise;
-        }
-
-        .audio-modal-panel.exit {
-          animation-name: modalSettle;
-        }
-
-        @keyframes modalFadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes modalFadeOut {
-          from {
-            opacity: 1;
-          }
-          to {
-            opacity: 0;
-          }
-        }
-
-        @keyframes modalRise {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes modalSettle {
-          from {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          to {
-            opacity: 0;
-            transform: translateY(18px);
-          }
-        }
-      `}</style>
     </>
   )
 }
