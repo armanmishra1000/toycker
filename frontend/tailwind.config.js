@@ -156,6 +156,10 @@ module.exports = {
           "0%": { transform: "translateX(140vw)" },
           "100%": { transform: "translateX(-140vw)" },
         },
+        "category-marquee": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-100%)" },
+        },
       },
       animation: {
         ring: "ring 2.2s cubic-bezier(0.5, 0, 0.5, 1) infinite",
@@ -174,6 +178,7 @@ module.exports = {
         "float-bob": "float-bob 6s ease-in-out infinite",
         "cloud-marquee-left": "cloud-marquee-left 18s linear infinite",
         "cloud-marquee-right": "cloud-marquee-right 22s linear infinite",
+        "category-marquee": "category-marquee 60s linear infinite",
       },
     },
   },
