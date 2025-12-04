@@ -50,7 +50,7 @@ const PopularToySet = async ({ regionId, countryCode, isCustomerLoggedIn }: Popu
 
         <div className="mt-12">
           <WishlistProvider isAuthenticated={isCustomerLoggedIn} loginPath={accountPath}>
-            <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 lg:[&>li:nth-last-child(-n+2)]:hidden xl:[&>li:nth-last-child(-n+2)]:block">
               {products.map((product) => (
                 <li key={product.id}>
                   <ProductPreview product={product} viewMode="grid-4" />

@@ -1,3 +1,12 @@
+"use client"
+
+import Link from "next/link"
+import { Swiper, SwiperSlide } from "swiper/react"
+import { Pagination } from "swiper/modules"
+
+import "swiper/css"
+import "swiper/css/pagination"
+
 type AgeGroup = {
   id: string
   title: string
@@ -65,12 +74,12 @@ const AGE_GROUPS: AgeGroup[] = [
   },
 ]
 
-type AgeStarProps = Pick<AgeGroup, "title" | "subtitle" | "baseColorClass" | "hoverColorClass">
+type AgeStarProps = AgeGroup
 
-const AgeStar = ({ title, subtitle, baseColorClass, hoverColorClass }: AgeStarProps) => {
+const AgeStar = ({ id, title, subtitle, baseColorClass, hoverColorClass }: AgeStarProps) => {
   return (
-    <button
-      type="button"
+    <Link
+      href={`/collections/${id}`}
       className="group flex min-w-[6rem] md:min-w-[10rem] flex-col items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ui-border-strong"
       aria-label={`${title} ${subtitle}`}
     >
@@ -98,7 +107,7 @@ const AgeStar = ({ title, subtitle, baseColorClass, hoverColorClass }: AgeStarPr
           </span>
         </div>
       </div>
-    </button>
+    </Link>
   )
 }
 
@@ -115,13 +124,32 @@ const ShopByAge = () => {
           </h2>
         </header>
 
-        <div className="overflow-x-auto">
-          <div className="flex min-w-max items-center gap-6 py-2 lg:justify-center">
-            {AGE_GROUPS.map((group) => (
-              <AgeStar key={group.id} {...group} />
-            ))}
-          </div>
-        </div>
+        <Swiper
+          modules={[Pagination]}
+          pagination={{
+            clickable: true,
+            bulletClass:
+              "swiper-pagination-bullet bg-gray-300 opacity-100 transition [margin-inline:6px]",
+            bulletActiveClass:
+              "swiper-pagination-bullet-active bg-primary",
+          }}
+          spaceBetween={32}
+          slidesPerView={2}
+          breakpoints={{
+            480: { slidesPerView: 3 },
+            768: { slidesPerView: 4 },
+            1024: { slidesPerView: 5 },
+            1280: { slidesPerView: 6 },
+            1440: { slidesPerView: 6 },
+          }}
+          className="pb-12 [--swiper-pagination-bottom:-0.5rem]"
+        >
+          {AGE_GROUPS.map((group) => (
+            <SwiperSlide key={group.id} className="flex justify-center py-4">
+              <AgeStar {...group} />
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
     </section>
   )

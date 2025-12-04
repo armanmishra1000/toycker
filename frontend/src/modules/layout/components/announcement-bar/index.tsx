@@ -32,13 +32,14 @@ const AnnouncementBar = () => {
       id: "location", 
       text: "Surat, Gujarat",
       icon: MapPinIcon,
+      href: "https://maps.app.goo.gl/vJjW43BJnUTFwrTj8",
       ariaLabel: "Current location"
     },
     { 
       id: "help", 
       text: "Help",
       icon: QuestionMarkCircleIcon,
-      href: "/help",
+      href: "/contact",
       ariaLabel: "Get help"
     }
   ]

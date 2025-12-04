@@ -32,7 +32,7 @@ const BestSelling = async ({ regionId, countryCode, isCustomerLoggedIn }: BestSe
       data-testid="best-selling-section"
     >
       <div className="mx-auto max-w-screen-2xl px-4 py-16 md:py-20">
-        <div className="flex flex-col gap-4 text-left md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-4 text-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">Curated</p>
             <h2
@@ -41,7 +41,7 @@ const BestSelling = async ({ regionId, countryCode, isCustomerLoggedIn }: BestSe
             >
               Best Selling Picks
             </h2>
-            <p className="mt-3 max-w-2xl text-base text-[#6b5b53] md:text-lg">
+            <p className="mx-auto mt-3 max-w-2xl text-base text-[#6b5b53] md:text-lg">
               Spotlight on the sets parents keep returning to—reliable builds, imaginative stories,
               and quality that keeps kids exploring.
             </p>
@@ -49,7 +49,7 @@ const BestSelling = async ({ regionId, countryCode, isCustomerLoggedIn }: BestSe
         </div>
 
         <WishlistProvider isAuthenticated={isCustomerLoggedIn} loginPath={accountPath}>
-          <ul className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <ul className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 lg:[&>li:nth-last-child(-n+2)]:hidden xl:[&>li:nth-last-child(-n+2)]:block">
             {products.map((product) => (
               <li key={product.id}>
                 <ProductPreview product={product} viewMode="grid-5" />
