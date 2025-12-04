@@ -33,70 +33,70 @@ export interface FooterBadgeGroup {
 }
 
 export const footerDescription =
-  "Lorem ipsum dolor sit amet consectetur. Id fames there are many vulputate eget dolor."
+  "Welcome to Toycker Collections, your #1 source for A–Z products with the best discounts 🎁"
 
 export const footerContactItems: FooterContactItem[] = [
   {
     id: "address",
-    label: "6391 Elgin St. Celina, Delaware 10299",
-    value: "6391 Elgin St. Celina, Delaware 10299",
+    label: "GROUND FLOOR, PLOT NO. 76, NILAMNAGAR SOCIETTY-2, PUNA SIMADA ROAD, PUNAGAM, Surat, Gujarat, 395010",
+    value: "GROUND FLOOR, PLOT NO. 76, NILAMNAGAR SOCIETTY-2, PUNA SIMADA ROAD, PUNAGAM, Surat, Gujarat, 395010",
     type: "address",
   },
   {
     id: "phone",
-    label: "+000-1234-456789",
-    value: "+000-1234-456789",
-    href: "tel:+0001234456789",
+    label: "+91 9925819694",
+    value: "+91 9925819694",
+    href: "tel:9925819694",
     type: "phone",
   },
   {
     id: "email",
-    label: "toyup@gmail.com",
-    value: "toyup@gmail.com",
-    href: "mailto:toyup@gmail.com",
+    label: "customercare@toycker.com",
+    value: "customercare@toycker.com",
+    href: "mailto:customercare@toycker.com",
     type: "email",
-  },
-  {
-    id: "fax",
-    label: "+000-1234-55000",
-    value: "+000-1234-55000",
-    type: "fax",
-  },
+  }
 ]
 
 export const footerLinkGroups: FooterLinkGroup[] = [
   {
-    id: "services",
-    title: "Services",
+    id: "categories",
+    title: "Categories",
     links: [
-      { id: "service-offerings", label: "Service Offerings", href: "/services/offerings" },
-      { id: "how-it-works", label: "How It Works", href: "/services/how-it-works" },
-      { id: "pricing-table", label: "Pricing Table", href: "/pricing" },
-      { id: "service-areas", label: "Service Areas", href: "/services/areas" },
-      { id: "service-faqs", label: "Service FAQs", href: "/services/faqs" },
-      { id: "contact-information", label: "Contact Information", href: "/contact" },
+      { id: "clothing-and-fashion", label: "Clothing & Fashion", href: "/categories/clothing-and-fashion" },
+      { id: "toys", label: "Toys", href: "/categories/toys" },
+      { id: "books-and-cds", label: "Books & CDs", href: "/categories/books-and-cds" },
+      { id: "school-supplies", label: "School Supplies", href: "/categories/school-supplies" },
+      { id: "birthday-party-supplies", label: "Birthday Party Supplies", href: "/categories/birthday-party-supplies" },
+      { id: "baby-diapering", label: "Baby Diapering", href: "/categories/baby-diapering" },
+      { id: "feeding-and-nursing", label: "Feeding & Nursing", href: "/categories/feeding-and-nursing" },
+      { id: "bath-and-skin-care", label: "Bath & Skin Care", href: "/categories/bath-and-skin-care" },
+      { id: "health-and-safety", label: "Health & Safety", href: "/categories/health-and-safety" },
+      { id: "baby-gear", label: "Baby Gear", href: "/categories/baby-gear" },
+      { id: "nursery", label: "Nursery", href: "/categories/nursery" },
+      { id: "moms-and-maternity", label: "Moms & Maternity", href: "/categories/moms-and-maternity" },
+      { id: "gifts", label: "Gifts", href: "/categories/gifts" },
+      { id: "preschool-admissions", label: "Preschool Admissions", href: "/categories/preschool-admissions" },
     ],
   },
   {
     id: "customer-support",
     title: "Customer Support",
     links: [
+      { id: "about-us", label: "About Us", href: "/about" },
       { id: "contact-us", label: "Contact Us", href: "/contact" },
-      { id: "store-list", label: "Store List", href: "/stores" },
-      { id: "opening-hours", label: "Opening Hours", href: "/stores/opening-hours" },
-      { id: "returns", label: "Returns & Exchanges", href: "/support/returns" },
-      { id: "refund", label: "Refund and Returns", href: "/support/refund" },
-      { id: "privacy", label: "Privacy Policy", href: "/policies/privacy" },
+      { id: "return-refund", label: "Return & Refund", href: "/policies/returns" },
+      { id: "shipping-policy", label: "Shipping Policy", href: "/policies/shipping" },
+      { id: "terms", label: "Terms & Condition", href: "/policies/terms" },
+      { id: "membership", label: "Membership*", href: "/membership" },
     ],
   },
 ]
 
 export const footerSocialLinks: FooterSocialLink[] = [
-  { id: "facebook", label: "Facebook", href: "https://facebook.com" },
-  { id: "x", label: "X", href: "https://x.com" },
-  { id: "linkedin", label: "LinkedIn", href: "https://linkedin.com" },
-  { id: "instagram", label: "Instagram", href: "https://instagram.com" },
-  { id: "tiktok", label: "TikTok", href: "https://tiktok.com" },
+  { id: "facebook", label: "Facebook", href: "https://www.facebook.com/toyckerofficial" },
+  { id: "instagram", label: "Instagram", href: "https://www.instagram.com/toyckerofficial" },
+  { id: "youtube", label: "YouTube", href: "https://www.youtube.com/@toyckerofficial" },
 ]
 
 export const footerBadgeGroups: FooterBadgeGroup[] = [
@@ -123,8 +123,8 @@ export const footerBadgeGroups: FooterBadgeGroup[] = [
 ]
 
 export const newsletterCopy = {
-  title: "Subscribe Our Newsletter",
-  description: "With our newsletter, you'll never miss an important update.",
-  placeholder: "Email Address",
+  title: "Subscribe & Save 50% 🔥",
+  description: "Get your Exclusive Coupon code in seconds and Enjoy 50% OFF on Every Product with Free Delivery, only for New Subscribers!",
+  placeholder: "Enter your email...",
   cta: "Send",
 }

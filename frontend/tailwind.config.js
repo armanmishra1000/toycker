@@ -144,6 +144,18 @@ module.exports = {
           "0%": { transform: "translateY(-100%)" },
           "100%": { transform: "translateY(0)" },
         },
+        "float-bob": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        "cloud-marquee-left": {
+          "0%": { transform: "translateX(120vw)" },
+          "100%": { transform: "translateX(-120vw)" },
+        },
+        "cloud-marquee-right": {
+          "0%": { transform: "translateX(140vw)" },
+          "100%": { transform: "translateX(-140vw)" },
+        },
       },
       animation: {
         ring: "ring 2.2s cubic-bezier(0.5, 0, 0.5, 1) infinite",
@@ -159,6 +171,9 @@ module.exports = {
         enter: "enter 200ms ease-out",
         "slide-in": "slide-in 1.2s cubic-bezier(.41,.73,.51,1.02)",
         leave: "leave 150ms ease-in forwards",
+        "float-bob": "float-bob 6s ease-in-out infinite",
+        "cloud-marquee-left": "cloud-marquee-left 18s linear infinite",
+        "cloud-marquee-right": "cloud-marquee-right 22s linear infinite",
       },
     },
   },
