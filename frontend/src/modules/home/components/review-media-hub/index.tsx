@@ -480,8 +480,8 @@ const ReviewMediaHub = () => {
 
   return (
     <>
-      <section className="w-full bg-[#fff8eb]" aria-labelledby="review-media-hub-heading">
-      <div className="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
+      <section className="w-full" aria-labelledby="review-media-hub-heading">
+      <div className="mx-auto max-w-screen-2xl px-4 py-24 sm:px-6 lg:px-8">
         <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#c45700]">Customer say!</p>
@@ -529,7 +529,7 @@ const ReviewMediaHub = () => {
               type="button"
               ref={prevRef}
               aria-label="Previous reviews"
-              className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full border-4 border-[#fff8eb] bg-[#ffbb3d] text-white transition hover:bg-primary cursor-pointer"
+              className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white transition cursor-pointer"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -537,7 +537,7 @@ const ReviewMediaHub = () => {
               type="button"
               ref={nextRef}
               aria-label="Next reviews"
-              className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full border-4 border-[#fff8eb] bg-[#ffbb3d] text-white transition hover:bg-primary cursor-pointer"
+              className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white transition cursor-pointer"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
