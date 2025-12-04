@@ -40,6 +40,7 @@ export const footerContactItems: FooterContactItem[] = [
     id: "address",
     label: "GROUND FLOOR, PLOT NO. 76, NILAMNAGAR SOCIETTY-2, PUNA SIMADA ROAD, PUNAGAM, Surat, Gujarat, 395010",
     value: "GROUND FLOOR, PLOT NO. 76, NILAMNAGAR SOCIETTY-2, PUNA SIMADA ROAD, PUNAGAM, Surat, Gujarat, 395010",
+    href: "https://maps.app.goo.gl/vJjW43BJnUTFwrTj8",
     type: "address",
   },
   {

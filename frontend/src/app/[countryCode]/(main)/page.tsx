@@ -1,9 +1,7 @@
 import { Metadata } from "next"
 import { cookies } from "next/headers"
-import dynamic from "next/dynamic"
 
 import ExclusiveCollections from "@modules/home/components/exclusive-collections"
-import FeaturedProducts from "@modules/home/components/featured-products"
 import Hero from "@modules/home/components/hero"
 import PopularToySet from "@modules/home/components/popular-toy-set"
 import BestSelling from "@modules/home/components/best-selling"
@@ -13,8 +11,6 @@ import WhyChooseUs from "@modules/home/components/why-choose-us"
 import CategoryMarquee from "@modules/home/components/category-marquee"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
-
-const CustomerSay = dynamic(() => import("@modules/home/components/customer-say"))
 
 export const metadata: Metadata = {
   title: "Medusa Next.js Starter Template",
@@ -49,24 +45,18 @@ export default async function Home(props: {
     <>
       <Hero />
       <CategoryMarquee />
-      <ShopByAge />
       <PopularToySet
         regionId={region.id}
         countryCode={countryCode}
         isCustomerLoggedIn={isCustomerLoggedIn}
       />
+      <ShopByAge />
       <ExclusiveCollections />
-      {/* <div className="py-12">
-        <ul className="flex flex-col gap-x-6">
-          <FeaturedProducts collections={collections} region={region} />
-        </ul>
-      </div> */}
       <BestSelling
         regionId={region.id}
         countryCode={countryCode}
         isCustomerLoggedIn={isCustomerLoggedIn}
       />
-      {/* <CustomerSay /> */}
       <ReviewMediaHub />
       <WhyChooseUs />
     </>

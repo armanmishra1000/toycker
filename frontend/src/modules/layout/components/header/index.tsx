@@ -33,7 +33,7 @@ interface ContactInfoProps {
 }
 
 const ContactInfo = ({ 
-  phone = "+1-888-0000-000", 
+  phone = "+91 9925819694", 
   showIcon = true 
 }: ContactInfoProps) => {
   return (
@@ -226,12 +226,12 @@ const Header = ({
             
             {/* Email Contact - Right Side */}
             <a
-              href="mailto:info@gmail.com"
+              href="mailto:customercare@toycker.com"
               className="flex items-center gap-2 text-gray-700 hover:text-primary transition-colors"
               aria-label="Contact email"
             >
               <EnvelopeIcon className="w-5 h-5 flex-shrink-0" />
-              <span className="text-base font-medium">info@gmail.com</span>
+              <span className="text-base font-medium">customercare@toycker.com</span>
             </a>
           </div>
         </div>
