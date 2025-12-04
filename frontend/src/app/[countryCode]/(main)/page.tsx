@@ -8,6 +8,7 @@ import Hero from "@modules/home/components/hero"
 import PopularToySet from "@modules/home/components/popular-toy-set"
 import BestSelling from "@modules/home/components/best-selling"
 import ShopByAge from "@modules/home/components/shop-by-age"
+import ReviewMediaHub from "@modules/home/components/review-media-hub"
 import WhyChooseUs from "@modules/home/components/why-choose-us"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
@@ -63,7 +64,8 @@ export default async function Home(props: {
         countryCode={countryCode}
         isCustomerLoggedIn={isCustomerLoggedIn}
       />
-      <CustomerSay />
+      {/* <CustomerSay /> */}
+      <ReviewMediaHub />
       <WhyChooseUs />
     </>
   )
