@@ -566,7 +566,15 @@ const ReviewMediaHub = () => {
             className={`audio-modal-panel ${isAudioModalOpen ? "enter" : "exit"}`}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4">
+            <button
+              type="button"
+              onClick={closeAudioModal}
+              className="audio-modal-close inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#e5e7eb] text-[#111827] transition hover:bg-[#111827] hover:text-white"
+              aria-label="Close audio reviews"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="flex flex-col gap-4 pt-12 sm:flex-row sm:items-start sm:justify-between sm:pt-0">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#c45700]">Audio reviews</p>
                 <h3 id="audio-modal-title" className="mt-2 text-3xl font-semibold text-[#111827]">
@@ -576,14 +584,6 @@ const ReviewMediaHub = () => {
                   Stream quick clips from parents and creators describing their Dodge Mini Metal Car builds.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={closeAudioModal}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#e5e7eb] text-[#111827] transition hover:bg-[#111827] hover:text-white"
-                aria-label="Close audio reviews"
-              >
-                <X className="h-5 w-5" />
-              </button>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -691,13 +691,21 @@ const ReviewMediaHub = () => {
           inset: 0;
           z-index: 50;
           display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 2rem 1rem;
+          align-items: stretch;
+          justify-content: stretch;
+          padding: 0;
           background-color: rgba(0, 0, 0, 0.45);
           animation-duration: 0.28s;
           animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
           animation-fill-mode: forwards;
+        }
+
+        @media (min-width: 640px) {
+          .audio-modal-overlay {
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+          }
         }
 
         .audio-modal-overlay.enter {
@@ -709,12 +717,16 @@ const ReviewMediaHub = () => {
         }
 
         .audio-modal-panel {
+          position: relative;
           width: 100%;
-          max-width: 48rem;
-          border-radius: 32px;
-          border: 1px solid rgba(255, 255, 255, 0.6);
+          height: 100%;
+          max-width: none;
+          max-height: none;
+          overflow-y: auto;
+          border-radius: 0;
+          border: none;
           background-image: linear-gradient(180deg, #ffffff 0%, #fff8ec 60%, #ffffff 100%);
-          padding: 1.5rem;
+          padding: 1.25rem;
           animation-duration: 0.3s;
           animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
           animation-fill-mode: forwards;
@@ -723,7 +735,32 @@ const ReviewMediaHub = () => {
 
         @media (min-width: 640px) {
           .audio-modal-panel {
+            height: auto;
+            max-width: 48rem;
+            max-height: 90vh;
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            padding: 1.75rem;
+          }
+        }
+
+        @media (min-width: 768px) {
+          .audio-modal-panel {
             padding: 2rem;
+          }
+        }
+
+        .audio-modal-close {
+          position: absolute;
+          right: 1rem;
+          top: 1rem;
+          z-index: 10;
+        }
+
+        @media (min-width: 640px) {
+          .audio-modal-close {
+            right: 1.5rem;
+            top: 1.5rem;
           }
         }
 
