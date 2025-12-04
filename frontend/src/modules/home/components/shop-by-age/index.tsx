@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Pagination } from "swiper/modules"
 
@@ -73,12 +74,12 @@ const AGE_GROUPS: AgeGroup[] = [
   },
 ]
 
-type AgeStarProps = Pick<AgeGroup, "title" | "subtitle" | "baseColorClass" | "hoverColorClass">
+type AgeStarProps = AgeGroup
 
-const AgeStar = ({ title, subtitle, baseColorClass, hoverColorClass }: AgeStarProps) => {
+const AgeStar = ({ id, title, subtitle, baseColorClass, hoverColorClass }: AgeStarProps) => {
   return (
-    <button
-      type="button"
+    <Link
+      href={`/collections/${id}`}
       className="group flex min-w-[6rem] md:min-w-[10rem] flex-col items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ui-border-strong"
       aria-label={`${title} ${subtitle}`}
     >
@@ -106,7 +107,7 @@ const AgeStar = ({ title, subtitle, baseColorClass, hoverColorClass }: AgeStarPr
           </span>
         </div>
       </div>
-    </button>
+    </Link>
   )
 }
 

@@ -42,14 +42,14 @@ export const navLinks: NavLink[] = [
 ]
 
 export const ageCategories: AgeCategory[] = [
-  { id: "0-18-months", label: "0-18 Month", href: "/collections/0-18-months" },
-  { id: "18-36-months", label: "18-36 Month", href: "/collections/18-36-months" },
-  { id: "3-5-years", label: "3-5 Year", href: "/collections/3-5-years" },
-  { id: "5-7-years", label: "5-7 Year", href: "/collections/5-7-years" },
+  { id: "0-18-months", label: "0-18 Months", href: "/collections/0-18-months" },
+  { id: "18-36-months", label: "18-36 Months", href: "/collections/18-36-months" },
+  { id: "3-5-years", label: "3-5 Years", href: "/collections/3-5-years" },
+  { id: "5-7-years", label: "5-7 Years", href: "/collections/5-7-years" },
   { id: "7-9-years", label: "7-9 Years", href: "/collections/7-9-years" },
-  { id: "9-12-years", label: "9-12 Year", href: "/collections/9-12-years" },
-  { id: "12-14-years", label: "12-14 Year", href: "/collections/12-14-years" },
-  { id: "14-plus-years", label: "14+ Year", href: "/collections/14-plus-years" },
+  { id: "9-12-years", label: "9-12 Years", href: "/collections/9-12-years" },
+  { id: "12-14-years", label: "12-14 Years", href: "/collections/12-14-years" },
+  { id: "14-plus-years", label: "14+ Years", href: "/collections/14-plus-years" },
 ]
 
 export const shopMenuSections: ShopMenuSection[] = [
