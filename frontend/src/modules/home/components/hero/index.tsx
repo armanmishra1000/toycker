@@ -51,7 +51,18 @@ const HERO_SLIDES: HeroSlide[] = [
     id: 7,
     imageSrc: "/assets/images/slider_7.png",
     alt: "Main hero promotion 7",
+  },
+  {
+    id: 8,
+    imageSrc: "/assets/images/slider_8.png",
+    alt: "Main hero promotion 8",
+  },
+  {
+    id: 9,
+    imageSrc: "/assets/images/slider_9.png",
+    alt: "Main hero promotion 9",
   }
+
 ]
 
 const HERO_SWIPER_OPTIONS = {
