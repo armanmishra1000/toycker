@@ -3,12 +3,18 @@ export type ContactReason = {
   label: string
 }
 
+export type ContactHours = {
+  weekdays: string
+  sunday: string
+}
+
 export const contactReasons: ContactReason[] = [
   { id: "product", label: "Product inquiries" },
   { id: "tracking", label: "Order tracking" },
   { id: "returns", label: "Return & refund requests" },
   { id: "bulk", label: "Bulk purchase queries" },
   { id: "feedback", label: "General feedback" },
+  { id: "ad", label: "Ad & collaboration requests" },
 ]
 
 export const contactInfo = {
@@ -21,9 +27,90 @@ export const contactInfo = {
     href: "mailto:customercare@toycker.com",
   },
   address:
-    "KESHAV ENTERPRISE\nGROUND FLOOR, PLOT NO. 76, NILAMNAGAR SOCIETTY-2, PUNA SIMADA ROAD, PUNAGAM, Surat, Gujarat, 395010",
+    "shed no-7/8, sardar campus, opp. River Kent, Mota Varachha, Surat, Gujarat 394101",
   hours: {
-    weekdays: "Monday – Saturday: 10:00 AM – 7:00 PM",
+    weekdays: "Monday – Saturday: 10:00 AM – 10:00 PM",
     sunday: "Sunday: Closed",
-  },
+  } satisfies ContactHours,
 }
+
+export type ContactLocation = {
+  id: string
+  title: string
+  label: string
+  addressLines: string[]
+  phone: {
+    display: string
+    href: string
+  }
+  mapQuery: string
+  virtualTourUrl: string
+  isHeadOffice?: boolean
+}
+
+export const contactLocations: ContactLocation[] = [
+  {
+    id: "head-office-varachha",
+    title: "HEAD OFFICE - VARACHHA",
+    label: "Main Toy Hub",
+    addressLines: [
+      "shed no-7/8, sardar campus, opp. River Kent,",
+      "Mota Varachha, Surat, Gujarat 394101",
+    ],
+    phone: {
+      display: "+91 9925819694",
+      href: "tel:919925819694",
+    },
+    mapQuery: "Toycker Head Office Varachha Surat",
+    virtualTourUrl: "https://maps.google.com/?q=Toycker+Head+Office+Varachha+Surat",
+    isHeadOffice: true,
+  },
+  {
+    id: "branch-1-katargam",
+    title: "BRANCH 1 - KATARGAM",
+    label: "Branch 1",
+    addressLines: [
+      "324-327, 3rd Floor, Laxmi Enclave",
+      "Opp. Gajera School, Chhitnikit Society",
+      "Katargam, Surat 395004",
+    ],
+    phone: {
+      display: "+91 90333 35009",
+      href: "tel:+919033335009",
+    },
+    mapQuery: "Toycker Branch Katargam Surat",
+    virtualTourUrl: "https://maps.google.com/?q=Toycker+Katargam+Surat",
+  },
+  {
+    id: "branch-2-adajan",
+    title: "BRANCH 2 - ADAJAN",
+    label: "Branch 2",
+    addressLines: [
+      "109, 1st Floor, Infinity Tower",
+      "Nr. G.D. Goenka School, LP Savani Road",
+      "Adajan, Surat 395009",
+    ],
+    phone: {
+      display: "+91 90991 44170",
+      href: "tel:+919099144170",
+    },
+    mapQuery: "Toycker Branch Adajan Surat",
+    virtualTourUrl: "https://maps.google.com/?q=Toycker+Adajan+Surat",
+  },
+  {
+    id: "branch-3-vesu",
+    title: "BRANCH 3 - VESU",
+    label: "Branch 3",
+    addressLines: [
+      "F-12, Second Avenue, Magdalla Circle",
+      "Opp. VR Mall",
+      "Vesu, Surat 395007",
+    ],
+    phone: {
+      display: "+91 97277 11802",
+      href: "tel:+919727711802",
+    },
+    mapQuery: "Toycker Branch Vesu Surat",
+    virtualTourUrl: "https://maps.google.com/?q=Toycker+Vesu+Surat",
+  },
+]
