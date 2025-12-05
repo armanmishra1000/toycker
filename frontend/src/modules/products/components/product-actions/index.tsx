@@ -36,6 +36,7 @@ const GIFT_WRAP_FEE = 50
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
   disabled?: boolean
+  showSupportActions?: boolean
 }
 
 const optionsAsKeymap = (
@@ -47,7 +48,7 @@ const optionsAsKeymap = (
   }, {})
 }
 
-export default function ProductActions({ product, disabled }: ProductActionsProps) {
+export default function ProductActions({ product, disabled, showSupportActions = true }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -479,24 +480,26 @@ export default function ProductActions({ product, disabled }: ProductActionsProp
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-ui-fg-base">
-        <button
-          type="button"
-          onClick={() => setIsQuestionOpen(true)}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
-        >
-          <MessageCircleQuestion className="h-4 w-4" />
-          Ask a question
-        </button>
-        <button
-          type="button"
-          onClick={handleShare}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
-        >
-          <Share2 className="h-4 w-4" />
-          {shareCopied ? "Link copied" : "Share"}
-        </button>
-      </div>
+      {showSupportActions && (
+        <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-ui-fg-base">
+          <button
+            type="button"
+            onClick={() => setIsQuestionOpen(true)}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
+          >
+            <MessageCircleQuestion className="h-4 w-4" />
+            Ask a question
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-ui-fg-base"
+          >
+            <Share2 className="h-4 w-4" />
+            {shareCopied ? "Link copied" : "Share"}
+          </button>
+        </div>
+      )}
 
       <Modal
         isOpen={isQuestionOpen}

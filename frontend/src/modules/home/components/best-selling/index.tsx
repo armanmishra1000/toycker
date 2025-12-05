@@ -49,7 +49,7 @@ const BestSelling = async ({ regionId, countryCode, isCustomerLoggedIn }: BestSe
         </div>
 
         <WishlistProvider isAuthenticated={isCustomerLoggedIn} loginPath={accountPath}>
-          <ul className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 lg:[&>li:nth-last-child(-n+2)]:hidden xl:[&>li:nth-last-child(-n+2)]:block">
+          <ul className="mt-10 grid gap-6 grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5 lg:[&>li:nth-last-child(-n+2)]:hidden xl:[&>li:nth-last-child(-n+2)]:block">
             {products.map((product) => (
               <li key={product.id}>
                 <ProductPreview product={product} viewMode="grid-5" />

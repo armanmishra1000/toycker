@@ -55,11 +55,11 @@ const ExclusiveCollections = () => {
               Exclusive collections
             </p>
             <h2 className="mt-2 text-3xl font-bold text-[#4b2b1c] md:text-4xl">
-              Shop from our founder
+              Limited-edition playtime drops
             </h2>
             <p className="mt-2 max-w-2xl text-base text-[#725747]">
-              Watch the sarees live, get the search code, and place an order directly after
-              seeing the drape in motion.
+              Catch our toymakers showcasing each collectible live, note the magic code, and
+              claim your next adventure set before the sparkly stock disappears.
             </p>
           </div>
           {/* {isMounted && (
