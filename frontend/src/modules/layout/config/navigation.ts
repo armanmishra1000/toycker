@@ -54,18 +54,6 @@ export const ageCategories: AgeCategory[] = [
 
 export const shopMenuSections: ShopMenuSection[] = [
   {
-    id: "brands",
-    title: "Shop By Brand",
-    items: [
-      { id: "giggles", label: "Giggles", href: "/categories/giggles" },
-      { id: "fundough", label: "Fundough", href: "/categories/fundough" },
-      { id: "games", label: "Games", href: "/categories/games" },
-      { id: "handycrafts", label: "Handycrafts", href: "/categories/handycrafts" },
-      { id: "play-learn", label: "Play & Learn", href: "/categories/play-and-learn" },
-      { id: "other-brands", label: "Other Brands", href: "/categories" },
-    ],
-  },
-  {
     id: "age",
     title: "Shop by Age",
     accent: "muted",
@@ -74,6 +62,19 @@ export const shopMenuSections: ShopMenuSection[] = [
       label: category.label,
       href: category.href,
     })),
+  },
+  {
+    id: "price",
+    title: "Shop By Price",
+    items: [
+      { id: "under-299", label: "Under 299", href: "/collections/under-299" },
+      { id: "under-499", label: "Under 499", href: "/collections/under-499" },
+      { id: "under-699", label: "Under 699", href: "/collections/under-699" },
+      { id: "under-999", label: "Under 999", href: "/collections/under-999" },
+      { id: "above-999", label: "Above 999", href: "/collections/above-999" },
+      { id: "boys", label: "Boys", href: "/collections/boys" },
+      { id: "girls", label: "Girls", href: "/collections/girls" },
+    ],
   },
 ]
 
