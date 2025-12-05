@@ -25,6 +25,26 @@ const PRODUCT_CACHE_MODE: ProductCacheMode = (() => {
   return "force-cache"
 })()
 
+const MULTI_COLLECTIONS_REVALIDATE_SECONDS = (() => {
+  const raw = process.env.NEXT_PUBLIC_MULTI_COLLECTIONS_REVALIDATE
+
+  if (!raw) {
+    return 3600
+  }
+
+  const normalized = raw.trim().toLowerCase()
+  if (["0", "disable", "disabled", "off", "false"].includes(normalized)) {
+    return 0
+  }
+
+  const parsed = Number(raw)
+  if (Number.isFinite(parsed) && parsed >= 0) {
+    return parsed
+  }
+
+  return 3600
+})()
+
 const DEFAULT_PRODUCT_FIELDS =
   "*variants.calculated_price,+variants.metadata,+variants.inventory_quantity,*variants.images,+metadata,+tags"
 
@@ -106,27 +126,40 @@ const prepareCollectionAwareQuery = async (
   return { query: nextQuery }
 }
 
+const shouldHydrateAdditionalCollections = () => MULTI_COLLECTIONS_REVALIDATE_SECONDS !== 0
+
 const hydrateProductsWithCollections = async (
   products: HttpTypes.StoreProduct[],
   headers: Record<string, string>
 ) => {
   const productIds = products.map((product) => product.id).filter(Boolean)
 
-  if (!productIds.length) {
+  if (!productIds.length || !shouldHydrateAdditionalCollections()) {
     return
   }
 
   try {
-    const payload = await sdk.client.fetch<{
-      items: { product_id: string; collections: HttpTypes.StoreProductCollection[] }[]
-    }>("/store/product-multi-collections", {
+    const fetchOptions: SdkFetchOptions = {
       method: "GET",
       query: {
         product_id: productIds,
       },
       headers,
-      cache: "no-store",
-    })
+      cache:
+        MULTI_COLLECTIONS_REVALIDATE_SECONDS > 0 ? "force-cache" : ("no-store" as const),
+    }
+
+    if (MULTI_COLLECTIONS_REVALIDATE_SECONDS > 0) {
+      const cacheTags = await getCacheOptions("product-multi-collections")
+      fetchOptions.next = {
+        revalidate: MULTI_COLLECTIONS_REVALIDATE_SECONDS,
+        ...(cacheTags as { tags?: string[] }),
+      }
+    }
+
+    const payload = await sdk.client.fetch<{
+      items: { product_id: string; collections: HttpTypes.StoreProductCollection[] }[]
+    }>("/store/product-multi-collections", fetchOptions)
 
     const collectionMap = new Map(
       (payload.items ?? []).map((item) => [item.product_id, item.collections ?? []])
