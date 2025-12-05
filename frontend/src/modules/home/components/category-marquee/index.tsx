@@ -8,6 +8,10 @@ type CategoryItem = {
   slug: string
 }
 
+type MarqueeItem = CategoryItem & {
+  isDuplicate: boolean
+}
+
 const CATEGORY_ITEMS: CategoryItem[] = [
   {
     id: "bath-toys",
@@ -101,7 +105,20 @@ const StarSeparator = () => (
 const CategoryMarquee = () => {
   const [isPaused, setIsPaused] = useState(false)
 
-  const marqueeItems = useMemo(() => CATEGORY_ITEMS.concat(CATEGORY_ITEMS), [])
+  const marqueeItems = useMemo<MarqueeItem[]>(() => {
+    const runs: MarqueeItem[] = []
+
+    for (let passIndex = 0; passIndex < 2; passIndex += 1) {
+      CATEGORY_ITEMS.forEach((item) => {
+        runs.push({
+          ...item,
+          isDuplicate: passIndex === 1,
+        })
+      })
+    }
+
+    return runs
+  }, [])
 
   const handlePreview = (
     event: MouseEvent<HTMLAnchorElement> | FocusEvent<HTMLAnchorElement>,
@@ -129,6 +146,8 @@ const CategoryMarquee = () => {
                 onFocus={handlePreview}
                 onMouseLeave={clearPreview}
                 onBlur={clearPreview}
+                aria-hidden={item.isDuplicate}
+                tabIndex={item.isDuplicate ? -1 : undefined}
               >
                 {item.label}
               </a>

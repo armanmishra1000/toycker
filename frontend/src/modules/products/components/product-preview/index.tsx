@@ -9,6 +9,7 @@ import { ViewMode } from "@modules/store/components/refinement-list/types"
 import WishlistButton from "@modules/products/components/wishlist-button"
 import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
 import SafeRichText from "@modules/common/components/safe-rich-text"
+import { Loader2, ShoppingCart } from "lucide-react"
 
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
@@ -77,6 +78,16 @@ export default function ProductPreview({
     titleSizeMap[viewMode] ?? "text-lg"
   )
   const descriptionPreview = isListView && product.description ? product.description : undefined
+  const buttonLabel = multipleVariants
+    ? "View options"
+    : status === "added"
+    ? "Added!"
+    : status === "error"
+    ? "Try again"
+    : isPending
+    ? "Adding..."
+    : "Add to cart"
+  const showMobileLoadingState = !multipleVariants && isPending
 
   return (
     <LocalizedClientLink
@@ -145,7 +156,10 @@ export default function ProductPreview({
                 })
               }
               className={clx(
-                "rounded-full px-5 py-2 text-xs font-semibold text-white transition",
+                "inline-flex items-center justify-center text-xs font-semibold text-white transition gap-0 sm:gap-2",
+                multipleVariants
+                  ? "rounded-full h-11 w-11 px-0 py-0 sm:h-auto sm:w-auto sm:px-5 sm:py-2"
+                  : "rounded-full h-11 w-11 px-0 py-0 sm:h-auto sm:w-auto sm:rounded-full sm:px-5 sm:py-2",
                 multipleVariants
                   ? "bg-slate-900 hover:bg-slate-800"
                   : "bg-[#111827] hover:bg-black",
@@ -154,17 +168,17 @@ export default function ProductPreview({
                     !multipleVariants && !defaultVariant?.id,
                 }
               )}
+              aria-label={buttonLabel}
               disabled={isPending && !multipleVariants}
             >
-              {multipleVariants
-                ? "View options"
-                : status === "added"
-                ? "Added!"
-                : status === "error"
-                ? "Try again"
-                : isPending
-                ? "Adding..."
-                : "Add to cart"}
+              {multipleVariants ? (
+                <ShoppingCart className="h-4 w-4 sm:hidden" aria-hidden="true" />
+              ) : showMobileLoadingState ? (
+                <Loader2 className="h-4 w-4 animate-spin sm:hidden" aria-hidden="true" />
+              ) : (
+                <ShoppingCart className="h-4 w-4 sm:hidden" aria-hidden="true" />
+              )}
+              <span className="hidden sm:inline">{buttonLabel}</span>
             </button>
           </div>
         </div>
