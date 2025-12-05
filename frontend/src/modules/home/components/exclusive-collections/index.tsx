@@ -105,16 +105,16 @@ const ExclusiveCollections = () => {
               loop
               speed={600}
               spaceBetween={16}
-              slidesPerView={1.05}
+              slidesPerView={1}
               breakpoints={{
                 540: {
-                  slidesPerView: 1.75,
+                  slidesPerView: 1,
                 },
                 768: {
-                  slidesPerView: 2.75,
+                  slidesPerView: 2,
                 },
                 1024: {
-                  slidesPerView: 4.75,
+                  slidesPerView: 3,
                 },
                 1280: {
                   slidesPerView: 5.25,

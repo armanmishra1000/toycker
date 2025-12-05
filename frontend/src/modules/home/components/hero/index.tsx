@@ -61,6 +61,11 @@ const HERO_SLIDES: HeroSlide[] = [
     id: 9,
     imageSrc: "/assets/images/slider_9.png",
     alt: "Main hero promotion 9",
+  },
+  {
+    id: 10,
+    imageSrc: "/assets/images/slider_10.png",
+    alt: "Main hero promotion 10",
   }
 
 ]
@@ -70,17 +75,20 @@ const HERO_SWIPER_OPTIONS = {
   loop: true,
   grabCursor: true,
   spaceBetween: 16,
-  slidesPerView: 1.1,
+  slidesPerView: 1,
   autoplay: {
     delay: 5000,
     disableOnInteraction: false,
   },
   breakpoints: {
     640: {
-      slidesPerView: 1.75,
+      slidesPerView: 1,
     },
     1024: {
-      slidesPerView: 2.25,
+      slidesPerView: 2,
+    },
+    1440: {
+      slidesPerView: 2.50,
     },
   },
 }
@@ -105,7 +113,7 @@ const Hero = () => {
 
   return (
     <section className="w-full">
-      <div className="w-full px-4 py-8">
+      <div className="w-full md:px-4 md:py-8">
         <div className="relative overflow-hidden">
           <Swiper
             {...HERO_SWIPER_OPTIONS}
@@ -117,7 +125,7 @@ const Hero = () => {
             {HERO_SLIDES.map((slide) => (
               <SwiperSlide key={slide.id}>
                 <div className="w-full">
-                  <div className="relative w-full overflow-hidden rounded-2xl bg-ui-bg-base aspect-[16/9]">
+                  <div className="relative w-full overflow-hidden md:rounded-2xl bg-ui-bg-base aspect-[16/9]">
                     <Image
                       src={slide.imageSrc}
                       alt={slide.alt}
