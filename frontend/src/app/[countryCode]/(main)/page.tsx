@@ -11,6 +11,7 @@ import WhyChooseUs from "@modules/home/components/why-choose-us"
 import CategoryMarquee from "@modules/home/components/category-marquee"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
+import { listExclusiveCollections } from "@lib/data/exclusive-collections"
 
 export const metadata: Metadata = {
   title: "Medusa Next.js Starter Template",
@@ -41,6 +42,10 @@ export default async function Home(props: {
     return null
   }
 
+  const exclusiveCollections = await listExclusiveCollections({
+    regionId: region.id,
+  })
+
   return (
     <>
       <Hero />
@@ -51,7 +56,7 @@ export default async function Home(props: {
         isCustomerLoggedIn={isCustomerLoggedIn}
       />
       <ShopByAge />
-      <ExclusiveCollections />
+      {exclusiveCollections.length > 0 && <ExclusiveCollections items={exclusiveCollections} />}
       <BestSelling
         regionId={region.id}
         countryCode={countryCode}

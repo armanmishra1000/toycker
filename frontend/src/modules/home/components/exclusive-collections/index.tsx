@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Autoplay } from "swiper/modules"
@@ -9,28 +9,69 @@ import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react"
 
 import "swiper/css"
 
-import { exclusiveCollectionItems } from "./data"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { getProductPrice } from "@lib/util/get-product-price"
+import { buildDisplayPrice, type DisplayPrice } from "@lib/util/display-price"
+import { clx } from "@medusajs/ui"
 
-const STORE_BADGES = [
-  {
-    id: "app-store",
-    label: "App Store",
-  },
-  {
-    id: "google-play",
-    label: "Google Play",
-  },
-]
+type ExclusiveCollectionsProps = {
+  items: ExclusiveCollectionEntry[]
+}
 
-const ExclusiveCollections = () => {
+const resolveDisplayPrice = (entry: ExclusiveCollectionEntry): DisplayPrice | null => {
+  if (!entry.product) {
+    return null
+  }
+
+  try {
+    const { cheapestPrice } = getProductPrice({ product: entry.product })
+    return buildDisplayPrice(cheapestPrice)
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Unable to compute price for exclusive entry", error)
+    }
+    return null
+  }
+}
+
+const PriceStack = ({ price }: { price: DisplayPrice | null }) => {
+  if (!price) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-col leading-tight">
+      <p
+        className={clx("text-sm font-semibold", {
+          "text-[#E7353A]": price.isDiscounted,
+          "text-[#4b2b1c]": !price.isDiscounted,
+        })}
+      >
+        {price.current.raw}
+      </p>
+      {price.original && (
+        <p className="text-xs text-[#9c7e6f] line-through">{price.original.raw}</p>
+      )}
+    </div>
+  )
+}
+
+const ExclusiveCollections = ({ items }: ExclusiveCollectionsProps) => {
   const [isMounted, setIsMounted] = useState(false)
   const swiperRef = useRef<SwiperInstance | null>(null)
   const [isAutoplaying, setIsAutoplaying] = useState(true)
   const [activeIndex, setActiveIndex] = useState(0)
 
+  const showcaseItems = useMemo(() => items ?? [], [items])
+  const hasItems = showcaseItems.length > 0
+
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  if (!hasItems) {
+    return null
+  }
 
   const toggleAutoplay = () => {
     if (!swiperRef.current?.autoplay) {
@@ -82,21 +123,31 @@ const ExclusiveCollections = () => {
 
         {!isMounted ? (
           <div className="grid gap-4 rounded-xl bg-[#f8ede6] p-6 sm:grid-cols-2 lg:grid-cols-3">
-            {exclusiveCollectionItems.slice(0, 3).map((item) => (
-              <article key={item.id} className="flex flex-col rounded-xl bg-white/80 p-4 shadow-sm">
-                <div className="relative mb-4 h-40 w-full overflow-hidden rounded-lg">
-                  <Image
-                    src={item.posterSrc}
-                    alt={item.name}
-                    fill
-                    sizes="(min-width: 1024px) 360px, 100vw"
-                    className="object-cover"
-                  />
-                </div>
-                <p className="text-base font-semibold text-[#4b2b1c]">{item.name}</p>
-                <p className="text-sm text-[#725747]">{item.priceLabel}</p>
-              </article>
-            ))}
+            {showcaseItems.slice(0, 3).map((item) => {
+              const title = item.product?.title ?? "Featured collectible"
+              const poster = item.poster_url ?? item.product?.thumbnail ?? "/assets/images/slider_1.png"
+              const displayPrice = resolveDisplayPrice(item)
+
+              return (
+                <article key={item.id} className="flex flex-col rounded-xl bg-white/80 p-4 shadow-sm">
+                  <div className="relative mb-4 h-40 w-full overflow-hidden rounded-lg">
+                    {poster ? (
+                      <Image
+                        src={poster}
+                        alt={title}
+                        fill
+                        sizes="(min-width: 1024px) 360px, 100vw"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-[#f2dccd]" aria-hidden="true" />
+                    )}
+                  </div>
+                  <p className="text-base font-semibold text-[#4b2b1c]">{title}</p>
+                  <PriceStack price={displayPrice} />
+                </article>
+              )
+            })}
           </div>
         ) : (
           <div className="relative overflow-hidden rounded-xl">
@@ -134,47 +185,59 @@ const ExclusiveCollections = () => {
               className="exclusive-swiper pb-6"
               aria-roledescription="Exclusive collections slider"
             >
-              {exclusiveCollectionItems.map((item, index) => (
+              {showcaseItems.map((item, index) => {
+                const poster = item.poster_url ?? item.product?.thumbnail ?? undefined
+                const title = item.product?.title ?? "Exclusive collectible"
+                const productHandle = item.product?.handle ?? item.product_id
+                const displayPrice = resolveDisplayPrice(item)
+
+                return (
                 <SwiperSlide
                   key={item.id}
                   role="group"
-                  aria-label={`Video ${index + 1} of ${exclusiveCollectionItems.length}`}
+                    aria-label={`Video ${index + 1} of ${showcaseItems.length}`}
                 >
                   <article className="flex h-full flex-col rounded-xl overflow-hidden">
                     <div className="relative overflow-hidden rounded-xl">
                       <video
                         className="h-full w-full object-cover d-block"
-                        src={item.videoSrc}
+                          src={item.video_url}
                         autoPlay
                         loop
                         muted
                         playsInline
                         preload="metadata"
-                        poster={item.posterSrc}
+                          poster={poster}
                       >
                         Your browser does not support the video tag.
                       </video>
-                      <div className="flex items-center gap-3 bg-[#dbfca7] p-3 text-[#3a5017] z-10">
-                      <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-white/60">
-                        <Image
-                          src={item.productImageSrc}
-                          alt={item.name}
-                          fill
-                          sizes="64px"
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex min-h-[3.5rem] flex-1 flex-col justify-center">
-                        <p className="text-sm font-semibold leading-tight">{item.name}</p>
-                        <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-                          {item.priceLabel}
-                        </p>
-                      </div>
-                    </div>
+                        <LocalizedClientLink
+                          href={`/products/${productHandle}`}
+                          className="flex items-center gap-3 bg-[#dbfca7] p-3 text-[#3a5017] z-10"
+                        >
+                          <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-white/60">
+                            {poster ? (
+                              <Image
+                                src={poster}
+                                alt={title}
+                                fill
+                                sizes="64px"
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-white/40" aria-hidden="true" />
+                            )}
+                          </div>
+                          <div className="flex min-h-[3.5rem] flex-1 flex-col justify-center">
+                            <p className="text-sm font-semibold leading-tight">{title}</p>
+                            <PriceStack price={displayPrice} />
+                          </div>
+                        </LocalizedClientLink>
                     </div>
                   </article>
-                </SwiperSlide>
-              ))}
+                  </SwiperSlide>
+                )
+              })}
             </Swiper>
             <button
               type="button"
@@ -193,7 +256,7 @@ const ExclusiveCollections = () => {
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </button>
             <p className="sr-only" aria-live="polite">
-              Slide {activeIndex + 1} of {exclusiveCollectionItems.length}
+              Slide {activeIndex + 1} of {showcaseItems.length}
             </p>
           </div>
         )}
