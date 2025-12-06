@@ -9,6 +9,7 @@ import {
   PriceRangeFilter,
   SortOptions,
 } from "@modules/store/components/refinement-list/types"
+import { normalizeAgeFilterForComparison } from "@modules/store/utils/age-filter"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
@@ -354,17 +355,23 @@ const matchesPriceFilter = (product: HttpTypes.StoreProduct, priceFilter?: Price
 }
 
 const matchesAgeFilter = (product: HttpTypes.StoreProduct, ageFilter?: string) => {
-  if (!ageFilter) {
+  const normalizedFilter = normalizeAgeFilterForComparison(ageFilter)
+
+  if (!normalizedFilter) {
     return true
   }
 
-  const metadataValue = product.metadata?.[AGE_METADATA_KEY]
+  const metadataValue = typeof product.metadata?.[AGE_METADATA_KEY] === "string"
+    ? product.metadata[AGE_METADATA_KEY]
+    : undefined
 
-  if (!metadataValue || typeof metadataValue !== "string") {
+  const normalizedMetadata = normalizeAgeFilterForComparison(metadataValue)
+
+  if (!normalizedMetadata) {
     return false
   }
 
-  return metadataValue.toLowerCase() === ageFilter.toLowerCase()
+  return normalizedMetadata === normalizedFilter
 }
 
 const applyClientSideFilters = (

@@ -10,6 +10,8 @@ import {
 } from "@modules/store/components/refinement-list/types"
 import ProductGridSection from "@modules/store/components/product-grid-section"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
+import { resolveAgeFilterValue } from "@modules/store/utils/age-filter"
+import { resolveCategoryIdentifier } from "@modules/store/utils/category"
 
 type PaginatedProductsParams = {
   limit: number
@@ -58,8 +60,10 @@ export default async function PaginatedProducts({
     queryParams["collection_id"] = [collectionId]
   }
 
-  if (categoryId) {
-    queryParams["category_id"] = [categoryId]
+  const resolvedCategoryId = await resolveCategoryIdentifier(categoryId)
+
+  if (resolvedCategoryId) {
+    queryParams["category_id"] = [resolvedCategoryId]
   }
 
   if (productsIds) {
@@ -76,6 +80,8 @@ export default async function PaginatedProducts({
     return null
   }
 
+  const normalizedAgeFilter = resolveAgeFilterValue(filters?.age)
+
   const {
     response: { products, count },
   } = await listPaginatedProducts({
@@ -86,7 +92,7 @@ export default async function PaginatedProducts({
     countryCode,
     availability: filters?.availability,
     priceFilter: filters?.price,
-    ageFilter: filters?.age,
+    ageFilter: normalizedAgeFilter,
   })
 
   const totalCount = typeof count === "number" ? count : totalCountHint ?? 0

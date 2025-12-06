@@ -22,6 +22,7 @@ import {
   ViewMode,
 } from "@modules/store/components/refinement-list/types"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
+import { resolveAgeFilterValue } from "@modules/store/utils/age-filter"
 
 type FilterState = {
   availability?: AvailabilityFilter
@@ -108,6 +109,7 @@ export const StorefrontFiltersProvider = ({
 
       const effectiveCategoryId = nextFilters.categoryId ?? fixedCategoryId
       const effectiveCollectionId = nextFilters.collectionId ?? fixedCollectionId
+      const normalizedAgeFilter = resolveAgeFilterValue(nextFilters.age)
 
       try {
         const response = await fetch("/api/storefront/products", {
@@ -127,7 +129,7 @@ export const StorefrontFiltersProvider = ({
             filters: {
               availability: nextFilters.availability,
               price: nextFilters.priceRange,
-              age: nextFilters.age,
+              age: normalizedAgeFilter,
             },
           }),
           signal: controller.signal,
