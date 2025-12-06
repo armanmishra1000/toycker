@@ -52,6 +52,42 @@ export const ageCategories: AgeCategory[] = [
   { id: "14-plus-years", label: "14+ Years", href: "/collections/14-plus-years" },
 ]
 
+type PriceTier = {
+  id: string
+  label: string
+  min?: number
+  max?: number
+}
+
+const buildStorePriceHref = ({ min, max }: Pick<PriceTier, "min" | "max">) => {
+  const params = new URLSearchParams()
+
+  if (typeof min === "number") {
+    params.set("price_min", Math.round(min).toString())
+  }
+
+  if (typeof max === "number") {
+    params.set("price_max", Math.round(max).toString())
+  }
+
+  const query = params.toString()
+  return query ? `/store?${query}` : "/store"
+}
+
+const priceTiers: PriceTier[] = [
+  { id: "under-299", label: "Under 299", max: 299 },
+  { id: "under-499", label: "Under 499", max: 499 },
+  { id: "under-699", label: "Under 699", max: 699 },
+  { id: "under-999", label: "Under 999", max: 999 },
+  { id: "above-999", label: "Above 999", min: 1000 },
+]
+
+const priceTierLinks: ShopMenuLink[] = priceTiers.map((tier) => ({
+  id: tier.id,
+  label: tier.label,
+  href: buildStorePriceHref(tier),
+}))
+
 export const shopMenuSections: ShopMenuSection[] = [
   {
     id: "age",
@@ -67,11 +103,7 @@ export const shopMenuSections: ShopMenuSection[] = [
     id: "price",
     title: "Shop By Price",
     items: [
-      { id: "under-299", label: "Under 299", href: "/collections/under-299" },
-      { id: "under-499", label: "Under 499", href: "/collections/under-499" },
-      { id: "under-699", label: "Under 699", href: "/collections/under-699" },
-      { id: "under-999", label: "Under 999", href: "/collections/under-999" },
-      { id: "above-999", label: "Above 999", href: "/collections/above-999" },
+      ...priceTierLinks,
       { id: "boys", label: "Boys", href: "/collections/boys" },
       { id: "girls", label: "Girls", href: "/collections/girls" },
     ],

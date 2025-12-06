@@ -7,6 +7,7 @@ import {
   SortOptions,
 } from "@modules/store/components/refinement-list/types"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
+import { sanitizePriceRange } from "@modules/store/utils/price-range"
 
 type RequestBody = {
   countryCode?: string
@@ -57,6 +58,8 @@ export async function POST(request: Request) {
       queryParams["q"] = body.searchQuery
     }
 
+    const requestedPrice = sanitizePriceRange(body.filters?.price)
+
     const { response } = await listPaginatedProducts({
       page,
       limit,
@@ -64,7 +67,7 @@ export async function POST(request: Request) {
       countryCode: body.countryCode,
       queryParams,
       availability: body.filters?.availability,
-      priceFilter: body.filters?.price,
+      priceFilter: requestedPrice,
       ageFilter: body.filters?.age,
     })
 

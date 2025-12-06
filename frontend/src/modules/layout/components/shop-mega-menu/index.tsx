@@ -34,7 +34,7 @@ const ShopMegaMenu = ({
     <div
       role="region"
       aria-label="Shop menu"
-      className={`absolute left-0 top-[calc(100%+0rem)] z-10 w-[min(850px,92vw)] rounded-br-xl rounded-bl-xl border border-gray-200/70 bg-white/95 backdrop-blur transition-all duration-200 ease-out ${
+      className={`absolute left-0 top-[calc(100%+0rem)] z-20 w-[min(850px,92vw)] rounded-br-xl rounded-bl-xl border border-gray-200/70 bg-white/95 backdrop-blur transition-all duration-200 ease-out ${
         isOpen
           ? "pointer-events-auto translate-y-0 opacity-100"
           : "pointer-events-none translate-y-2 opacity-0"

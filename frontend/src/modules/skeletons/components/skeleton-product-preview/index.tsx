@@ -43,7 +43,7 @@ const SkeletonProductPreview = ({ viewMode = "grid-4" }: SkeletonProductPreviewP
     <div className={cardClassName}>
       <div className={wrapperClassName}>
         <div className={imageWrapperClassName}>
-          <div className="absolute right-3 top-3 z-10 translate-x-4 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
+          <div className="absolute right-3 top-3 translate-x-4 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
             <div className="h-9 w-9 rounded-full bg-white/80 shadow-lg" />
           </div>
           <div className="h-full w-full rounded-2xl bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100" />

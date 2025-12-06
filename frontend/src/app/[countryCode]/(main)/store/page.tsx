@@ -2,11 +2,11 @@ import { Metadata } from "next"
 
 import {
   AvailabilityFilter,
-  PriceRangeFilter,
   SortOptions,
   ViewMode,
 } from "@modules/store/components/refinement-list/types"
 import StoreTemplate from "@modules/store/templates"
+import { sanitizePriceRange } from "@modules/store/utils/price-range"
 
 export const metadata: Metadata = {
   title: "Store",
@@ -35,22 +35,10 @@ export default async function StorePage(props: Params) {
   const searchParams = await props.searchParams
   const { sortBy, page, q, availability, price_min, price_max, age, category, view } = searchParams
 
-  const parsedPriceRange: PriceRangeFilter | undefined = (() => {
-    const min = price_min !== undefined ? Number(price_min) : undefined
-    const max = price_max !== undefined ? Number(price_max) : undefined
-
-    if (
-      (min !== undefined && Number.isFinite(min)) ||
-      (max !== undefined && Number.isFinite(max))
-    ) {
-      return {
-        min: Number.isFinite(min) ? min : undefined,
-        max: Number.isFinite(max) ? max : undefined,
-      }
-    }
-
-    return undefined
-  })()
+  const parsedPriceRange = sanitizePriceRange({
+    min: price_min !== undefined ? Number(price_min) : undefined,
+    max: price_max !== undefined ? Number(price_max) : undefined,
+  })
 
   return (
     <StoreTemplate
