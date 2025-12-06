@@ -103,9 +103,6 @@ const FilterDrawer = ({
       return
     }
 
-    storefrontFilters.setAvailability(pendingFilters.availability)
-    storefrontFilters.setAge(pendingFilters.age)
-    storefrontFilters.setCategory(pendingFilters.category)
     const nextPrice =
       pendingFilters.priceMin === undefined && pendingFilters.priceMax === undefined
         ? undefined
@@ -113,7 +110,13 @@ const FilterDrawer = ({
             min: pendingFilters.priceMin,
             max: pendingFilters.priceMax,
           }
-    storefrontFilters.setPriceRange(nextPrice)
+
+    storefrontFilters.updateFilters({
+      availability: pendingFilters.availability,
+      age: pendingFilters.age,
+      categoryId: pendingFilters.category,
+      priceRange: nextPrice,
+    })
     close()
   }
 

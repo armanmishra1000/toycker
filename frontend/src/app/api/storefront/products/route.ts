@@ -7,6 +7,9 @@ import {
   SortOptions,
 } from "@modules/store/components/refinement-list/types"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
+import { sanitizePriceRange } from "@modules/store/utils/price-range"
+import { resolveAgeFilterValue } from "@modules/store/utils/age-filter"
+import { resolveCategoryIdentifier } from "@modules/store/utils/category"
 
 type RequestBody = {
   countryCode?: string
@@ -40,9 +43,10 @@ export async function POST(request: Request) {
     const sortBy: SortOptions = body.sortBy || "featured"
 
     const queryParams: Record<string, unknown> = {}
+    const resolvedCategoryId = await resolveCategoryIdentifier(body.categoryId)
 
-    if (body.categoryId) {
-      queryParams["category_id"] = [body.categoryId]
+    if (resolvedCategoryId) {
+      queryParams["category_id"] = [resolvedCategoryId]
     }
 
     if (body.collectionId) {
@@ -57,6 +61,9 @@ export async function POST(request: Request) {
       queryParams["q"] = body.searchQuery
     }
 
+    const requestedPrice = sanitizePriceRange(body.filters?.price)
+    const normalizedAgeFilter = resolveAgeFilterValue(body.filters?.age)
+
     const { response } = await listPaginatedProducts({
       page,
       limit,
@@ -64,8 +71,8 @@ export async function POST(request: Request) {
       countryCode: body.countryCode,
       queryParams,
       availability: body.filters?.availability,
-      priceFilter: body.filters?.price,
-      ageFilter: body.filters?.age,
+      priceFilter: requestedPrice,
+      ageFilter: normalizedAgeFilter,
     })
 
     return NextResponse.json({ products: response.products, count: response.count })

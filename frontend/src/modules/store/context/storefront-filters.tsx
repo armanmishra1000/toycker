@@ -22,6 +22,7 @@ import {
   ViewMode,
 } from "@modules/store/components/refinement-list/types"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
+import { resolveAgeFilterValue } from "@modules/store/utils/age-filter"
 
 type FilterState = {
   availability?: AvailabilityFilter
@@ -59,6 +60,9 @@ type StorefrontFiltersContextValue = {
   setPriceRange: (range?: PriceRangeFilter) => void
   setAge: (value?: string) => void
   setCategory: (value?: string) => void
+  /** @deprecated Use updateFilters instead */
+  setFilters: (partial: Partial<FilterState>, options?: { resetPage?: boolean }) => void
+  updateFilters: (partial: Partial<FilterState>, options?: { resetPage?: boolean }) => void
   setSort: (value: SortOptions) => void
   setViewMode: (value: ViewMode) => void
   setPage: (page: number) => void
@@ -79,7 +83,7 @@ export const StorefrontFiltersProvider = ({
   fixedCategoryId,
   fixedCollectionId,
 }: StorefrontFiltersProviderProps) => {
-  const [filters, setFilters] = useState<FilterState>(initialFilters)
+  const [filters, setFilterState] = useState<FilterState>(initialFilters)
   const filtersRef = useRef(initialFilters)
   const [listing, setListing] = useState<{ products: HttpTypes.StoreProduct[]; count: number }>({
     products: initialProducts,
@@ -105,6 +109,7 @@ export const StorefrontFiltersProvider = ({
 
       const effectiveCategoryId = nextFilters.categoryId ?? fixedCategoryId
       const effectiveCollectionId = nextFilters.collectionId ?? fixedCollectionId
+      const normalizedAgeFilter = resolveAgeFilterValue(nextFilters.age)
 
       try {
         const response = await fetch("/api/storefront/products", {
@@ -124,7 +129,7 @@ export const StorefrontFiltersProvider = ({
             filters: {
               availability: nextFilters.availability,
               price: nextFilters.priceRange,
-              age: nextFilters.age,
+              age: normalizedAgeFilter,
             },
           }),
           signal: controller.signal,
@@ -182,7 +187,7 @@ export const StorefrontFiltersProvider = ({
   const commitFilters = useCallback(
     (next: FilterState, { shouldFetch = true }: { shouldFetch?: boolean } = {}) => {
       filtersRef.current = next
-      startTransition(() => setFilters(next))
+      startTransition(() => setFilterState(next))
       triggerFetch(next, { shouldFetch })
     },
     [triggerFetch]
@@ -210,6 +215,14 @@ export const StorefrontFiltersProvider = ({
   const setAvailability = useCallback((value?: AvailabilityFilter) => baseUpdate({ availability: value }), [baseUpdate])
   const setAge = useCallback((value?: string) => baseUpdate({ age: value ?? undefined }), [baseUpdate])
   const setCategory = useCallback((value?: string) => baseUpdate({ categoryId: value ?? undefined }), [baseUpdate])
+  const updateFilters = useCallback(
+    (partial: Partial<FilterState>, options?: { resetPage?: boolean }) => {
+      baseUpdate(partial, {
+        resetPage: options?.resetPage ?? true,
+      })
+    },
+    [baseUpdate]
+  )
   const setPriceRange = useCallback(
     (range?: PriceRangeFilter) => {
       if (!range || (range.min === undefined && range.max === undefined)) {
@@ -254,6 +267,8 @@ export const StorefrontFiltersProvider = ({
       setPriceRange,
       setAge,
       setCategory,
+      setFilters: updateFilters,
+      updateFilters,
       setSort,
       setViewMode,
       setPage,
@@ -274,6 +289,7 @@ export const StorefrontFiltersProvider = ({
       setPriceRange,
       setAge,
       setCategory,
+      updateFilters,
       setSort,
       setViewMode,
       setPage,

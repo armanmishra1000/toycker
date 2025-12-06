@@ -15,6 +15,8 @@ import ProductGridSection from "@modules/store/components/product-grid-section"
 import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
 import FilterDrawer from "@modules/store/components/filter-drawer"
 import Breadcrumbs from "@modules/common/components/breadcrumbs"
+import { resolveAgeFilterValue } from "@modules/store/utils/age-filter"
+import { resolveCategoryIdentifier } from "@modules/store/utils/category"
 
 const StoreTemplate = async ({
   sortBy,
@@ -41,10 +43,13 @@ const StoreTemplate = async ({
   const sort = sortBy || "featured"
   const resolvedViewMode = viewMode || "grid-4"
 
+  const normalizedAgeFilter = resolveAgeFilterValue(ageFilter)
+  const resolvedCategoryId = await resolveCategoryIdentifier(categoryId)
+
   const productQueryParams: HttpTypes.FindParams & HttpTypes.StoreProductListParams = {}
 
-  if (categoryId) {
-    productQueryParams["category_id"] = [categoryId]
+  if (resolvedCategoryId) {
+    productQueryParams["category_id"] = [resolvedCategoryId]
   }
 
   if (searchQuery) {
@@ -64,7 +69,7 @@ const StoreTemplate = async ({
       countryCode,
       availability,
       priceFilter: priceRange,
-      ageFilter,
+      ageFilter: normalizedAgeFilter,
     }),
   ])
 
@@ -123,7 +128,7 @@ const StoreTemplate = async ({
         availability,
         priceRange,
         age: ageFilter,
-        categoryId,
+        categoryId: resolvedCategoryId,
         viewMode: resolvedViewMode,
       }}
       initialProducts={initialProducts}
@@ -137,7 +142,7 @@ const StoreTemplate = async ({
           priceMin: priceRange?.min,
           priceMax: priceRange?.max,
           age: ageFilter,
-          category: categoryId,
+          category: resolvedCategoryId,
         }}
         filterOptions={{
           availability: availabilityOptions,

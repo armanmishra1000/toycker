@@ -108,7 +108,7 @@ export default function ProductPreview({
             isFeatured={isFeatured}
             className="h-full w-full rounded-2xl border-none bg-ui-bg-base/0 p-0 shadow-none object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
-          <div className="absolute right-3 top-3 z-10 translate-x-4 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+          <div className="absolute right-3 top-3 translate-x-4 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
             <WishlistButton
               productId={product.id}
               productTitle={product.title}
