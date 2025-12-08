@@ -85,3 +85,7 @@ export const useCartSidebar = () => {
 
   return context
 }
+
+export const useOptionalCartSidebar = () => {
+  return useContext(CartSidebarContext)
+}

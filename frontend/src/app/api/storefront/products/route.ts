@@ -10,6 +10,15 @@ import { STORE_PRODUCT_PAGE_SIZE } from "@modules/store/constants"
 import { sanitizePriceRange } from "@modules/store/utils/price-range"
 import { resolveAgeFilterValue } from "@modules/store/utils/age-filter"
 import { resolveCategoryIdentifier } from "@modules/store/utils/category"
+import { resolveCollectionIdentifier } from "@modules/store/utils/collection"
+
+const normalizeStringArray = (value?: string | string[] | null): string[] => {
+  if (!value) {
+    return []
+  }
+
+  return (Array.isArray(value) ? value : [value]).map((entry) => entry ?? "").filter(Boolean)
+}
 
 type RequestBody = {
   countryCode?: string
@@ -17,7 +26,7 @@ type RequestBody = {
   limit?: number
   sortBy?: SortOptions
   categoryId?: string
-  collectionId?: string
+  collectionId?: string | string[]
   productsIds?: string[]
   searchQuery?: string
   filters?: {
@@ -49,8 +58,15 @@ export async function POST(request: Request) {
       queryParams["category_id"] = [resolvedCategoryId]
     }
 
-    if (body.collectionId) {
-      queryParams["collection_id"] = [body.collectionId]
+    const collectionIdsInput = normalizeStringArray(body.collectionId)
+    if (collectionIdsInput.length) {
+      const resolvedCollectionIds = await Promise.all(
+        collectionIdsInput.map(async (entry) => (await resolveCollectionIdentifier(entry)) ?? undefined)
+      )
+      const validCollectionIds = resolvedCollectionIds.filter((id): id is string => Boolean(id))
+      if (validCollectionIds.length) {
+        queryParams["collection_id"] = validCollectionIds
+      }
     }
 
     if (body.productsIds?.length) {

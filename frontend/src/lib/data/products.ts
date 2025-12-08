@@ -60,6 +60,14 @@ const ensureVariantMetadataSelection = (fields?: string) => {
   return parts.length ? `${parts.join(",")},+variants.metadata` : "+variants.metadata"
 }
 
+const normalizeStringArray = (value?: string | string[] | null): string[] => {
+  if (!value) {
+    return []
+  }
+
+  return (Array.isArray(value) ? value : [value]).map((entry) => entry ?? "").filter(Boolean)
+}
+
 const fetchCollectionProductIds = async (
   collectionIds: string[],
   headers: Record<string, string>
@@ -101,11 +109,17 @@ const prepareCollectionAwareQuery = async (
   headers: Record<string, string>,
   skipExpansion?: boolean
 ) => {
-  if (!query || skipExpansion || !query.collection_id?.length) {
+  if (!query || skipExpansion) {
     return { query }
   }
 
-  const productIds = await fetchCollectionProductIds(query.collection_id, headers)
+  const collectionIds = normalizeStringArray(query.collection_id as string | string[] | undefined)
+
+  if (!collectionIds.length) {
+    return { query }
+  }
+
+  const productIds = await fetchCollectionProductIds(collectionIds, headers)
 
   if (!productIds.length) {
     return { query: null }
@@ -117,8 +131,10 @@ const prepareCollectionAwareQuery = async (
 
   delete nextQuery.collection_id
 
-  if (nextQuery.id?.length) {
-    const combined = new Set([...nextQuery.id, ...productIds])
+  const existingIds = normalizeStringArray(nextQuery.id as string | string[] | undefined)
+
+  if (existingIds.length) {
+    const combined = new Set([...existingIds, ...productIds])
     nextQuery.id = Array.from(combined)
   } else {
     nextQuery.id = productIds
@@ -159,7 +175,7 @@ const hydrateProductsWithCollections = async (
     }
 
     const payload = await sdk.client.fetch<{
-      items: { product_id: string; collections: HttpTypes.StoreProductCollection[] }[]
+      items: { product_id: string; collections: HttpTypes.StoreCollection[] }[]
     }>("/store/product-multi-collections", fetchOptions)
 
     const collectionMap = new Map(
@@ -170,7 +186,7 @@ const hydrateProductsWithCollections = async (
       const assigned = collectionMap.get(product.id)
       if (assigned?.length) {
         ;(product as HttpTypes.StoreProduct & {
-          additional_collections?: HttpTypes.StoreProductCollection[]
+          additional_collections?: HttpTypes.StoreCollection[]
         }).additional_collections = assigned
       }
     })
@@ -313,8 +329,6 @@ const AGE_METADATA_KEY = "age_band"
 const CLIENT_SCAN_LIMIT = 600
 const CLIENT_SCAN_MAX_PAGES = 50
 
-const convertMajorToMinor = (value: number) => Math.round(value * 100)
-
 const isProductInStock = (product: HttpTypes.StoreProduct) => {
   return product.variants?.some((variant) => {
     if (variant?.manage_inventory === false) {
@@ -339,9 +353,9 @@ const matchesPriceFilter = (product: HttpTypes.StoreProduct, priceFilter?: Price
   const amount = cheapestPrice.calculated_price_number
 
   const min =
-    typeof priceFilter.min === "number" ? convertMajorToMinor(Math.max(priceFilter.min, 0)) : undefined
+    typeof priceFilter.min === "number" ? Math.max(priceFilter.min, 0) : undefined
   const max =
-    typeof priceFilter.max === "number" ? convertMajorToMinor(Math.max(priceFilter.max, 0)) : undefined
+    typeof priceFilter.max === "number" ? Math.max(priceFilter.max, 0) : undefined
 
   if (min !== undefined && amount < min) {
     return false

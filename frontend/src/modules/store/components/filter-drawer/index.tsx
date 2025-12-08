@@ -2,6 +2,7 @@
 
 import { Dialog, DialogPanel, DialogTitle, Transition } from "@headlessui/react"
 import { X } from "lucide-react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   Fragment,
   ReactNode,
@@ -51,14 +52,18 @@ const FilterDrawer = ({
   title = "Filters",
   ...refinementListProps
 }: FilterDrawerProps) => {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [isOpen, setIsOpen] = useState(false)
   const storefrontFilters = useOptionalStorefrontFilters()
   const open = useCallback(() => setIsOpen(true), [])
   const close = useCallback(() => setIsOpen(false), [])
-  const activeCount = useActiveFilterCount(
+  const fallbackActiveCount = useActiveFilterCount(
     refinementListProps.selectedFilters,
     refinementListProps.searchQuery ?? undefined
   )
+  const activeCount = storefrontFilters?.activeFilterCount ?? fallbackActiveCount
   const filterSignature = useFilterSignature(
     refinementListProps.selectedFilters,
     refinementListProps.searchQuery ?? undefined
@@ -66,6 +71,17 @@ const FilterDrawer = ({
   const lastSignatureRef = useRef(filterSignature)
   const snapshot = useFilterSnapshot(refinementListProps.selectedFilters, refinementListProps.searchQuery ?? undefined)
   const [pendingFilters, setPendingFilters] = useState<SelectedFilters>(() => snapshotToSelected(snapshot))
+
+  const syncRouterParams = useCallback(
+    (mutator: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams)
+      mutator(params)
+      params.delete("page")
+      const queryString = params.toString()
+      router.push(queryString ? `${pathname}?${queryString}` : pathname)
+    },
+    [pathname, router, searchParams]
+  )
 
   useEffect(() => {
     if (isOpen) {
@@ -115,7 +131,31 @@ const FilterDrawer = ({
       availability: pendingFilters.availability,
       age: pendingFilters.age,
       categoryId: pendingFilters.category,
+      collectionId: pendingFilters.collection,
       priceRange: nextPrice,
+    })
+
+    syncRouterParams((params) => {
+      const assignParam = (key: string, nextValue?: string | number) => {
+        if (nextValue !== undefined && nextValue !== "") {
+          params.set(key, String(nextValue))
+        } else {
+          params.delete(key)
+        }
+      }
+
+      assignParam("availability", pendingFilters.availability)
+      assignParam("age", pendingFilters.age)
+      assignParam("collection", pendingFilters.collection)
+      assignParam("category", pendingFilters.category)
+      assignParam(
+        "price_min",
+        pendingFilters.priceMin !== undefined ? Math.round(pendingFilters.priceMin) : undefined
+      )
+      assignParam(
+        "price_max",
+        pendingFilters.priceMax !== undefined ? Math.round(pendingFilters.priceMax) : undefined
+      )
     })
     close()
   }
@@ -194,6 +234,7 @@ type FilterSnapshot = {
   category?: string
   price?: { min?: number; max?: number }
   search?: string
+  collection?: string
 }
 
 const useFilterSnapshot = (selectedFilters?: SelectedFilters, searchQuery?: string) => {
@@ -203,6 +244,7 @@ const useFilterSnapshot = (selectedFilters?: SelectedFilters, searchQuery?: stri
     const availability = storefrontFilters?.filters.availability ?? selectedFilters?.availability
     const age = storefrontFilters?.filters.age ?? selectedFilters?.age
     const category = storefrontFilters?.filters.categoryId ?? selectedFilters?.category
+    const collection = storefrontFilters?.filters.collectionId ?? selectedFilters?.collection
     const price = storefrontFilters?.filters.priceRange ??
       (selectedFilters?.priceMin !== undefined || selectedFilters?.priceMax !== undefined
         ? { min: selectedFilters?.priceMin, max: selectedFilters?.priceMax }
@@ -215,6 +257,7 @@ const useFilterSnapshot = (selectedFilters?: SelectedFilters, searchQuery?: stri
       category,
       price,
       search,
+      collection,
     }
   }, [storefrontFilters, selectedFilters, searchQuery])
 }
@@ -231,6 +274,7 @@ const useActiveFilterCount = (selectedFilters?: SelectedFilters, searchQuery?: s
       count += 1
     }
     if (snapshot.search) count += 1
+    if (snapshot.collection && !snapshot.age) count += 1
 
     return count
   }, [snapshot])
@@ -248,12 +292,14 @@ const snapshotToSelected = (snapshot: FilterSnapshot): SelectedFilters => ({
   category: snapshot.category,
   priceMin: snapshot.price?.min,
   priceMax: snapshot.price?.max,
+  collection: snapshot.collection,
 })
 
 const areFiltersEqual = (a: SelectedFilters, b: SelectedFilters) =>
   a.availability === b.availability &&
   a.age === b.age &&
   a.category === b.category &&
+  a.collection === b.collection &&
   (a.priceMin ?? undefined) === (b.priceMin ?? undefined) &&
   (a.priceMax ?? undefined) === (b.priceMax ?? undefined)
 

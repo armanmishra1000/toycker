@@ -56,10 +56,12 @@ type StorefrontFiltersContextValue = {
   isFetching: boolean
   isPending: boolean
   error?: string
+  activeFilterCount: number
   setAvailability: (value?: AvailabilityFilter) => void
   setPriceRange: (range?: PriceRangeFilter) => void
   setAge: (value?: string) => void
   setCategory: (value?: string) => void
+  setCollection: (value?: string) => void
   /** @deprecated Use updateFilters instead */
   setFilters: (partial: Partial<FilterState>, options?: { resetPage?: boolean }) => void
   updateFilters: (partial: Partial<FilterState>, options?: { resetPage?: boolean }) => void
@@ -72,6 +74,29 @@ type StorefrontFiltersContextValue = {
 }
 
 const StorefrontFiltersContext = createContext<StorefrontFiltersContextValue | null>(null)
+
+const isPriceRangeEqual = (a?: PriceRangeFilter, b?: PriceRangeFilter) => {
+  if (!a && !b) {
+    return true
+  }
+
+  if (!a || !b) {
+    return false
+  }
+
+  return a.min === b.min && a.max === b.max
+}
+
+const isFilterStateEqual = (a: FilterState, b: FilterState) =>
+  a.availability === b.availability &&
+  isPriceRangeEqual(a.priceRange, b.priceRange) &&
+  a.age === b.age &&
+  a.categoryId === b.categoryId &&
+  a.collectionId === b.collectionId &&
+  a.sortBy === b.sortBy &&
+  a.page === b.page &&
+  a.searchQuery === b.searchQuery &&
+  a.viewMode === b.viewMode
 
 export const StorefrontFiltersProvider = ({
   children,
@@ -110,6 +135,7 @@ export const StorefrontFiltersProvider = ({
       const effectiveCategoryId = nextFilters.categoryId ?? fixedCategoryId
       const effectiveCollectionId = nextFilters.collectionId ?? fixedCollectionId
       const normalizedAgeFilter = resolveAgeFilterValue(nextFilters.age)
+      const shouldApplyAgeFilter = Boolean(normalizedAgeFilter) && !effectiveCollectionId
 
       try {
         const response = await fetch("/api/storefront/products", {
@@ -129,7 +155,7 @@ export const StorefrontFiltersProvider = ({
             filters: {
               availability: nextFilters.availability,
               price: nextFilters.priceRange,
-              age: normalizedAgeFilter,
+              age: shouldApplyAgeFilter ? normalizedAgeFilter : undefined,
             },
           }),
           signal: controller.signal,
@@ -207,6 +233,11 @@ export const StorefrontFiltersProvider = ({
         ...(resetPage ? { page: 1 } : {}),
         ...partial,
       }
+
+      if (isFilterStateEqual(current, next)) {
+        return
+      }
+
       commitFilters(next, { shouldFetch })
     },
     [commitFilters]
@@ -215,6 +246,7 @@ export const StorefrontFiltersProvider = ({
   const setAvailability = useCallback((value?: AvailabilityFilter) => baseUpdate({ availability: value }), [baseUpdate])
   const setAge = useCallback((value?: string) => baseUpdate({ age: value ?? undefined }), [baseUpdate])
   const setCategory = useCallback((value?: string) => baseUpdate({ categoryId: value ?? undefined }), [baseUpdate])
+  const setCollection = useCallback((value?: string) => baseUpdate({ collectionId: value ?? undefined }), [baseUpdate])
   const updateFilters = useCallback(
     (partial: Partial<FilterState>, options?: { resetPage?: boolean }) => {
       baseUpdate(partial, {
@@ -253,6 +285,25 @@ export const StorefrontFiltersProvider = ({
     [listing.count, pageSize]
   )
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+
+    if (filters.availability) count += 1
+    if (filters.age) count += 1
+    if (filters.categoryId) count += 1
+
+    const hasPriceRange = filters.priceRange && (filters.priceRange.min !== undefined || filters.priceRange.max !== undefined)
+    if (hasPriceRange) count += 1
+
+    if (filters.searchQuery) count += 1
+
+    if (filters.collectionId && !filters.age) {
+      count += 1
+    }
+
+    return count
+  }, [filters])
+
   const value = useMemo<StorefrontFiltersContextValue>(
     () => ({
       filters,
@@ -263,10 +314,12 @@ export const StorefrontFiltersProvider = ({
       isFetching,
       isPending,
       error,
+      activeFilterCount,
       setAvailability,
       setPriceRange,
       setAge,
       setCategory,
+      setCollection,
       setFilters: updateFilters,
       updateFilters,
       setSort,
@@ -285,10 +338,12 @@ export const StorefrontFiltersProvider = ({
       isFetching,
       isPending,
       error,
+      activeFilterCount,
       setAvailability,
       setPriceRange,
       setAge,
       setCategory,
+      setCollection,
       updateFilters,
       setSort,
       setViewMode,

@@ -19,5 +19,6 @@ module.exports = {
     "@next/next/no-document-import-in-page": "off",
     "@next/next/no-document-import-in-head": "off",
     "@next/next/no-script-component-in-head": "off",
+    "@next/next/no-img-element": "off",
   },
 };

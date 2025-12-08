@@ -114,8 +114,8 @@ export const shopMenuPromo: ShopMenuPromo = {
   title: "Shop All",
   links: [
     { id: "shop-all", label: "Shop All", href: "/store" },
-    { id: "new-arrivals", label: "New Arrivals", href: "/categories/new-arrivals" },
-    { id: "best-sellers", label: "Best Sellers", href: "/categories/best-sellers" },
+    { id: "new-arrivals", label: "New Arrivals", href: "/collections/new-arrivals" },
+    { id: "best-selling", label: "Best Sellers", href: "/collections/best-selling" },
   ],
   image: {
     src: "/assets/images/H373b3e2614344291824ff29116a86506M.jpg",

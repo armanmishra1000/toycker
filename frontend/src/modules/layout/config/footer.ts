@@ -61,15 +61,15 @@ export const footerContactItems: FooterContactItem[] = [
 
 export const footerLinkGroups: FooterLinkGroup[] = [
   {
-    id: "categories",
-    title: "Categories",
+    id: "Popular-searches",
+    title: "Popular searches",
     links: [
-      { id: "action-figures", label: "Action Figures", href: "/categories/action-figures" },
-      { id: "sport-toys", label: "Sport Toys", href: "/categories/sport-toys" },
-      { id: "educational-toy", label: "Educational Toy", href: "/categories/educational-toy" },
-      { id: "drone", label: "Drone", href: "/categories/drone" },
-      { id: "role-play-set", label: "Role Play Set", href: "/categories/role-play-set" },
-      { id: "electric-ride-ons", label: "Electric Ride Ons", href: "/categories/electric-ride-ons" },
+      { id: "action-figures", label: "Action Figures", href: "/collections/action-figures" },
+      { id: "sport-toys", label: "Sport Toys", href: "/collections/sport-toys" },
+      { id: "educational-toy", label: "Educational Toy", href: "/collections/educational-toy" },
+      { id: "drone", label: "Drone", href: "/collections/drone" },
+      { id: "role-play-set", label: "Role Play Set", href: "/collections/role-play-set" },
+      { id: "metal-car", label: "Metal car", href: "/collections/metal-car" },
     ],
   },
   {
