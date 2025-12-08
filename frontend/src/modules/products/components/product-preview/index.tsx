@@ -7,7 +7,7 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { ViewMode } from "@modules/store/components/refinement-list/types"
 import WishlistButton from "@modules/products/components/wishlist-button"
-import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
+import { useOptionalCartSidebar } from "@modules/layout/context/cart-sidebar-context"
 import SafeRichText from "@modules/common/components/safe-rich-text"
 import { Loader2, ShoppingCart } from "lucide-react"
 
@@ -34,7 +34,9 @@ export default function ProductPreview({
   const params = useParams<{ countryCode?: string }>()
   const [isPending, startTransition] = useTransition()
   const [status, setStatus] = useState<"idle" | "added" | "error">("idle")
-  const { openCart, refreshCart } = useCartSidebar()
+  const cartSidebar = useOptionalCartSidebar()
+  const openCart = cartSidebar?.openCart
+  const refreshCart = cartSidebar?.refreshCart
   const countryCodeParam = Array.isArray(params?.countryCode)
     ? params.countryCode[0]
     : params?.countryCode

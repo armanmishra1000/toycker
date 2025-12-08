@@ -24,11 +24,6 @@ export default async function CollectionTemplate({
   const sort = sortBy || "featured"
   const defaultViewMode: ViewMode = "grid-4"
 
-  const normalizedHandle = (collection.handle ?? "").toLowerCase()
-  if (normalizedHandle === "popular" || normalizedHandle === "best_selling") {
-    return null
-  }
-
   const [productListing] = await Promise.all([
     listPaginatedProducts({
       page: pageNumber,
@@ -67,7 +62,7 @@ export default async function CollectionTemplate({
       fixedCollectionId={collection.id}
     >
       <FilterDrawer filterOptions={{ availability: availabilityOptions }}>
-        <div className="mx-auto p-4 max-w-[1440px]">
+        <div className="mx-auto p-4 max-w-[1440px] pb-10">
           <Breadcrumbs
             className="mb-6"
             items={[

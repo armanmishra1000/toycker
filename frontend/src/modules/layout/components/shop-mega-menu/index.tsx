@@ -99,7 +99,11 @@ const ShopMegaMenu = ({
             })}
           </div>
 
-          <div className="mt-6 overflow-hidden rounded-2xl bg-white/70 p-3 text-center shadow-inner">
+          <LocalizedClientLink
+            href="/products/dj-coco-light-music-toy"
+            className="mt-6 block overflow-hidden rounded-2xl bg-white/70 p-3 text-center shadow-inner transition hover:bg-white"
+            aria-label="View DJ Coco Light Music Toy"
+          >
             <div className="relative mx-auto h-32 w-full max-w-[160px]">
               <Image
                 src={promo.image.src}
@@ -110,10 +114,10 @@ const ShopMegaMenu = ({
                 priority={false}
               />
             </div>
-            <p className="mt-4 text-sm font-medium text-slate-700">
-              Spark creativity with our curated picks
+            <p className="mt-4 text-sm font-semibold text-slate-800">
+              Dj Coco Light & Music Toy
             </p>
-          </div>
+          </LocalizedClientLink>
         </div>
       </div>
     </div>
