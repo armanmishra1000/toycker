@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ComponentType, Fragment } from "react"
+import { ComponentType, Fragment, useId } from "react"
 
 import { clx } from "@medusajs/ui"
 import { Check, ChevronDown, LayoutGrid, PanelsTopLeft, Rows, SlidersHorizontal } from "lucide-react"
@@ -138,57 +138,69 @@ const SortDropdown = ({
 }: {
   value: SortOptions
   onChange: (value: SortOptions) => void
-}) => (
-  <Listbox value={value} onChange={onChange}>
-    {({ open }) => (
-      <div className="relative">
-        <ListboxButton
-          className={clx(
-            "inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold transition-all",
-            "border-ui-border-base bg-ui-bg-field text-ui-fg-base hover:border-ui-border-strong"
-          )}
-        >
-          <span className="text-ui-fg-muted">Sort by:</span>
-          <span className="text-ui-fg-base">{SORT_OPTIONS.find((opt) => opt.value === value)?.label ?? "Featured"}</span>
-          <ChevronDown
-            className={clx("h-4 w-4 text-ui-fg-muted transition-transform", {
-              "-scale-y-100": open,
-            })}
-            aria-hidden
-          />
-        </ListboxButton>
-        <Transition
-          show={open}
-          as={Fragment}
-          leave="transition ease-in duration-100"
-          leaveFrom="opacity-100 translate-y-0"
-          leaveTo="opacity-0 -translate-y-1"
-        >
-          <ListboxOptions className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-ui-border-base bg-white p-1 shadow-lg focus:outline-none">
-            {SORT_OPTIONS.map((option) => (
-              <ListboxOption
-                key={option.value}
-                value={option.value}
-                className={({ selected, active }) =>
-                  clx(
-                    "flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm font-medium",
-                    active && "bg-ui-bg-field text-ui-fg-base",
-                    selected && "text-ui-fg-base",
-                    !active && !selected && "text-ui-fg-muted"
-                  )
-                }
-              >
-                {({ selected }) => (
-                  <>
-                    <span>{option.label}</span>
-                    {selected ? <Check className="h-4 w-4 text-ui-fg-base" aria-hidden /> : null}
-                  </>
-                )}
-              </ListboxOption>
-            ))}
-          </ListboxOptions>
-        </Transition>
-      </div>
-    )}
-  </Listbox>
-)
+}) => {
+  const listboxId = useId()
+  const buttonId = `${listboxId}-button`
+  const optionsId = `${listboxId}-options`
+
+  return (
+    <Listbox value={value} onChange={onChange}>
+      {({ open }) => (
+        <div className="relative">
+          <ListboxButton
+            id={buttonId}
+            aria-controls={optionsId}
+            className={clx(
+              "inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold transition-all",
+              "border-ui-border-base bg-ui-bg-field text-ui-fg-base hover:border-ui-border-strong"
+            )}
+          >
+            <span className="text-ui-fg-muted">Sort by:</span>
+            <span className="text-ui-fg-base">{SORT_OPTIONS.find((opt) => opt.value === value)?.label ?? "Featured"}</span>
+            <ChevronDown
+              className={clx("h-4 w-4 text-ui-fg-muted transition-transform", {
+                "-scale-y-100": open,
+              })}
+              aria-hidden
+            />
+          </ListboxButton>
+          <Transition
+            show={open}
+            as={Fragment}
+            leave="transition ease-in duration-100"
+            leaveFrom="opacity-100 translate-y-0"
+            leaveTo="opacity-0 -translate-y-1"
+          >
+            <ListboxOptions
+              id={optionsId}
+              aria-labelledby={buttonId}
+              className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-ui-border-base bg-white p-1 shadow-lg focus:outline-none"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <ListboxOption
+                  key={option.value}
+                  value={option.value}
+                  className={({ selected, active }) =>
+                    clx(
+                      "flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm font-medium",
+                      active && "bg-ui-bg-field text-ui-fg-base",
+                      selected && "text-ui-fg-base",
+                      !active && !selected && "text-ui-fg-muted"
+                    )
+                  }
+                >
+                  {({ selected }) => (
+                    <>
+                      <span>{option.label}</span>
+                      {selected ? <Check className="h-4 w-4 text-ui-fg-base" aria-hidden /> : null}
+                    </>
+                  )}
+                </ListboxOption>
+              ))}
+            </ListboxOptions>
+          </Transition>
+        </div>
+      )}
+    </Listbox>
+  )
+}

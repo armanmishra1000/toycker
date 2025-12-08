@@ -16,6 +16,7 @@ export type FilterOption = {
   label: string
   value: string
   count?: number
+  collectionId?: string
 }
 
 export type FilterConfig = {
@@ -28,6 +29,7 @@ export type SelectedFilters = {
   availability?: AvailabilityFilter
   age?: string
   category?: string
+  collection?: string
   priceMin?: number
   priceMax?: number
 }
@@ -105,6 +107,7 @@ const RefinementList = ({
         availability: storefrontFilters.filters.availability,
         age: storefrontFilters.filters.age,
         category: storefrontFilters.filters.categoryId,
+        collection: storefrontFilters.filters.collectionId,
         priceMin: storefrontFilters.filters.priceRange?.min,
         priceMax: storefrontFilters.filters.priceRange?.max,
       }
@@ -145,18 +148,57 @@ const RefinementList = ({
     router.push(queryString ? `${pathname}?${queryString}` : pathname)
   }
 
+  const updateSearchParams = (updater: (params: URLSearchParams) => void) => {
+    const params = new URLSearchParams(searchParams)
+    updater(params)
+    params.delete("page")
+    pushWithParams(params)
+  }
+
   const toggleCheckboxParam = (name: string, value: string) => {
+    const ageOption = name === "age" ? filterOptions?.ages?.find((option) => option.value === value) : undefined
+
     if (!shouldUseCustomState && storefrontFilters) {
       if (name === "availability") {
         const typedValue = value as AvailabilityFilter
         const nextValue = storefrontFilters.filters.availability === typedValue ? undefined : typedValue
         storefrontFilters.setAvailability(nextValue)
+        updateSearchParams((params) => {
+          if (nextValue) {
+            params.set("availability", nextValue)
+          } else {
+            params.delete("availability")
+          }
+        })
       } else if (name === "age") {
-        const nextValue = storefrontFilters.filters.age === value ? undefined : value
-        storefrontFilters.setAge(nextValue)
+        const isActive = storefrontFilters.filters.age === value
+        const nextValue = isActive ? undefined : value
+        const nextCollection = isActive ? undefined : ageOption?.collectionId
+        storefrontFilters.updateFilters({ age: nextValue, collectionId: nextCollection })
+        updateSearchParams((params) => {
+          if (nextValue) {
+            params.set("age", nextValue)
+          } else {
+            params.delete("age")
+          }
+
+          if (nextCollection) {
+            params.set("collection", nextCollection)
+          } else {
+            params.delete("collection")
+          }
+        })
       } else if (name === "category") {
-        const nextValue = storefrontFilters.filters.categoryId === value ? undefined : value
+        const isActive = storefrontFilters.filters.categoryId === value
+        const nextValue = isActive ? undefined : value
         storefrontFilters.setCategory(nextValue)
+        updateSearchParams((params) => {
+          if (nextValue) {
+            params.set("category", nextValue)
+          } else {
+            params.delete("category")
+          }
+        })
       }
       return
     }
@@ -171,9 +213,11 @@ const RefinementList = ({
         })
       } else if (name === "age") {
         const nextValue = effectiveFilters.age === value ? undefined : value
+        const nextCollection = nextValue ? ageOption?.collectionId : undefined
         onFiltersChange({
           ...effectiveFilters,
           age: nextValue,
+          collection: nextCollection,
         })
       } else if (name === "category") {
         const nextValue = effectiveFilters.category === value ? undefined : value
@@ -185,17 +229,26 @@ const RefinementList = ({
       return
     }
 
-    const params = new URLSearchParams(searchParams)
-    const currentValue = params.get(name)
+    updateSearchParams((params) => {
+      const currentValue = params.get(name)
+      const isActive = currentValue === value
 
-    if (currentValue === value) {
-      params.delete(name)
-    } else {
-      params.set(name, value)
-    }
+      if (isActive) {
+        params.delete(name)
+      } else {
+        params.set(name, value)
+      }
 
-    params.delete("page")
-    pushWithParams(params)
+      if (name === "age") {
+        if (isActive) {
+          params.delete("collection")
+        } else if (ageOption?.collectionId) {
+          params.set("collection", ageOption.collectionId)
+        } else {
+          params.delete("collection")
+        }
+      }
+    })
   }
 
   const commitPriceRange = (range: PriceRangeState) => {
@@ -210,6 +263,19 @@ const RefinementList = ({
               max,
             }
       )
+      updateSearchParams((params) => {
+        if (min !== undefined) {
+          params.set("price_min", min.toString())
+        } else {
+          params.delete("price_min")
+        }
+
+        if (max !== undefined) {
+          params.set("price_max", max.toString())
+        } else {
+          params.delete("price_max")
+        }
+      })
       return
     }
 
@@ -322,10 +388,13 @@ const RefinementList = ({
             storefrontFilters.setAvailability(undefined)
             break
           case "age":
-            storefrontFilters.setAge(undefined)
+            storefrontFilters.updateFilters({ age: undefined, collectionId: undefined }, { resetPage: true })
             break
           case "category":
             storefrontFilters.setCategory(undefined)
+            break
+          case "collection":
+            storefrontFilters.setCollection(undefined)
             break
           case "price_min":
           case "price_max":
@@ -351,9 +420,13 @@ const RefinementList = ({
             break
           case "age":
             next.age = undefined
+            next.collection = undefined
             break
           case "category":
             next.category = undefined
+            break
+          case "collection":
+            next.collection = undefined
             break
           case "price_min":
           case "price_max":
@@ -371,6 +444,9 @@ const RefinementList = ({
     const params = new URLSearchParams(searchParams)
     const keys = Array.isArray(paramKey) ? paramKey : [paramKey]
     keys.forEach((key) => params.delete(key))
+    if (keys.includes("age")) {
+      params.delete("collection")
+    }
     params.delete("page")
     pushWithParams(params)
   }

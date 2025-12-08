@@ -23,6 +23,7 @@ type Params = {
     price_max?: string
     age?: string
     category?: string
+    collection?: string
     view?: ViewMode
   }>
   params: Promise<{
@@ -33,7 +34,7 @@ type Params = {
 export default async function StorePage(props: Params) {
   const params = await props.params
   const searchParams = await props.searchParams
-  const { sortBy, page, q, availability, price_min, price_max, age, category, view } = searchParams
+  const { sortBy, page, q, availability, price_min, price_max, age, category, collection, view } = searchParams
 
   const parsedPriceRange = sanitizePriceRange({
     min: price_min !== undefined ? Number(price_min) : undefined,
@@ -50,6 +51,7 @@ export default async function StorePage(props: Params) {
       priceRange={parsedPriceRange}
       ageFilter={age}
       categoryId={category}
+      collectionId={collection}
       viewMode={view}
     />
   )

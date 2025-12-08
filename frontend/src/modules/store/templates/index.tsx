@@ -17,6 +17,7 @@ import FilterDrawer from "@modules/store/components/filter-drawer"
 import Breadcrumbs from "@modules/common/components/breadcrumbs"
 import { resolveAgeFilterValue } from "@modules/store/utils/age-filter"
 import { resolveCategoryIdentifier } from "@modules/store/utils/category"
+import { resolveCollectionIdentifier } from "@modules/store/utils/collection"
 
 const StoreTemplate = async ({
   sortBy,
@@ -27,6 +28,7 @@ const StoreTemplate = async ({
   priceRange,
   ageFilter,
   categoryId,
+  collectionId,
   viewMode,
 }: {
   sortBy?: SortOptions
@@ -37,6 +39,7 @@ const StoreTemplate = async ({
   priceRange?: PriceRangeFilter
   ageFilter?: string
   categoryId?: string
+  collectionId?: string
   viewMode?: ViewMode
 }) => {
   const pageNumber = page ? parseInt(page) : 1
@@ -46,10 +49,29 @@ const StoreTemplate = async ({
   const normalizedAgeFilter = resolveAgeFilterValue(ageFilter)
   const resolvedCategoryId = await resolveCategoryIdentifier(categoryId)
 
+  const ageCollectionEntries = await Promise.all(
+    ageCategories.map(async (age) => {
+      const resolved = await resolveCollectionIdentifier(age.href)
+      return [age.id, resolved] as const
+    })
+  )
+
+  const ageCollectionMap = new Map(
+    ageCollectionEntries.filter(([, id]) => Boolean(id)) as [string, string][]
+  )
+
+  const providedCollectionId = await resolveCollectionIdentifier(collectionId)
+  const inferredAgeCollectionId = ageFilter ? ageCollectionMap.get(ageFilter) : undefined
+  const effectiveCollectionId = providedCollectionId ?? inferredAgeCollectionId
+
   const productQueryParams: HttpTypes.FindParams & HttpTypes.StoreProductListParams = {}
 
   if (resolvedCategoryId) {
     productQueryParams["category_id"] = [resolvedCategoryId]
+  }
+
+  if (effectiveCollectionId) {
+    productQueryParams["collection_id"] = [effectiveCollectionId]
   }
 
   if (searchQuery) {
@@ -101,7 +123,11 @@ const StoreTemplate = async ({
     })
     ?? []
 
-  const ageOptions = ageCategories.map((age) => ({ value: age.id, label: age.label }))
+  const ageOptions = ageCategories.map((age) => ({
+    value: age.id,
+    label: age.label,
+    collectionId: ageCollectionMap.get(age.id),
+  }))
 
   const availabilityOptions = [
     {
@@ -129,6 +155,7 @@ const StoreTemplate = async ({
         priceRange,
         age: ageFilter,
         categoryId: resolvedCategoryId,
+        collectionId: effectiveCollectionId,
         viewMode: resolvedViewMode,
       }}
       initialProducts={initialProducts}
@@ -143,6 +170,7 @@ const StoreTemplate = async ({
           priceMax: priceRange?.max,
           age: ageFilter,
           category: resolvedCategoryId,
+          collection: effectiveCollectionId,
         }}
         filterOptions={{
           availability: availabilityOptions,

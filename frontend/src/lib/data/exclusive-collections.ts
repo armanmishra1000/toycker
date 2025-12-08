@@ -22,6 +22,7 @@ const PRODUCT_FIELD_SELECTION = [
   "title",
   "handle",
   "thumbnail",
+  "*images",
   "+metadata",
   "*variants.calculated_price",
   "*variants.prices",

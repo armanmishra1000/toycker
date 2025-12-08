@@ -329,8 +329,6 @@ const AGE_METADATA_KEY = "age_band"
 const CLIENT_SCAN_LIMIT = 600
 const CLIENT_SCAN_MAX_PAGES = 50
 
-const convertMajorToMinor = (value: number) => Math.round(value * 100)
-
 const isProductInStock = (product: HttpTypes.StoreProduct) => {
   return product.variants?.some((variant) => {
     if (variant?.manage_inventory === false) {
@@ -355,9 +353,9 @@ const matchesPriceFilter = (product: HttpTypes.StoreProduct, priceFilter?: Price
   const amount = cheapestPrice.calculated_price_number
 
   const min =
-    typeof priceFilter.min === "number" ? convertMajorToMinor(Math.max(priceFilter.min, 0)) : undefined
+    typeof priceFilter.min === "number" ? Math.max(priceFilter.min, 0) : undefined
   const max =
-    typeof priceFilter.max === "number" ? convertMajorToMinor(Math.max(priceFilter.max, 0)) : undefined
+    typeof priceFilter.max === "number" ? Math.max(priceFilter.max, 0) : undefined
 
   if (min !== undefined && amount < min) {
     return false

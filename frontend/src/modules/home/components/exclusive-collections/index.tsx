@@ -12,10 +12,22 @@ import "swiper/css"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { buildDisplayPrice, type DisplayPrice } from "@lib/util/display-price"
+import type { ExclusiveCollectionEntry } from "@lib/data/exclusive-collections"
 import { clx } from "@medusajs/ui"
 
 type ExclusiveCollectionsProps = {
   items: ExclusiveCollectionEntry[]
+}
+
+const FALLBACK_POSTER = "/assets/images/slider_1.png"
+
+const resolvePosterSource = (entry: ExclusiveCollectionEntry) => {
+  return (
+    entry.poster_url ??
+    entry.product?.thumbnail ??
+    entry.product?.images?.[0]?.url ??
+    FALLBACK_POSTER
+  )
 }
 
 const resolveDisplayPrice = (entry: ExclusiveCollectionEntry): DisplayPrice | null => {
@@ -125,7 +137,7 @@ const ExclusiveCollections = ({ items }: ExclusiveCollectionsProps) => {
           <div className="grid gap-4 rounded-xl bg-[#f8ede6] p-6 sm:grid-cols-2 lg:grid-cols-3">
             {showcaseItems.slice(0, 3).map((item) => {
               const title = item.product?.title ?? "Featured collectible"
-              const poster = item.poster_url ?? item.product?.thumbnail ?? "/assets/images/slider_1.png"
+              const poster = resolvePosterSource(item)
               const displayPrice = resolveDisplayPrice(item)
 
               return (
@@ -186,7 +198,7 @@ const ExclusiveCollections = ({ items }: ExclusiveCollectionsProps) => {
               aria-roledescription="Exclusive collections slider"
             >
               {showcaseItems.map((item, index) => {
-                const poster = item.poster_url ?? item.product?.thumbnail ?? undefined
+                const poster = resolvePosterSource(item)
                 const title = item.product?.title ?? "Exclusive collectible"
                 const productHandle = item.product?.handle ?? item.product_id
                 const displayPrice = resolveDisplayPrice(item)
