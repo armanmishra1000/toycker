@@ -30,6 +30,15 @@ const resolvePosterSource = (entry: ExclusiveCollectionEntry) => {
   )
 }
 
+const resolveProductImageSource = (entry: ExclusiveCollectionEntry) => {
+  return (
+    entry.product?.images?.[0]?.url ??
+    entry.product?.thumbnail ??
+    entry.poster_url ??
+    FALLBACK_POSTER
+  )
+}
+
 const resolveDisplayPrice = (entry: ExclusiveCollectionEntry): DisplayPrice | null => {
   if (!entry.product) {
     return null
@@ -137,15 +146,15 @@ const ExclusiveCollections = ({ items }: ExclusiveCollectionsProps) => {
           <div className="grid gap-4 rounded-xl bg-[#f8ede6] p-6 sm:grid-cols-2 lg:grid-cols-3">
             {showcaseItems.slice(0, 3).map((item) => {
               const title = item.product?.title ?? "Featured collectible"
-              const poster = resolvePosterSource(item)
+              const productImage = resolveProductImageSource(item)
               const displayPrice = resolveDisplayPrice(item)
 
               return (
                 <article key={item.id} className="flex flex-col rounded-xl bg-white/80 p-4 shadow-sm">
                   <div className="relative mb-4 h-40 w-full overflow-hidden rounded-lg">
-                    {poster ? (
+                    {productImage ? (
                       <Image
-                        src={poster}
+                        src={productImage}
                         alt={title}
                         fill
                         sizes="(min-width: 1024px) 360px, 100vw"
@@ -199,6 +208,7 @@ const ExclusiveCollections = ({ items }: ExclusiveCollectionsProps) => {
             >
               {showcaseItems.map((item, index) => {
                 const poster = resolvePosterSource(item)
+                const productImage = resolveProductImageSource(item)
                 const title = item.product?.title ?? "Exclusive collectible"
                 const productHandle = item.product?.handle ?? item.product_id
                 const displayPrice = resolveDisplayPrice(item)
@@ -228,9 +238,9 @@ const ExclusiveCollections = ({ items }: ExclusiveCollectionsProps) => {
                           className="flex items-center gap-3 bg-[#dbfca7] p-3 text-[#3a5017] z-10"
                         >
                           <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-white/60">
-                            {poster ? (
+                            {productImage ? (
                               <Image
-                                src={poster}
+                                src={productImage}
                                 alt={title}
                                 fill
                                 sizes="64px"
