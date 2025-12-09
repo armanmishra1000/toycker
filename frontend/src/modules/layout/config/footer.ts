@@ -38,8 +38,8 @@ export const footerDescription =
 export const footerContactItems: FooterContactItem[] = [
   {
     id: "address",
-    label: "GROUND FLOOR, PLOT NO. 76, NILAMNAGAR SOCIETTY-2, PUNA SIMADA ROAD, PUNAGAM, Surat, Gujarat, 395010",
-    value: "GROUND FLOOR, PLOT NO. 76, NILAMNAGAR SOCIETTY-2, PUNA SIMADA ROAD, PUNAGAM, Surat, Gujarat, 395010",
+    label: "Shed No. 7/8, Sardar Campus, Opp. River Kent, Mota Varachha, Surat, Gujarat, 394101",
+    value: "Shed No. 7/8, Sardar Campus, Opp. River Kent, Mota Varachha, Surat, Gujarat, 394101",
     href: "https://maps.app.goo.gl/vJjW43BJnUTFwrTj8",
     type: "address",
   },
@@ -82,6 +82,7 @@ export const footerLinkGroups: FooterLinkGroup[] = [
       { id: "return-refund", label: "Return & Refund", href: "/policies/returns" },
       { id: "shipping-policy", label: "Shipping Policy", href: "/policies/shipping" },
       { id: "terms", label: "Terms & Condition", href: "/policies/terms" },
+      { id: "privacy", label: "Privacy Policy", href: "/policies/privacy" },
     ],
   },
 ]

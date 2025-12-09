@@ -59,6 +59,22 @@ const AnnouncementBar = () => {
     )
 
     if (item.href) {
+      const isExternal = item.href.startsWith("http")
+
+      if (isExternal) {
+        return (
+          <a
+            key={item.id}
+            href={item.href}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex"
+          >
+            {content}
+          </a>
+        )
+      }
+
       return (
         <LocalizedClientLink key={item.id} href={item.href}>
           {content}
