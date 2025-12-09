@@ -38,7 +38,7 @@ export const navLinks: NavLink[] = [
   { id: "shop", label: "Shop", href: "/shop-by-age", hasDropdown: true },
   { id: "about", label: "About Us", href: "/about" },
   { id: "contact", label: "Contact", href: "/contact" },
-  { id: "metal-cars", label: "Metal Cars", href: "/collections/metal-cars" },
+  { id: "metal-cars", label: "Metal Car", href: "/collections/metal-car" },
 ]
 
 export const ageCategories: AgeCategory[] = [
