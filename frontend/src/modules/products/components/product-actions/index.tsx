@@ -72,7 +72,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
   const [shareCopied, setShareCopied] = useState(false)
   const [isPending, startTransition] = useTransition()
   const countryCode = useParams().countryCode as string
-  const { openCart, refreshCart } = useCartSidebar()
+  const { openCart, refreshCart, setCart } = useCartSidebar()
   const giftWrapInputId = useId()
   const plainDescription = extractPlainText(product.description)
 
@@ -222,7 +222,12 @@ export default function ProductActions({ product, disabled, showSupportActions =
           openCart()
         }
 
-        await addToCart({
+        const idempotencyKey =
+          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `cart-${Date.now()}-${Math.random()}`
+
+        const cart = await addToCart({
           variantId: selectedVariant.id,
           quantity,
           countryCode,
@@ -233,9 +238,14 @@ export default function ProductActions({ product, disabled, showSupportActions =
                 gift_wrap_packages: Math.max(1, quantity),
               }
             : undefined,
+          idempotencyKey,
         })
 
-        await refreshCart()
+        if (cart) {
+          setCart(cart)
+        } else {
+          await refreshCart()
+        }
 
         if (mode === "buy") {
           router.push(`/${countryCode}/checkout`)

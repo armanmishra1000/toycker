@@ -37,6 +37,7 @@ export default function ProductPreview({
   const cartSidebar = useOptionalCartSidebar()
   const openCart = cartSidebar?.openCart
   const refreshCart = cartSidebar?.refreshCart
+  const setCart = cartSidebar?.setCart
   const countryCodeParam = Array.isArray(params?.countryCode)
     ? params.countryCode[0]
     : params?.countryCode
@@ -155,6 +156,7 @@ export default function ProductPreview({
                   router,
                   openCart,
                   refreshCart,
+                  setCart,
                 })
               }
               className={clx(
@@ -201,6 +203,7 @@ const handleAddToCart = (
     router,
     openCart,
     refreshCart,
+    setCart,
   }: {
     multipleVariants: boolean
     defaultVariantId?: string | null
@@ -211,6 +214,7 @@ const handleAddToCart = (
     router: ReturnType<typeof useRouter>
     openCart?: () => void
     refreshCart?: () => Promise<void>
+    setCart?: (cart: HttpTypes.StoreCart | null) => void
   }
 ) => {
   event.preventDefault()
@@ -225,8 +229,23 @@ const handleAddToCart = (
     setStatus("added")
     openCart?.()
     try {
-      await addToCart({ variantId: defaultVariantId, quantity: 1, countryCode })
-      await refreshCart?.()
+      const idempotencyKey =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `cart-${Date.now()}-${Math.random()}`
+
+      const cart = await addToCart({
+        variantId: defaultVariantId,
+        quantity: 1,
+        countryCode,
+        idempotencyKey,
+      })
+
+      if (cart) {
+        setCart?.(cart)
+      } else {
+        await refreshCart?.()
+      }
       setTimeout(() => setStatus("idle"), 2000)
     } catch (error) {
       console.error("Failed to add to cart", error)

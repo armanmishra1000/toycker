@@ -123,11 +123,13 @@ export async function addToCart({
   quantity,
   countryCode,
   metadata,
+  idempotencyKey,
 }: {
   variantId: string
   quantity: number
   countryCode: string
   metadata?: LineItemMetadata
+  idempotencyKey?: string
 }) {
   if (!variantId) {
     throw new Error("Missing variant ID when adding to cart")
@@ -139,8 +141,12 @@ export async function addToCart({
     throw new Error("Error retrieving or creating cart")
   }
 
-  const headers = {
+  const headers: Record<string, string> = {
     ...(await getAuthHeaders()),
+  }
+
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey
   }
 
   const lineItemPayload: HttpTypes.StoreAddCartLineItem & {
@@ -154,14 +160,16 @@ export async function addToCart({
     lineItemPayload.metadata = metadata
   }
 
-  await sdk.store.cart
+  return sdk.store.cart
     .createLineItem(cart.id, lineItemPayload, {}, headers)
-    .then(async () => {
+    .then(async ({ cart: updatedCart }: { cart: HttpTypes.StoreCart }) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
 
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
+
+      return updatedCart
     })
     .catch(medusaError)
 }

@@ -9,6 +9,7 @@ import { useState } from "react"
 import { StoreFreeShippingPrice } from "types/global"
 
 import { useLayoutData } from "@modules/layout/context/layout-data-context"
+import { useEffect } from "react"
 
 const computeTarget = (
   cart: HttpTypes.StoreCart,
@@ -70,7 +71,19 @@ const computeTarget = (
 }
 
 export default function ShippingPriceNudge({ variant = "inline" }: { variant?: "popup" | "inline" }) {
-  const { cart, shippingOptions } = useLayoutData()
+  const { cart, shippingOptions, loadShippingOptions } = useLayoutData()
+
+  useEffect(() => {
+    if (!cart) {
+      return
+    }
+
+    if (!shippingOptions.length) {
+      loadShippingOptions().catch((error) => {
+        console.error("Failed to load shipping options", error)
+      })
+    }
+  }, [cart, shippingOptions.length, loadShippingOptions])
 
   if (!cart || !shippingOptions?.length) {
     return null
