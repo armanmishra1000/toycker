@@ -60,6 +60,7 @@ const ShopMegaMenu = ({
                 <li key={item.id}>
                   <LocalizedClientLink
                     href={item.href}
+                    prefetchIntent="hover"
                     className="text-base font-medium text-slate-900 transition-colors duration-150 hover:text-primary"
                   >
                     {item.label}
@@ -80,6 +81,7 @@ const ShopMegaMenu = ({
                   <LocalizedClientLink
                     key={link.id}
                     href={link.href}
+                    prefetchIntent="hover"
                     className="inline-flex w-full items-center justify-center rounded-full bg-primary px-4 py-2 text-base font-semibold text-white shadow-sm transition hover:bg-primary/90"
                   >
                     {link.label}
@@ -91,6 +93,7 @@ const ShopMegaMenu = ({
                 <LocalizedClientLink
                   key={link.id}
                   href={link.href}
+                  prefetchIntent="hover"
                   className="block text-base font-medium text-slate-900 transition-colors hover:text-primary"
                 >
                   {link.label}
@@ -101,6 +104,7 @@ const ShopMegaMenu = ({
 
           <LocalizedClientLink
             href="/products/dj-coco-light-music-toy"
+            prefetchIntent="hover"
             className="mt-6 block overflow-hidden rounded-2xl bg-white/70 p-3 text-center shadow-inner transition hover:bg-white"
             aria-label="View DJ Coco Light Music Toy"
           >

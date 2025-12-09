@@ -62,6 +62,26 @@ const MULTI_COLLECTIONS_ENABLED = (() => {
   return false
 })()
 
+const COLLECTION_PRODUCT_IDS_REVALIDATE_SECONDS = (() => {
+  const raw = process.env.NEXT_PUBLIC_COLLECTION_PRODUCT_IDS_REVALIDATE
+
+  if (!raw) {
+    return 300
+  }
+
+  const normalized = raw.trim().toLowerCase()
+  if (["0", "off", "false", "disable", "disabled"].includes(normalized)) {
+    return 0
+  }
+
+  const parsed = Number(raw)
+  if (Number.isFinite(parsed) && parsed >= 0) {
+    return parsed
+  }
+
+  return 300
+})()
+
 const DEFAULT_PRODUCT_FIELDS =
   "*variants.calculated_price,+variants.metadata,+variants.inventory_quantity,*variants.images,+metadata,+tags"
 
@@ -97,12 +117,22 @@ const fetchCollectionProductIds = async (
   await Promise.all(
     collectionIds.map(async (collectionId) => {
       try {
+        const cacheOptions = await getCacheOptions(`collection-product-ids-${collectionId}`)
+        const cacheMode = COLLECTION_PRODUCT_IDS_REVALIDATE_SECONDS === 0 ? "no-store" : "force-cache"
         const response = await sdk.client.fetch<{ product_ids?: string[] }>(
           `/store/collections/${collectionId}/product-ids`,
           {
             method: "GET",
             headers,
-            cache: "no-store",
+            cache: cacheMode,
+            ...(cacheMode === "force-cache"
+              ? {
+                  next: {
+                    revalidate: COLLECTION_PRODUCT_IDS_REVALIDATE_SECONDS,
+                    ...(cacheOptions as { tags?: string[] }),
+                  },
+                }
+              : {}),
           }
         )
 
@@ -469,7 +499,16 @@ export const listPaginatedProducts = async ({
   }
 
   const authHeaders = await getAuthHeaders()
-  const preparedQueryResult = await prepareCollectionAwareQuery(baseQuery, authHeaders)
+  const collectionFilterValues = normalizeStringArray(
+    baseQuery.collection_id as string | string[] | undefined
+  )
+  const hasCollectionFilter = collectionFilterValues.length > 0
+
+  const preparedQueryResult = await prepareCollectionAwareQuery(
+    baseQuery,
+    authHeaders,
+    !hasCollectionFilter
+  )
 
   if (!preparedQueryResult.query) {
     return {
@@ -484,7 +523,7 @@ export const listPaginatedProducts = async ({
   const normalizedQuery = preparedQueryResult.query
   const sharedListOptions = {
     headers: authHeaders,
-    skipCollectionExpansion: true,
+    skipCollectionExpansion: !hasCollectionFilter,
   }
 
   if (!needsFullScan) {
