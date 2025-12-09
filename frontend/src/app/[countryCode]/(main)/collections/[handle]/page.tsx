@@ -17,9 +17,13 @@ type Props = {
 
 export const PRODUCT_LIMIT = 12
 
+// Always resolve collections at request time so newly added handles work without rebuilds
+export const dynamic = "force-dynamic"
+
 export async function generateStaticParams() {
   const { collections } = await listCollections({
     fields: "*products",
+    limit: "1000",
   })
 
   if (!collections) {
