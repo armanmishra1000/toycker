@@ -31,8 +31,6 @@ const PRODUCT_FIELD_SELECTION = [
   "+variants.metadata",
 ].join(",")
 
-const EXCLUSIVE_COLLECTIONS_REVALIDATE_SECONDS = 60
-
 export const listExclusiveCollections = async ({
   regionId,
 }: {
@@ -54,11 +52,7 @@ export const listExclusiveCollections = async ({
       {
         method: "GET",
         headers,
-        cache: "force-cache",
-        next: {
-          revalidate: EXCLUSIVE_COLLECTIONS_REVALIDATE_SECONDS,
-          tags: ["exclusive-collections"],
-        },
+        cache: "no-store",
       },
     )
 
@@ -89,11 +83,7 @@ export const listExclusiveCollections = async ({
       {
         method: "GET",
         headers,
-        cache: "force-cache",
-        next: {
-          revalidate: EXCLUSIVE_COLLECTIONS_REVALIDATE_SECONDS,
-          tags: ["exclusive-collections", "products"],
-        },
+        cache: "no-store",
         query: {
           id: productIds,
           region_id: regionId,
