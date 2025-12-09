@@ -26,14 +26,16 @@ export default async function Home(props: {
 
   const { countryCode } = params
 
-  const [region, collectionsResult] = await Promise.all([
+  const [region, collectionsResult, exclusiveCollections, cookieStore] = await Promise.all([
     getRegion(countryCode),
     listCollections({
       fields: "id, handle, title",
     }),
+    getRegion(countryCode).then((r) =>
+      r ? listExclusiveCollections({ regionId: r.id }) : []
+    ),
+    cookies(),
   ])
-
-  const cookieStore = await cookies()
 
   const collections = collectionsResult?.collections
   const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
@@ -41,10 +43,6 @@ export default async function Home(props: {
   if (!collections || !region) {
     return null
   }
-
-  const exclusiveCollections = await listExclusiveCollections({
-    regionId: region.id,
-  })
 
   return (
     <>

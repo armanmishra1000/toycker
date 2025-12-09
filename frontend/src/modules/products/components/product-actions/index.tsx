@@ -17,6 +17,7 @@ import {
   useId,
   useMemo,
   useState,
+  useTransition,
 } from "react"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
@@ -54,7 +55,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
   const searchParams = useSearchParams()
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
-  const [isAdding, setIsAdding] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [quantity, setQuantity] = useState(1)
   const [giftWrap, setGiftWrap] = useState(false)
   const wishlist = useOptionalWishlist()
@@ -212,12 +213,10 @@ export default function ProductActions({ product, disabled, showSupportActions =
   }, [product.id, toggleLocalWishlist, wishlist])
 
   // add the selected variant to the cart
-  const handleAddToCart = async (mode: "add" | "buy" = "add") => {
-    if (!selectedVariant?.id) return null
+  const handleAddToCart = (mode: "add" | "buy" = "add") => {
+    if (!selectedVariant?.id) return
 
-    setIsAdding(true)
-
-    try {
+    startTransition(async () => {
       await addToCart({
         variantId: selectedVariant.id,
         quantity,
@@ -232,7 +231,6 @@ export default function ProductActions({ product, disabled, showSupportActions =
       })
 
       await refreshCart()
-      router.refresh()
 
       if (mode === "add") {
         openCart()
@@ -241,9 +239,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
       if (mode === "buy") {
         router.push(`/${countryCode}/checkout`)
       }
-    } finally {
-      setIsAdding(false)
-    }
+    })
   }
 
   const handleQuestionSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -301,7 +297,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
     !!selectedVariant &&
     !disabled &&
     isValidVariant &&
-    !isAdding
+    !isPending
 
   const addToCartLabel = requiresSelection
     ? "Select options"
@@ -309,7 +305,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
     ? "Select options"
     : !inStock
     ? "Out of stock"
-    : isAdding
+    : isPending
     ? "Adding..."
     : "Add to Cart"
 
@@ -366,7 +362,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
                   updateOption={setOptionValue}
                   title={option.title ?? ""}
                   data-testid="product-options"
-                  disabled={!!disabled || isAdding}
+                  disabled={!!disabled || isPending}
                   layout={isColorOption ? "swatch" : "pill"}
                 />
               </div>
