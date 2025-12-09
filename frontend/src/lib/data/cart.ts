@@ -1,6 +1,7 @@
 "use server"
 
 import { cache } from "react"
+import { randomUUID } from "crypto"
 
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
@@ -415,9 +416,11 @@ export async function placeOrder(cartId?: string) {
     throw new Error("No existing cart found when placing an order")
   }
 
-  const headers = {
+  const headers: Record<string, string> = {
     ...(await getAuthHeaders()),
   }
+
+  headers["Idempotency-Key"] = `checkout-complete-${id}-${randomUUID()}`
 
   const cartRes = await sdk.store.cart
     .complete(id, {}, headers)
