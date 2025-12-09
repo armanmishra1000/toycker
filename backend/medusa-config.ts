@@ -90,6 +90,25 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "@medusajs/medusa/locking",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/locking-redis",
+            id: "locking-redis",
+            is_default: true,
+            options: redisProviderOptions,
+          },
+        ],
+      },
+    },
+    {
+      resolve: "@medusajs/workflow-engine-redis",
+      options: {
+        connection: redisProviderOptions,
+      },
+    },
+    {
       resolve: "@medusajs/file",
       options: {
         providers: [

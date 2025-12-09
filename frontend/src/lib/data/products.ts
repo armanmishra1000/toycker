@@ -86,7 +86,10 @@ const fetchCollectionProductIds = async (
           {
             method: "GET",
             headers,
-            cache: "no-store",
+            cache: "force-cache",
+            next: {
+              tags: ["collections", "products"],
+            },
           }
         )
 
