@@ -10,13 +10,15 @@ type BestSellingProps = {
   regionId: string
   countryCode: string
   isCustomerLoggedIn: boolean
+  collectionId?: string
 }
 
-const BestSelling = async ({ regionId, countryCode, isCustomerLoggedIn }: BestSellingProps) => {
+const BestSelling = async ({ regionId, countryCode, isCustomerLoggedIn, collectionId }: BestSellingProps) => {
   const products = await getCollectionProductsByHandle({
     handle: BEST_SELLING_COLLECTION_HANDLE,
     regionId,
     limit: BEST_SELLING_SECTION_LIMIT,
+    collectionId,
   })
 
   if (products.length === 0) {

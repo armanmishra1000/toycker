@@ -17,9 +17,13 @@ type Props = {
 
 export const PRODUCT_LIMIT = 12
 
+// Always resolve collections at request time so newly added handles work without rebuilds
+export const dynamic = "force-dynamic"
+
 export async function generateStaticParams() {
   const { collections } = await listCollections({
     fields: "*products",
+    limit: "1000",
   })
 
   if (!collections) {
@@ -52,7 +56,9 @@ export async function generateStaticParams() {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
-  const collection = await getCollectionByHandle(params.handle)
+  const collection = await getCollectionByHandle(params.handle, {
+    cache: "no-store",
+  })
 
   if (!collection) {
     notFound()
@@ -71,9 +77,9 @@ export default async function CollectionPage(props: Props) {
   const params = await props.params
   const { sortBy, page } = searchParams
 
-  const collection = await getCollectionByHandle(params.handle).then(
-    (collection: StoreCollection) => collection
-  )
+  const collection = await getCollectionByHandle(params.handle, {
+    cache: "no-store",
+  }).then((collection: StoreCollection) => collection)
 
   if (!collection) {
     notFound()

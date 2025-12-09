@@ -85,6 +85,7 @@ const ExclusiveCollections = ({ items }: ExclusiveCollectionsProps) => {
 
   const showcaseItems = useMemo(() => items ?? [], [items])
   const hasItems = showcaseItems.length > 0
+  const shouldLoop = showcaseItems.length > 5
 
   useEffect(() => {
     setIsMounted(true)
@@ -174,7 +175,7 @@ const ExclusiveCollections = ({ items }: ExclusiveCollectionsProps) => {
           <div className="relative overflow-hidden rounded-xl">
             <Swiper
               modules={[Autoplay]}
-              loop
+              loop={shouldLoop}
               speed={600}
               spaceBetween={16}
               slidesPerView={1}

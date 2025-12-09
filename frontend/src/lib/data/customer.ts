@@ -19,7 +19,9 @@ import {
 export const retrieveCustomer = cache(async (): Promise<HttpTypes.StoreCustomer | null> => {
   const authHeaders = await getAuthHeaders()
 
-  if (!authHeaders) return null
+  if (!authHeaders || !("authorization" in authHeaders)) {
+    return null
+  }
 
   const headers = {
     ...authHeaders,

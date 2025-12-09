@@ -10,13 +10,15 @@ type PopularToySetProps = {
   regionId: string
   countryCode: string
   isCustomerLoggedIn: boolean
+  collectionId?: string
 }
 
-const PopularToySet = async ({ regionId, countryCode, isCustomerLoggedIn }: PopularToySetProps) => {
+const PopularToySet = async ({ regionId, countryCode, isCustomerLoggedIn, collectionId }: PopularToySetProps) => {
   const products = await getCollectionProductsByHandle({
     handle: POPULAR_COLLECTION_HANDLE,
     regionId,
     limit: POPULAR_SECTION_LIMIT,
+    collectionId,
   })
 
   if (products.length === 0) {

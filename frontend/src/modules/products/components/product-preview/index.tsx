@@ -222,13 +222,12 @@ const handleAddToCart = (
   }
 
   startTransition(async () => {
+    setStatus("added")
+    openCart?.()
     try {
       await addToCart({ variantId: defaultVariantId, quantity: 1, countryCode })
       await refreshCart?.()
-      router.refresh()
-      setStatus("added")
       setTimeout(() => setStatus("idle"), 2000)
-      openCart?.()
     } catch (error) {
       console.error("Failed to add to cart", error)
       setStatus("error")

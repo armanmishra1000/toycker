@@ -42,18 +42,27 @@ export const listCollections = async (
     .then(({ collections }) => ({ collections, count: collections.length }))
 }
 
+type CollectionFetchOptions = {
+  cache?: RequestCache
+}
+
 export const getCollectionByHandle = async (
-  handle: string
+  handle: string,
+  options?: CollectionFetchOptions
 ): Promise<HttpTypes.StoreCollection> => {
-  const next = {
-    ...(await getCacheOptions("collections")),
-  }
+  const cacheMode = options?.cache ?? "force-cache"
+  const next =
+    cacheMode === "force-cache"
+      ? {
+          ...(await getCacheOptions("collections")),
+        }
+      : undefined
 
   return sdk.client
     .fetch<HttpTypes.StoreCollectionListResponse>(`/store/collections`, {
-      query: { handle, fields: "*products" },
+      query: { handle, fields: "id,handle,title" },
       next,
-      cache: "force-cache",
+      cache: cacheMode,
     })
     .then(({ collections }) => collections[0])
 }

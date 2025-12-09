@@ -30,7 +30,7 @@ const MULTI_COLLECTIONS_REVALIDATE_SECONDS = (() => {
   const raw = process.env.NEXT_PUBLIC_MULTI_COLLECTIONS_REVALIDATE
 
   if (!raw) {
-    return 3600
+    return 0
   }
 
   const normalized = raw.trim().toLowerCase()
@@ -43,7 +43,23 @@ const MULTI_COLLECTIONS_REVALIDATE_SECONDS = (() => {
     return parsed
   }
 
-  return 3600
+  return 0
+})()
+
+const MULTI_COLLECTIONS_ENABLED = (() => {
+  const raw = process.env.NEXT_PUBLIC_MULTI_COLLECTIONS_ENABLED
+
+  if (!raw) {
+    return false
+  }
+
+  const normalized = raw.trim().toLowerCase()
+
+  if (["1", "true", "yes", "on"].includes(normalized)) {
+    return true
+  }
+
+  return false
 })()
 
 const DEFAULT_PRODUCT_FIELDS =
@@ -143,7 +159,8 @@ const prepareCollectionAwareQuery = async (
   return { query: nextQuery }
 }
 
-const shouldHydrateAdditionalCollections = () => MULTI_COLLECTIONS_REVALIDATE_SECONDS !== 0
+const shouldHydrateAdditionalCollections = () =>
+  MULTI_COLLECTIONS_ENABLED && MULTI_COLLECTIONS_REVALIDATE_SECONDS !== 0
 
 const hydrateProductsWithCollections = async (
   products: HttpTypes.StoreProduct[],
