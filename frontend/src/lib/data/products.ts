@@ -26,8 +26,6 @@ const PRODUCT_CACHE_MODE: ProductCacheMode = (() => {
   return "force-cache"
 })()
 
-const PRODUCTS_REVALIDATE_SECONDS = 60
-
 const MULTI_COLLECTIONS_REVALIDATE_SECONDS = (() => {
   const raw = process.env.NEXT_PUBLIC_MULTI_COLLECTIONS_REVALIDATE
 
@@ -49,7 +47,7 @@ const MULTI_COLLECTIONS_REVALIDATE_SECONDS = (() => {
 })()
 
 const DEFAULT_PRODUCT_FIELDS =
-  "title,handle,thumbnail,id,metadata,*variants.calculated_price,+variants.metadata,+variants.inventory_quantity"
+  "*variants.calculated_price,+variants.metadata,+variants.inventory_quantity,*variants.images,+metadata,+tags"
 
 const ensureVariantMetadataSelection = (fields?: string) => {
   const normalized = (fields ?? DEFAULT_PRODUCT_FIELDS).replace(/,+$/g, "")
@@ -88,11 +86,7 @@ const fetchCollectionProductIds = async (
           {
             method: "GET",
             headers,
-            cache: "force-cache",
-            next: {
-              revalidate: PRODUCTS_REVALIDATE_SECONDS,
-              tags: ["collections", "products"],
-            },
+            cache: "no-store",
           }
         )
 
@@ -261,7 +255,6 @@ export const listProducts = async (
   const next =
     PRODUCT_CACHE_MODE === "force-cache"
       ? {
-          revalidate: PRODUCTS_REVALIDATE_SECONDS,
           ...(await getCacheOptions("products")),
         }
       : undefined
@@ -333,6 +326,96 @@ const ORDER_MAP: Record<SortOptions, string | undefined> = {
 }
 
 const AGE_METADATA_KEY = "age_band"
+const CLIENT_SCAN_LIMIT = 600
+const CLIENT_SCAN_MAX_PAGES = 50
+
+const isProductInStock = (product: HttpTypes.StoreProduct) => {
+  return product.variants?.some((variant) => {
+    if (variant?.manage_inventory === false) {
+      return true
+    }
+
+    const quantity = variant?.inventory_quantity ?? 0
+    return quantity > 0
+  })
+}
+
+const matchesPriceFilter = (product: HttpTypes.StoreProduct, priceFilter?: PriceRangeFilter) => {
+  if (!priceFilter || (priceFilter.min === undefined && priceFilter.max === undefined)) {
+    return true
+  }
+
+  const cheapestPrice = getProductPrice({ product }).cheapestPrice
+
+  if (!cheapestPrice) {
+    return false
+  }
+  const amount = cheapestPrice.calculated_price_number
+
+  const min =
+    typeof priceFilter.min === "number" ? Math.max(priceFilter.min, 0) : undefined
+  const max =
+    typeof priceFilter.max === "number" ? Math.max(priceFilter.max, 0) : undefined
+
+  if (min !== undefined && amount < min) {
+    return false
+  }
+
+  if (max !== undefined && amount > max) {
+    return false
+  }
+
+  return true
+}
+
+const matchesAgeFilter = (product: HttpTypes.StoreProduct, ageFilter?: string) => {
+  const normalizedFilter = normalizeAgeFilterForComparison(ageFilter)
+
+  if (!normalizedFilter) {
+    return true
+  }
+
+  const metadataValue = typeof product.metadata?.[AGE_METADATA_KEY] === "string"
+    ? product.metadata[AGE_METADATA_KEY]
+    : undefined
+
+  const normalizedMetadata = normalizeAgeFilterForComparison(metadataValue)
+
+  if (!normalizedMetadata) {
+    return false
+  }
+
+  return normalizedMetadata === normalizedFilter
+}
+
+const applyClientSideFilters = (
+  product: HttpTypes.StoreProduct,
+  filters: {
+    availability?: AvailabilityFilter
+    price?: PriceRangeFilter
+    age?: string
+  }
+) => {
+  const inStock = isProductInStock(product)
+
+  if (filters.availability === "in_stock" && !inStock) {
+    return false
+  }
+
+  if (filters.availability === "out_of_stock" && inStock) {
+    return false
+  }
+
+  if (!matchesPriceFilter(product, filters.price)) {
+    return false
+  }
+
+  if (!matchesAgeFilter(product, filters.age)) {
+    return false
+  }
+
+  return true
+}
 
 type ListPaginatedProductsArgs = {
   page?: number
@@ -359,15 +442,13 @@ export const listPaginatedProducts = async ({
   pagination: { page: number; limit: number }
 }> => {
   const normalizedPage = Math.max(page, 1)
+  const requiresClientSideSorting = sortBy === "price_asc" || sortBy === "price_desc"
+  const requiresClientSideFiltering = Boolean(availability || priceFilter || ageFilter)
+  const needsFullScan = requiresClientSideFiltering || requiresClientSideSorting
   const order = ORDER_MAP[sortBy]
-  const baseQuery: HttpTypes.FindParams & HttpTypes.StoreProductListParams & { metadata?: Record<string, string> } = {
+  const baseQuery: HttpTypes.FindParams & HttpTypes.StoreProductListParams = {
     ...(queryParams ?? {}),
     ...(order ? { order } : {}),
-  }
-
-  // Attempt server-side metadata filtering for age
-  if (ageFilter) {
-    baseQuery.metadata = { [AGE_METADATA_KEY]: ageFilter }
   }
 
   const authHeaders = await getAuthHeaders()
@@ -389,24 +470,80 @@ export const listPaginatedProducts = async ({
     skipCollectionExpansion: true,
   }
 
-  const {
-    response: { products, count },
-  } = await listProducts(
-    {
-      pageParam: normalizedPage,
-      queryParams: {
-        ...normalizedQuery,
+  if (!needsFullScan) {
+    const {
+      response: { products, count },
+    } = await listProducts(
+      {
+        pageParam: normalizedPage,
+        queryParams: {
+          ...normalizedQuery,
+          limit,
+        },
+        countryCode,
+      },
+      sharedListOptions
+    )
+
+    return {
+      response: {
+        products,
+        count,
+      },
+      pagination: {
+        page: normalizedPage,
         limit,
       },
-      countryCode,
-    },
-    sharedListOptions
+    }
+  }
+
+  const aggregated: HttpTypes.StoreProduct[] = []
+  let cursor = 1
+  let iterations = 0
+  const chunkSize = Math.max(limit, 24)
+
+  while (iterations < CLIENT_SCAN_MAX_PAGES && aggregated.length < CLIENT_SCAN_LIMIT) {
+    iterations += 1
+    const { response, nextPage } = await listProducts(
+      {
+        pageParam: cursor,
+        queryParams: {
+          ...normalizedQuery,
+          limit: chunkSize,
+        },
+        countryCode,
+      },
+      sharedListOptions
+    )
+
+    aggregated.push(...response.products)
+
+    if (!nextPage) {
+      break
+    }
+
+    cursor = nextPage
+  }
+
+  const filteredProducts = aggregated.filter((product) =>
+    applyClientSideFilters(product, {
+      availability,
+      price: priceFilter,
+      age: ageFilter,
+    })
   )
+
+  const sortedProducts = requiresClientSideSorting
+    ? sortProducts(filteredProducts, sortBy)
+    : filteredProducts
+
+  const offset = (normalizedPage - 1) * limit
+  const paginatedProducts = sortedProducts.slice(offset, offset + limit)
 
   return {
     response: {
-      products,
-      count,
+      products: paginatedProducts,
+      count: sortedProducts.length,
     },
     pagination: {
       page: normalizedPage,
