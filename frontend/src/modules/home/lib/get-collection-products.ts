@@ -8,16 +8,18 @@ type GetCollectionProductsArgs = {
   handle: string
   regionId: string
   limit?: number
+  collectionId?: string
 }
 
 export const getCollectionProductsByHandle = async ({
   handle,
   regionId,
   limit = 5,
+  collectionId,
 }: GetCollectionProductsArgs): Promise<HttpTypes.StoreProduct[]> => {
-  const collection = await getCollectionByHandle(handle)
+  const resolvedCollectionId = collectionId ?? (await getCollectionByHandle(handle))?.id
 
-  if (!collection?.id) {
+  if (!resolvedCollectionId) {
     return []
   }
 
@@ -26,8 +28,10 @@ export const getCollectionProductsByHandle = async ({
   } = await listProducts({
     regionId,
     queryParams: {
-      collection_id: [collection.id],
+      collection_id: [resolvedCollectionId],
       limit,
+      fields:
+        "id,title,handle,description,thumbnail,*images,*variants.id,*variants.title,*variants.calculated_price,*variants.prices,*variants.manage_inventory,*variants.allow_backorder,*variants.inventory_quantity",
     },
   })
 

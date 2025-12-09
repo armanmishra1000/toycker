@@ -3,7 +3,7 @@
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 
-import { getAuthHeaders } from "./cookies"
+import { getAuthHeaders, getCacheOptions } from "./cookies"
 
 type StoreExclusiveCollectionEntry = {
   id: string
@@ -31,6 +31,43 @@ const PRODUCT_FIELD_SELECTION = [
   "+variants.metadata",
 ].join(",")
 
+const EXCLUSIVE_COLLECTIONS_REVALIDATE_SECONDS = (() => {
+  const raw = process.env.NEXT_PUBLIC_EXCLUSIVE_COLLECTIONS_REVALIDATE
+
+  if (!raw) {
+    return 300
+  }
+
+  const normalized = raw.trim().toLowerCase()
+
+  if (["0", "false", "off", "disable", "disabled"].includes(normalized)) {
+    return 0
+  }
+
+  const parsed = Number(raw)
+  if (Number.isFinite(parsed) && parsed >= 0) {
+    return parsed
+  }
+
+  return 300
+})()
+
+const buildCacheConfig = async (tag: string) => {
+  if (EXCLUSIVE_COLLECTIONS_REVALIDATE_SECONDS <= 0) {
+    return { cache: "no-store" as const }
+  }
+
+  const cacheOptions = await getCacheOptions(tag)
+
+  return {
+    cache: "force-cache" as const,
+    next: {
+      revalidate: EXCLUSIVE_COLLECTIONS_REVALIDATE_SECONDS,
+      ...(cacheOptions as { tags?: string[] }),
+    },
+  }
+}
+
 export const listExclusiveCollections = async ({
   regionId,
 }: {
@@ -47,12 +84,14 @@ export const listExclusiveCollections = async ({
   let entries: StoreExclusiveCollectionEntry[] = []
 
   try {
+    const entryCacheConfig = await buildCacheConfig("exclusive-collections")
     const payload = await sdk.client.fetch<{ entries: StoreExclusiveCollectionEntry[] }>(
       "/store/exclusive-collections",
       {
         method: "GET",
         headers,
-        cache: "no-store",
+        cache: entryCacheConfig.cache,
+        ...(entryCacheConfig.next ? { next: entryCacheConfig.next } : {}),
       },
     )
 
@@ -78,12 +117,14 @@ export const listExclusiveCollections = async ({
   let products: HttpTypes.StoreProduct[] = []
 
   try {
+    const productCacheConfig = await buildCacheConfig("exclusive-collection-products")
     const payload = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[] }>(
       "/store/products",
       {
         method: "GET",
         headers,
-        cache: "no-store",
+        cache: productCacheConfig.cache,
+        ...(productCacheConfig.next ? { next: productCacheConfig.next } : {}),
         query: {
           id: productIds,
           region_id: regionId,

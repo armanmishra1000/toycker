@@ -12,6 +12,7 @@ import CategoryMarquee from "@modules/home/components/category-marquee"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
 import { listExclusiveCollections } from "@lib/data/exclusive-collections"
+import type { HttpTypes } from "@medusajs/types"
 
 export const metadata: Metadata = {
   title: "Medusa Next.js Starter Template",
@@ -35,16 +36,19 @@ export default async function Home(props: {
 
   const cookieStore = await cookies()
 
-  const collections = collectionsResult?.collections
+  const collections = (collectionsResult?.collections ?? []) as HttpTypes.StoreCollection[]
   const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
 
-  if (!collections || !region) {
+  if (!collections.length || !region) {
     return null
   }
 
   const exclusiveCollections = await listExclusiveCollections({
     regionId: region.id,
   })
+
+  const popularCollection = collections.find((collection) => collection.handle === "popular")
+  const bestSellingCollection = collections.find((collection) => collection.handle === "best-selling")
 
   return (
     <>
@@ -54,6 +58,7 @@ export default async function Home(props: {
         regionId={region.id}
         countryCode={countryCode}
         isCustomerLoggedIn={isCustomerLoggedIn}
+        collectionId={popularCollection?.id}
       />
       <ShopByAge />
       {exclusiveCollections.length > 0 && <ExclusiveCollections items={exclusiveCollections} />}
@@ -61,6 +66,7 @@ export default async function Home(props: {
         regionId={region.id}
         countryCode={countryCode}
         isCustomerLoggedIn={isCustomerLoggedIn}
+        collectionId={bestSellingCollection?.id}
       />
       <ReviewMediaHub />
       <WhyChooseUs />

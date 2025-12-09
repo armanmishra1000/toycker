@@ -17,6 +17,7 @@ import {
   useId,
   useMemo,
   useState,
+  useTransition,
 } from "react"
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
@@ -54,7 +55,6 @@ export default function ProductActions({ product, disabled, showSupportActions =
   const searchParams = useSearchParams()
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
-  const [isAdding, setIsAdding] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [giftWrap, setGiftWrap] = useState(false)
   const wishlist = useOptionalWishlist()
@@ -70,6 +70,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
     message: "",
   })
   const [shareCopied, setShareCopied] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const countryCode = useParams().countryCode as string
   const { openCart, refreshCart } = useCartSidebar()
   const giftWrapInputId = useId()
@@ -215,35 +216,34 @@ export default function ProductActions({ product, disabled, showSupportActions =
   const handleAddToCart = async (mode: "add" | "buy" = "add") => {
     if (!selectedVariant?.id) return null
 
-    setIsAdding(true)
+    startTransition(async () => {
+      try {
+        if (mode === "add") {
+          openCart()
+        }
 
-    try {
-      await addToCart({
-        variantId: selectedVariant.id,
-        quantity,
-        countryCode,
-        metadata: giftWrap
-          ? {
-              gift_wrap: true,
-              gift_wrap_fee: GIFT_WRAP_FEE,
-              gift_wrap_packages: Math.max(1, quantity),
-            }
-          : undefined,
-      })
+        await addToCart({
+          variantId: selectedVariant.id,
+          quantity,
+          countryCode,
+          metadata: giftWrap
+            ? {
+                gift_wrap: true,
+                gift_wrap_fee: GIFT_WRAP_FEE,
+                gift_wrap_packages: Math.max(1, quantity),
+              }
+            : undefined,
+        })
 
-      await refreshCart()
-      router.refresh()
+        await refreshCart()
 
-      if (mode === "add") {
-        openCart()
+        if (mode === "buy") {
+          router.push(`/${countryCode}/checkout`)
+        }
+      } catch (error) {
+        console.error("Failed to add to cart", error)
       }
-
-      if (mode === "buy") {
-        router.push(`/${countryCode}/checkout`)
-      }
-    } finally {
-      setIsAdding(false)
-    }
+    })
   }
 
   const handleQuestionSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -301,7 +301,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
     !!selectedVariant &&
     !disabled &&
     isValidVariant &&
-    !isAdding
+    !isPending
 
   const addToCartLabel = requiresSelection
     ? "Select options"
@@ -309,7 +309,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
     ? "Select options"
     : !inStock
     ? "Out of stock"
-    : isAdding
+    : isPending
     ? "Adding..."
     : "Add to Cart"
 
@@ -366,7 +366,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
                   updateOption={setOptionValue}
                   title={option.title ?? ""}
                   data-testid="product-options"
-                  disabled={!!disabled || isAdding}
+                  disabled={!!disabled || isPending}
                   layout={isColorOption ? "swatch" : "pill"}
                 />
               </div>
