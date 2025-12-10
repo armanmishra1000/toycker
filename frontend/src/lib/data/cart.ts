@@ -17,6 +17,32 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 
+const CART_RESPONSE_FIELDS = [
+  "*items",
+  "*region",
+  "*items.product",
+  "*items.variant",
+  "*items.thumbnail",
+  "*items.metadata",
+  "+items.total",
+  "+items.original_total",
+  "+items.subtotal",
+  "+items.discount_total",
+  "*promotions",
+  "+shipping_methods.name",
+  "+shipping_methods.total",
+  "+shipping_methods.subtotal",
+  "+shipping_methods.tax_total",
+  "+subtotal",
+  "+total",
+  "+item_total",
+  "+item_subtotal",
+  "+tax_total",
+  "+discount_total",
+  "+shipping_total",
+  "+shipping_subtotal",
+].join(",")
+
 type LineItemMetadataValue = string | number | boolean | null
 
 export type GiftWrapMetadata = {
@@ -34,7 +60,7 @@ type LineItemMetadata = Record<string, LineItemMetadataValue> | GiftWrapMetadata
  */
 export const retrieveCart = cache(async (cartId?: string, fields?: string) => {
   const id = cartId || (await getCartId())
-  fields ??= "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+  fields ??= CART_RESPONSE_FIELDS
 
   if (!id) {
     return null
@@ -48,7 +74,7 @@ export const retrieveCart = cache(async (cartId?: string, fields?: string) => {
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
       method: "GET",
       query: {
-        fields
+        fields,
       },
       headers,
       cache: "no-store",
@@ -161,7 +187,14 @@ export async function addToCart({
   }
 
   return sdk.store.cart
-    .createLineItem(cart.id, lineItemPayload, {}, headers)
+    .createLineItem(
+      cart.id,
+      lineItemPayload,
+      {
+        fields: CART_RESPONSE_FIELDS,
+      },
+      headers,
+    )
     .then(async ({ cart: updatedCart }: { cart: HttpTypes.StoreCart }) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
