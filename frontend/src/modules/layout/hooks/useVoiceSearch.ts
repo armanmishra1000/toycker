@@ -25,6 +25,14 @@ export const useVoiceSearch = ({
   const [error, setError] = useState<string | null>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const onResultRef = useRef<(value: string) => void>()
+  const inactivityTimeoutRef = useRef<number | null>(null)
+
+  const clearInactivityTimer = () => {
+    if (inactivityTimeoutRef.current) {
+      window.clearTimeout(inactivityTimeoutRef.current)
+      inactivityTimeoutRef.current = null
+    }
+  }
 
   useEffect(() => {
     onResultRef.current = onResult
@@ -56,14 +64,28 @@ export const useVoiceSearch = ({
       setIsListening(true)
       setTranscript("")
       setError(null)
+      clearInactivityTimer()
     }
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      setError(event.error)
+      const message =
+        event.error === "not-allowed"
+          ? "Microphone permission denied"
+          : event.error === "network"
+            ? "Network issue while listening"
+            : event.error
+      setError(message)
+      clearInactivityTimer()
     }
 
     recognition.onend = () => {
       setIsListening(false)
+      clearInactivityTimer()
+    }
+
+    recognition.onspeechend = () => {
+      clearInactivityTimer()
+      recognition.stop()
     }
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -78,6 +100,11 @@ export const useVoiceSearch = ({
       if (lastResult?.isFinal && text) {
         onResultRef.current?.(text)
       }
+
+      clearInactivityTimer()
+      inactivityTimeoutRef.current = window.setTimeout(() => {
+        recognition.stop()
+      }, 8000)
     }
 
     recognitionRef.current = recognition
@@ -110,6 +137,7 @@ export const useVoiceSearch = ({
   }, [])
 
   const stopListening = useCallback(() => {
+    clearInactivityTimer()
     recognitionRef.current?.stop()
   }, [])
 

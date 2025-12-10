@@ -22,12 +22,13 @@ export const useSearchResults = ({
   const [results, setResults] = useState<SearchResultsPayload | null>(null)
   const [status, setStatus] = useState<SearchStatus>("idle")
   const [error, setError] = useState<string | null>(null)
-  const abortControllerRef = useRef<AbortController | null>(null)
+  const cacheRef = useRef<Map<string, SearchResultsPayload>>(new Map())
+  const fetchIdRef = useRef(0)
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setDebouncedQuery(query.trim())
-    }, 250)
+    }, 150)
 
     return () => window.clearTimeout(timeoutId)
   }, [query])
@@ -37,10 +38,6 @@ export const useSearchResults = ({
       setResults(null)
       setStatus("idle")
       setError(null)
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-        abortControllerRef.current = null
-      }
       return
     }
 
@@ -50,26 +47,34 @@ export const useSearchResults = ({
       return
     }
 
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
+    const cacheKey = `${countryCode}|${debouncedQuery.toLowerCase()}|${productLimit}|${taxonomyLimit}`
+    const cached = cacheRef.current.get(cacheKey)
+
+    if (cached) {
+      setResults(cached)
+      setStatus("success")
     }
 
-    const controller = new AbortController()
-    abortControllerRef.current = controller
-    setStatus("loading")
+    const currentFetchId = fetchIdRef.current + 1
+    fetchIdRef.current = currentFetchId
+    let isActive = true
+
     setError(null)
+    if (!cached) {
+      setStatus("loading")
+    }
 
-    const params = new URLSearchParams({
-      q: debouncedQuery,
-      countryCode,
-      productLimit: String(productLimit),
-      taxonomyLimit: String(taxonomyLimit),
-    })
+    const fetchResults = async () => {
+      try {
+        const params = new URLSearchParams({
+          q: debouncedQuery,
+          countryCode,
+          productLimit: String(productLimit),
+          taxonomyLimit: String(taxonomyLimit),
+        })
 
-    fetch(`/api/storefront/search?${params.toString()}`, {
-      signal: controller.signal,
-    })
-      .then(async (response) => {
+        const response = await fetch(`/api/storefront/search?${params.toString()}`)
+
         if (!response.ok) {
           const payload = (await response.json().catch(() => ({}))) as {
             message?: string
@@ -77,23 +82,29 @@ export const useSearchResults = ({
           throw new Error(payload.message || "Unable to fetch search results")
         }
 
-        return response.json() as Promise<SearchResultsPayload>
-      })
-      .then((payload) => {
+        const payload = (await response.json()) as SearchResultsPayload
+        cacheRef.current.set(cacheKey, payload)
+
+        if (!isActive || fetchIdRef.current !== currentFetchId) {
+          return
+        }
+
         setResults(payload)
         setStatus("success")
-      })
-      .catch((fetchError) => {
-        if (fetchError instanceof DOMException && fetchError.name === "AbortError") {
+      } catch (fetchError) {
+        if (!isActive || fetchIdRef.current !== currentFetchId) {
           return
         }
 
         setError(fetchError instanceof Error ? fetchError.message : "Unexpected error")
         setStatus("error")
-      })
+      }
+    }
+
+    fetchResults()
 
     return () => {
-      controller.abort()
+      isActive = false
     }
   }, [countryCode, debouncedQuery, productLimit, taxonomyLimit])
 

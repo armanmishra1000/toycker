@@ -3,8 +3,6 @@ import { cookies } from "next/headers"
 
 import { searchEntities } from "@lib/data/search"
 
-export const dynamic = "force-dynamic"
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -40,7 +38,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(results, {
       headers: {
-        "Cache-Control": "no-store",
+        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120",
       },
     })
   } catch (error) {

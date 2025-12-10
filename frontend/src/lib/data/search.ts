@@ -45,6 +45,8 @@ type SearchEntitiesArgs = {
   taxonomyLimit?: number
 }
 
+const SEARCH_PRODUCT_FIELDS = "id,title,handle,thumbnail,+variants.prices"
+
 const normalizeProduct = (product: HttpTypes.StoreProduct): SearchProductSummary => {
   const priceData = getProductPrice({ product }).cheapestPrice
 
@@ -101,9 +103,10 @@ export const searchEntities = async ({
       queryParams: {
         limit: productLimit,
         q: normalizedQuery,
+        fields: SEARCH_PRODUCT_FIELDS,
       },
       countryCode,
-    }),
+    }, { skipCollectionExpansion: true }),
     listCategories({
       q: normalizedQuery,
       limit: taxonomyLimit,

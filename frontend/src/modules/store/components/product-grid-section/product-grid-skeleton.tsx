@@ -51,7 +51,7 @@ const ProductGridSkeleton = ({ viewMode = "grid-4", count = 12 }: ProductGridSke
               <div className={`${block} h-4 w-1/2 rounded-full`} />
               <div className="flex items-center justify-between gap-3">
                 <div className={`${block} h-5 w-20 rounded-full`} />
-                <div className={`${block} h-10 w-28 rounded-full`} />
+                <div className={`${block} h-10 md:w-28 w-10 rounded-full`} />
               </div>
             </div>
           </div>
