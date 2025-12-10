@@ -125,5 +125,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/exclusive-showcase",
       options: {},
     },
+    {
+      resolve: "./src/modules/product-short-description",
+      options: {},
+    },
   ],
 })

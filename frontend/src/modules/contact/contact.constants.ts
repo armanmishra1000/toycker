@@ -66,22 +66,6 @@ export const contactLocations: ContactLocation[] = [
     isHeadOffice: true,
   },
   {
-    id: "branch-1-katargam",
-    title: "BRANCH 1 - KATARGAM",
-    label: "Branch 1",
-    addressLines: [
-      "324-327, 3rd Floor, Laxmi Enclave",
-      "Opp. Gajera School, Chhitnikit Society",
-      "Katargam, Surat 395004",
-    ],
-    phone: {
-      display: "+91 90333 35009",
-      href: "tel:+919033335009",
-    },
-    mapQuery: "Toycker Branch Katargam Surat",
-    virtualTourUrl: "https://maps.google.com/?q=Toycker+Katargam+Surat",
-  },
-  {
     id: "branch-2-adajan",
     title: "BRANCH 2 - ADAJAN",
     label: "Branch 2",
@@ -96,21 +80,5 @@ export const contactLocations: ContactLocation[] = [
     },
     mapQuery: "Toycker Branch Adajan Surat",
     virtualTourUrl: "https://maps.google.com/?q=Toycker+Adajan+Surat",
-  },
-  {
-    id: "branch-3-vesu",
-    title: "BRANCH 3 - VESU",
-    label: "Branch 3",
-    addressLines: [
-      "F-12, Second Avenue, Magdalla Circle",
-      "Opp. VR Mall",
-      "Vesu, Surat 395007",
-    ],
-    phone: {
-      display: "+91 97277 11802",
-      href: "tel:+919727711802",
-    },
-    mapQuery: "Toycker Branch Vesu Surat",
-    virtualTourUrl: "https://maps.google.com/?q=Toycker+Vesu+Surat",
   },
 ]
