@@ -68,7 +68,7 @@ export default async function CategoryTemplate({
     { label: category.name },
   ]
 
-  const accountPath = `/${countryCode}/account`
+  const accountPath = "/account"
   const cookieStore = await cookies()
   const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
 

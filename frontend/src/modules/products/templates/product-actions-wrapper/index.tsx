@@ -10,17 +10,14 @@ import { WishlistProvider } from "@modules/products/context/wishlist"
 export default async function ProductActionsWrapper({
   id,
   region,
-  countryCode,
 }: {
   id: string
   region: HttpTypes.StoreRegion
-  countryCode: string
 }) {
   const customerPromise = retrieveCustomer()
   const product = await listProducts({
     queryParams: { id: [id] },
     regionId: region.id,
-    countryCode,
   }).then(({ response }) => response.products[0])
 
   const customer = await customerPromise
@@ -29,7 +26,7 @@ export default async function ProductActionsWrapper({
     return null
   }
 
-  const accountPath = `/${countryCode}/account`
+  const accountPath = "/account"
 
   return (
     <WishlistProvider isAuthenticated={Boolean(customer)} loginPath={accountPath}>

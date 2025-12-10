@@ -25,7 +25,7 @@ const PopularToySet = async ({ regionId, countryCode, isCustomerLoggedIn, collec
     return null
   }
 
-  const accountPath = `/${countryCode}/account`
+  const accountPath = "/account"
 
   return (
     <section

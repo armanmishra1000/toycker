@@ -99,7 +99,7 @@ export default async function PaginatedProducts({
   const resolvedViewMode = viewMode || "grid-4"
   const resolvedSort = sortBy || "featured"
 
-  const accountPath = `/${countryCode}/account`
+  const accountPath = "/account"
   const cookieStore = await cookies()
   const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
 
