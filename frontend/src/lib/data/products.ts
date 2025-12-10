@@ -83,7 +83,7 @@ const COLLECTION_PRODUCT_IDS_REVALIDATE_SECONDS = (() => {
 })()
 
 const DEFAULT_PRODUCT_FIELDS =
-  "*variants.calculated_price,+variants.prices,+variants.metadata,+variants.inventory_quantity,*variants.images,+metadata,+tags"
+  "*variants.calculated_price,+variants.prices,+variants.metadata,+variants.inventory_quantity,*variants.images,+metadata,+tags,+short_description.*"
 
 const ensureVariantMetadataSelection = (fields?: string) => {
   const normalized = (fields ?? DEFAULT_PRODUCT_FIELDS).replace(/,+$/g, "")
@@ -98,6 +98,7 @@ const ensureVariantMetadataSelection = (fields?: string) => {
   ensurePart("+variants.metadata")
   ensurePart("+variants.prices")
   ensurePart("*variants.calculated_price")
+  ensurePart("+short_description.*")
 
   return parts.join(",")
 }

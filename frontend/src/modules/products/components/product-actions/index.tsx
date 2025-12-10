@@ -3,7 +3,7 @@
 import { addToCart, createBuyNowCart } from "@lib/data/cart"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { buildDisplayPrice } from "@lib/util/display-price"
-import { extractPlainText } from "@lib/util/sanitize-html"
+import getShortDescription from "@modules/products/utils/get-short-description"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import Modal from "@modules/common/components/modal"
@@ -75,7 +75,6 @@ export default function ProductActions({ product, disabled, showSupportActions =
   const countryCode = useParams().countryCode as string
   const { openCart, refreshCart, setCart } = useCartSidebar()
   const giftWrapInputId = useId()
-  const plainDescription = extractPlainText(product.description)
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
@@ -375,9 +374,13 @@ export default function ProductActions({ product, disabled, showSupportActions =
           <h1 className="text-[32px] font-semibold leading-tight text-slate-900">
             {product.title}
           </h1>
-          <p className="text-base text-slate-500">
-            {product.subtitle || plainDescription || "Playful accessories curated for everyday wonder."}
-          </p>
+          {(() => {
+            const blurb = getShortDescription(product)
+            if (!blurb) {
+              return null
+            }
+            return <p className="text-base text-slate-500">{blurb}</p>
+          })()}
         </div>
 
         <div className="flex flex-wrap items-baseline gap-3">
