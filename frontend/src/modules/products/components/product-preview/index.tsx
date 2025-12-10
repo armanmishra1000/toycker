@@ -1,6 +1,7 @@
 "use client"
 
 import { Text, clx } from "@medusajs/ui"
+import { DEFAULT_COUNTRY_CODE } from "@lib/constants/region"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
@@ -15,7 +16,7 @@ import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
 import { MouseEvent, useMemo, useState, useTransition } from "react"
 import type { TransitionStartFunction } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 type ProductPreviewProps = {
   product: HttpTypes.StoreProduct
@@ -31,16 +32,13 @@ export default function ProductPreview({
   const { cheapestPrice } = getProductPrice({ product })
   const isListView = viewMode === "list"
   const router = useRouter()
-  const params = useParams<{ countryCode?: string }>()
   const [isPending, startTransition] = useTransition()
   const [status, setStatus] = useState<"idle" | "added" | "error">("idle")
   const cartSidebar = useOptionalCartSidebar()
   const openCart = cartSidebar?.openCart
   const refreshCart = cartSidebar?.refreshCart
   const setCart = cartSidebar?.setCart
-  const countryCodeParam = Array.isArray(params?.countryCode)
-    ? params.countryCode[0]
-    : params?.countryCode
+  const countryCodeParam = DEFAULT_COUNTRY_CODE
   const multipleVariants = (product.variants?.length ?? 0) > 1
   const defaultVariant = useMemo(() => {
     if (!product.variants?.length) {
@@ -220,8 +218,8 @@ const handleAddToCart = (
   event.preventDefault()
   event.stopPropagation()
 
-  if (multipleVariants || !defaultVariantId || !countryCode) {
-    router.push(`/${countryCode ?? "in"}/products/${productHandle}`)
+  if (multipleVariants || !defaultVariantId) {
+    router.push(`/products/${productHandle}`)
     return
   }
 

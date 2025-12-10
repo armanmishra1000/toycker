@@ -33,7 +33,7 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
   >(undefined)
 
   const { countryCode } = useParams()
-  const currentPath = usePathname().split(`/${countryCode}`)[1]
+  const currentPath = usePathname()
 
   const { state, close } = toggleState
 

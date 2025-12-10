@@ -4,6 +4,7 @@ import { cache } from "react"
 import { randomUUID } from "crypto"
 
 import { sdk } from "@lib/config"
+import { DEFAULT_COUNTRY_CODE } from "@lib/constants/region"
 import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
@@ -83,7 +84,7 @@ export const retrieveCart = cache(async (cartId?: string, fields?: string) => {
     .catch(() => null)
 })
 
-export async function getOrSetCart(countryCode: string) {
+export async function getOrSetCart(countryCode: string = DEFAULT_COUNTRY_CODE) {
   const region = await getRegion(countryCode)
 
   if (!region) {
@@ -147,13 +148,13 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
 export async function addToCart({
   variantId,
   quantity,
-  countryCode,
+  countryCode = DEFAULT_COUNTRY_CODE,
   metadata,
   idempotencyKey,
 }: {
   variantId: string
   quantity: number
-  countryCode: string
+  countryCode?: string
   metadata?: LineItemMetadata
   idempotencyKey?: string
 }) {
@@ -210,12 +211,12 @@ export async function addToCart({
 export async function createBuyNowCart({
   variantId,
   quantity,
-  countryCode,
+  countryCode = DEFAULT_COUNTRY_CODE,
   metadata,
 }: {
   variantId: string
   quantity: number
-  countryCode: string
+  countryCode?: string
   metadata?: LineItemMetadata
 }) {
   if (!variantId) {
@@ -493,9 +494,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     return e.message
   }
 
-  redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=payment`
-  )
+  redirect(`/checkout?step=payment`)
 }
 
 /**
@@ -526,14 +525,11 @@ export async function placeOrder(cartId?: string) {
     .catch(medusaError)
 
   if (cartRes?.type === "order") {
-    const countryCode =
-      cartRes.order.shipping_address?.country_code?.toLowerCase()
-
     const orderCacheTag = await getCacheTag("orders")
     revalidateTag(orderCacheTag)
 
     removeCartId()
-    redirect(`/${countryCode}/order/${cartRes?.order.id}/confirmed`)
+    redirect(`/order/${cartRes?.order.id}/confirmed`)
   }
 
   return cartRes.cart
@@ -564,7 +560,8 @@ export async function updateRegion(countryCode: string, currentPath: string) {
   const productsCacheTag = await getCacheTag("products")
   revalidateTag(productsCacheTag)
 
-  redirect(`/${countryCode}${currentPath}`)
+  const normalizedPath = currentPath.startsWith("/") ? currentPath : `/${currentPath}`
+  redirect(normalizedPath)
 }
 
 export const listCartOptions = cache(async () => {

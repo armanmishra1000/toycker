@@ -3,14 +3,10 @@ import HighlightsSection from "@modules/about/components/highlights-section"
 import StorySections from "@modules/about/components/story-sections"
 import { heroContent } from "@modules/about/constants"
 
-type AboutPageProps = {
-  countryCode: string
-}
-
-const AboutPage = ({ countryCode }: AboutPageProps) => {
+const AboutPage = () => {
   return (
     <div className="space-y-4 bg-white">
-      <HeroSection content={heroContent} countryCode={countryCode} />
+      <HeroSection content={heroContent} />
       <HighlightsSection />
       <StorySections />
     </div>

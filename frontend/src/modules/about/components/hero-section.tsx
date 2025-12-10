@@ -5,12 +5,11 @@ import { HeroContent } from "@modules/about/constants"
 
 type HeroSectionProps = {
   content: HeroContent
-  countryCode: string
 }
 
-const HeroSection = ({ content, countryCode }: HeroSectionProps) => {
-  const primaryHref = `/${countryCode}${content.primaryCta.href}`
-  const secondaryHref = `/${countryCode}${content.secondaryCta.href}`
+const HeroSection = ({ content }: HeroSectionProps) => {
+  const primaryHref = content.primaryCta.href
+  const secondaryHref = content.secondaryCta.href
 
   return (
     <section className="bg-gradient-to-b from-primary/5 via-white to-white" aria-labelledby="about-hero-heading">

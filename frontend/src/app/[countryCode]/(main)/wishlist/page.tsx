@@ -12,8 +12,8 @@ type WishlistPageProps = {
 }
 
 const buildLoginRedirect = (countryCode: string) => {
-  const loginPath = `/${countryCode}/account`
-  const wishlistPath = `/${countryCode}/wishlist`
+  const loginPath = `/account`
+  const wishlistPath = `/wishlist`
   return `${loginPath}?redirect=${encodeURIComponent(wishlistPath)}`
 }
 

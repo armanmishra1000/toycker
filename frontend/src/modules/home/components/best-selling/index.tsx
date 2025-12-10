@@ -25,7 +25,7 @@ const BestSelling = async ({ regionId, countryCode, isCustomerLoggedIn, collecti
     return null
   }
 
-  const accountPath = `/${countryCode}/account`
+  const accountPath = "/account"
 
   return (
     <section

@@ -1,5 +1,6 @@
 "use client"
 
+import { DEFAULT_COUNTRY_CODE } from "@lib/constants/region"
 import { addToCart, createBuyNowCart } from "@lib/data/cart"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { buildDisplayPrice } from "@lib/util/display-price"
@@ -19,7 +20,7 @@ import {
   useState,
   useTransition,
 } from "react"
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   Check,
   Gift,
@@ -72,7 +73,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
   const [shareCopied, setShareCopied] = useState(false)
   const [isAdding, startAddToCart] = useTransition()
   const [isBuying, setIsBuying] = useState(false)
-  const countryCode = useParams().countryCode as string
+  const countryCode = DEFAULT_COUNTRY_CODE
   const { openCart, refreshCart, setCart } = useCartSidebar()
   const giftWrapInputId = useId()
 
@@ -284,7 +285,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
         countryCode,
         metadata: buildLineItemMetadata(),
       })
-      router.push(`/${countryCode}/checkout?step=address`)
+      router.push(`/checkout?step=address`)
     } catch (error) {
       console.error("Failed to start checkout", error)
     } finally {

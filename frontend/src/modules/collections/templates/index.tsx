@@ -44,7 +44,7 @@ export default async function CollectionTemplate({
     { value: "out_of_stock", label: "Out of stock" },
   ]
 
-  const accountPath = `/${countryCode}/account`
+  const accountPath = "/account"
   const cookieStore = await cookies()
   const isCustomerLoggedIn = Boolean(cookieStore.get("_medusa_jwt"))
 

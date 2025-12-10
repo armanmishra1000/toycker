@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Fragment, useEffect, useMemo, useRef } from "react"
 import {
   ArrowUpRightIcon,
@@ -17,6 +17,7 @@ import { useBodyScrollLock } from "@modules/layout/hooks/useBodyScrollLock"
 import { useSearchResults } from "@modules/layout/hooks/useSearchResults"
 import { useVoiceSearch } from "@modules/layout/hooks/useVoiceSearch"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { DEFAULT_COUNTRY_CODE } from "@lib/constants/region"
 
 type SearchDrawerProps = {
   isOpen: boolean
@@ -24,19 +25,13 @@ type SearchDrawerProps = {
 }
 
 const SearchDrawer = ({ isOpen, onClose }: SearchDrawerProps) => {
-  const params = useParams<{ countryCode?: string }>()
-  const countryCode = params?.countryCode
-    ? params.countryCode.toString()
-    : undefined
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
+  const countryCode = DEFAULT_COUNTRY_CODE
 
   const buildLocalizedPath = (path: string) => {
     const normalizedPath = path.startsWith("/") ? path : `/${path}`
-    if (!countryCode) {
-      return normalizedPath
-    }
-    return `/${countryCode}${normalizedPath}`
+    return normalizedPath
   }
 
   const {

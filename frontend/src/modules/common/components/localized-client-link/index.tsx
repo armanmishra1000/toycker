@@ -1,7 +1,7 @@
 "use client"
 
 import Link, { type LinkProps } from "next/link"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import React, { useCallback, useEffect, useRef } from "react"
 
 /**
@@ -25,11 +25,10 @@ const LocalizedClientLink = ({
   onFocus,
   ...props
 }: LocalizedClientLinkProps) => {
-  const { countryCode } = useParams()
   const router = useRouter()
   const anchorRef = useRef<HTMLAnchorElement | null>(null)
   const prefetchedRef = useRef(false)
-  const resolvedHref = `/${countryCode}${href}`
+  const resolvedHref = href.startsWith("/") ? href : `/${href}`
 
   const triggerPrefetch = useCallback(() => {
     if (prefetchedRef.current || prefetchIntent === "none") {
