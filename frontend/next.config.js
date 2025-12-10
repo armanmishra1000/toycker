@@ -16,6 +16,11 @@ const R2_PATHNAME = process.env.NEXT_PUBLIC_R2_MEDIA_PATHNAME
  */
 const IMAGE_QUALITIES = [50, 75, 90]
 
+const shouldForceOptimizedImages =
+  process.env.NEXT_PUBLIC_ENABLE_IMAGE_OPTIMIZATION === "true"
+
+const disableOptimizer = !shouldForceOptimizedImages && Boolean(process.env.VERCEL)
+
 const nextConfig = {
   reactStrictMode: true,
   logging: {
@@ -72,6 +77,7 @@ const nextConfig = {
         : []),
     ],
     qualities: IMAGE_QUALITIES,
+    unoptimized: disableOptimizer,
   },
 }
 
