@@ -42,18 +42,28 @@ const fetchLayoutState = async (signal?: AbortSignal) => {
 }
 
 const fetchShippingOptions = async (signal?: AbortSignal) => {
-  const response = await fetch("/api/storefront/shipping-options", {
-    cache: "no-store",
-    signal,
-  })
+  try {
+    const response = await fetch("/api/storefront/shipping-options", {
+      cache: "no-store",
+      signal,
+    })
 
-  if (!response.ok) {
-    throw new Error("Failed to load shipping options")
-  }
+    if (!response.ok) {
+      throw new Error("Failed to load shipping options")
+    }
 
-  return (await response.json()) as {
-    shippingOptions: StoreCartShippingOption[]
-    regionId: string | null
+    return (await response.json()) as {
+      shippingOptions: StoreCartShippingOption[]
+      regionId: string | null
+    }
+  } catch (error) {
+    if ((error as Error)?.name === "AbortError") {
+      return {
+        shippingOptions: [],
+        regionId: null,
+      }
+    }
+    throw error
   }
 }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { addToCart } from "@lib/data/cart"
+import { addToCart, createBuyNowCart } from "@lib/data/cart"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { buildDisplayPrice } from "@lib/util/display-price"
 import { extractPlainText } from "@lib/util/sanitize-html"
@@ -70,7 +70,8 @@ export default function ProductActions({ product, disabled, showSupportActions =
     message: "",
   })
   const [shareCopied, setShareCopied] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [isAdding, startAddToCart] = useTransition()
+  const [isBuying, setIsBuying] = useState(false)
   const countryCode = useParams().countryCode as string
   const { openCart, refreshCart, setCart } = useCartSidebar()
   const giftWrapInputId = useId()
@@ -212,48 +213,84 @@ export default function ProductActions({ product, disabled, showSupportActions =
     toggleLocalWishlist()
   }, [product.id, toggleLocalWishlist, wishlist])
 
-  // add the selected variant to the cart
-  const handleAddToCart = async (mode: "add" | "buy" = "add") => {
-    if (!selectedVariant?.id) return null
+  const buildLineItemMetadata = useCallback(() => {
+    if (!giftWrap) {
+      return undefined
+    }
 
-    startTransition(async () => {
+    return {
+      gift_wrap: true,
+      gift_wrap_fee: GIFT_WRAP_FEE,
+      gift_wrap_packages: Math.max(1, quantity),
+    }
+  }, [giftWrap, quantity])
+
+  const addVariantToCart = useCallback(async () => {
+    if (!selectedVariant?.id) {
+      throw new Error("Missing selected variant")
+    }
+
+    const idempotencyKey =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `cart-${Date.now()}-${Math.random()}`
+
+    const cart = await addToCart({
+      variantId: selectedVariant.id,
+      quantity,
+      countryCode,
+      metadata: buildLineItemMetadata(),
+      idempotencyKey,
+    })
+
+    if (cart) {
+      setCart(cart)
+    } else {
+      await refreshCart()
+    }
+  }, [
+    buildLineItemMetadata,
+    countryCode,
+    quantity,
+    refreshCart,
+    selectedVariant?.id,
+    setCart,
+  ])
+
+  const handleAddToCartClick = () => {
+    if (!selectedVariant?.id) {
+      return
+    }
+
+    startAddToCart(async () => {
       try {
-        if (mode === "add") {
-          openCart()
-        }
-
-        const idempotencyKey =
-          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-            ? crypto.randomUUID()
-            : `cart-${Date.now()}-${Math.random()}`
-
-        const cart = await addToCart({
-          variantId: selectedVariant.id,
-          quantity,
-          countryCode,
-          metadata: giftWrap
-            ? {
-                gift_wrap: true,
-                gift_wrap_fee: GIFT_WRAP_FEE,
-                gift_wrap_packages: Math.max(1, quantity),
-              }
-            : undefined,
-          idempotencyKey,
-        })
-
-        if (cart) {
-          setCart(cart)
-        } else {
-          await refreshCart()
-        }
-
-        if (mode === "buy") {
-          router.push(`/${countryCode}/checkout`)
-        }
+        openCart()
+        await addVariantToCart()
       } catch (error) {
         console.error("Failed to add to cart", error)
       }
     })
+  }
+
+  const handleBuyNowClick = async () => {
+    if (!selectedVariant?.id) {
+      return
+    }
+
+    setIsBuying(true)
+    try {
+      await createBuyNowCart({
+        variantId: selectedVariant.id,
+        quantity,
+        countryCode,
+        metadata: buildLineItemMetadata(),
+      })
+      router.push(`/${countryCode}/checkout?step=address`)
+    } catch (error) {
+      console.error("Failed to start checkout", error)
+    } finally {
+      setIsBuying(false)
+    }
   }
 
   const handleQuestionSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -306,12 +343,13 @@ export default function ProductActions({ product, disabled, showSupportActions =
 
   const requiresSelection = (product.options?.length ?? 0) > 0 && !selectedVariant
 
-  const canTransact =
+  const canTransactBase =
     inStock &&
     !!selectedVariant &&
     !disabled &&
-    isValidVariant &&
-    !isPending
+    isValidVariant
+
+  const isBusy = isAdding || isBuying
 
   const addToCartLabel = requiresSelection
     ? "Select options"
@@ -319,9 +357,12 @@ export default function ProductActions({ product, disabled, showSupportActions =
     ? "Select options"
     : !inStock
     ? "Out of stock"
-    : isPending
+    : isAdding
     ? "Adding..."
     : "Add to Cart"
+
+  const disableAddButton = !canTransactBase || isAdding
+  const disableBuyNowButton = !canTransactBase || isBuying
 
   const isWishlistActive = wishlist
     ? wishlist.isInWishlist(product.id)
@@ -376,7 +417,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
                   updateOption={setOptionValue}
                   title={option.title ?? ""}
                   data-testid="product-options"
-                  disabled={!!disabled || isPending}
+                  disabled={!!disabled || isBusy}
                   layout={isColorOption ? "swatch" : "pill"}
                 />
               </div>
@@ -455,10 +496,10 @@ export default function ProductActions({ product, disabled, showSupportActions =
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            onClick={() => handleAddToCart("add")}
-            disabled={!canTransact}
+            onClick={handleAddToCartClick}
+            disabled={disableAddButton}
             className={`h-14 flex-1 rounded-full px-10 text-base font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A] ${
-              canTransact
+              !disableAddButton
                 ? "bg-[#F6E36C] text-slate-900 hover:brightness-95"
                 : "cursor-not-allowed bg-slate-200 text-slate-500"
             }`}
@@ -480,13 +521,13 @@ export default function ProductActions({ product, disabled, showSupportActions =
         </div>
         <button
           type="button"
-          onClick={() => handleAddToCart("buy")}
-          disabled={!canTransact}
+          onClick={handleBuyNowClick}
+          disabled={disableBuyNowButton}
           className={`h-14 w-full rounded-full text-base font-semibold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A] ${
-            canTransact ? "bg-[#E7353A] hover:bg-[#d52c34]" : "cursor-not-allowed bg-slate-300"
+            !disableBuyNowButton ? "bg-[#E7353A] hover:bg-[#d52c34]" : "cursor-not-allowed bg-slate-300"
           }`}
         >
-          Buy It Now
+          {isBuying ? "Processing..." : "Buy It Now"}
         </button>
       </div>
 

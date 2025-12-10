@@ -207,6 +207,59 @@ export async function addToCart({
     .catch(medusaError)
 }
 
+export async function createBuyNowCart({
+  variantId,
+  quantity,
+  countryCode,
+  metadata,
+}: {
+  variantId: string
+  quantity: number
+  countryCode: string
+  metadata?: LineItemMetadata
+}) {
+  if (!variantId) {
+    throw new Error("Missing variant ID when creating buy now cart")
+  }
+
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    throw new Error(`Region not found for country code: ${countryCode}`)
+  }
+
+  const headers: Record<string, string> = {
+    ...(await getAuthHeaders()),
+  }
+
+  const { cart } = await sdk.store.cart.create(
+    { region_id: region.id },
+    {},
+    headers
+  )
+
+  await sdk.store.cart.createLineItem(
+    cart.id,
+    {
+      variant_id: variantId,
+      quantity,
+      ...(metadata ? { metadata } : {}),
+    },
+    {},
+    headers
+  )
+
+  await setCartId(cart.id)
+
+  const cartCacheTag = await getCacheTag("carts")
+  revalidateTag(cartCacheTag)
+
+  const fulfillmentCacheTag = await getCacheTag("fulfillment")
+  revalidateTag(fulfillmentCacheTag)
+
+  return retrieveCart(cart.id)
+}
+
 export async function updateLineItem({
   lineId,
   quantity,

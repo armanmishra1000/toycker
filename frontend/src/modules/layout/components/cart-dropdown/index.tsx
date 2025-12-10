@@ -15,7 +15,7 @@ import LineItemPrice from "@modules/common/components/line-item-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "@modules/products/components/thumbnail"
 import { usePathname } from "next/navigation"
-import { Fragment, useEffect, useRef, useState } from "react"
+import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 
 const CartDropdown = ({
   cart: cartState,
@@ -27,8 +27,8 @@ const CartDropdown = ({
   )
   const [cartDropdownOpen, setCartDropdownOpen] = useState(false)
 
-  const open = () => setCartDropdownOpen(true)
-  const close = () => setCartDropdownOpen(false)
+  const open = useCallback(() => setCartDropdownOpen(true), [])
+  const close = useCallback(() => setCartDropdownOpen(false), [])
 
   const totalItems =
     cartState?.items?.reduce((acc, item) => {
@@ -38,21 +38,21 @@ const CartDropdown = ({
   const subtotal = cartState?.subtotal ?? 0
   const itemRef = useRef<number>(totalItems || 0)
 
-  const timedOpen = () => {
+  const timedOpen = useCallback(() => {
     open()
 
     const timer = setTimeout(close, 5000)
 
     setActiveTimer(timer)
-  }
+  }, [close, open])
 
-  const openAndCancel = () => {
+  const openAndCancel = useCallback(() => {
     if (activeTimer) {
       clearTimeout(activeTimer)
     }
 
     open()
-  }
+  }, [activeTimer, open])
 
   // Clean up the timer when the component unmounts
   useEffect(() => {
@@ -67,11 +67,13 @@ const CartDropdown = ({
 
   // open cart dropdown when modifying the cart items, but only if we're not on the cart page
   useEffect(() => {
-    if (itemRef.current !== totalItems && !pathname.includes("/cart")) {
+    const hasChanged = itemRef.current !== totalItems
+    itemRef.current = totalItems
+
+    if (hasChanged && !pathname.includes("/cart")) {
       timedOpen()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalItems, itemRef.current])
+  }, [pathname, timedOpen, totalItems])
 
   return (
     <div
