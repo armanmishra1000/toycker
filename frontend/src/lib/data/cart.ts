@@ -17,6 +17,32 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 
+const CART_RESPONSE_FIELDS = [
+  "*items",
+  "*region",
+  "*items.product",
+  "*items.variant",
+  "*items.thumbnail",
+  "*items.metadata",
+  "+items.total",
+  "+items.original_total",
+  "+items.subtotal",
+  "+items.discount_total",
+  "*promotions",
+  "+shipping_methods.name",
+  "+shipping_methods.total",
+  "+shipping_methods.subtotal",
+  "+shipping_methods.tax_total",
+  "+subtotal",
+  "+total",
+  "+item_total",
+  "+item_subtotal",
+  "+tax_total",
+  "+discount_total",
+  "+shipping_total",
+  "+shipping_subtotal",
+].join(",")
+
 type LineItemMetadataValue = string | number | boolean | null
 
 export type GiftWrapMetadata = {
@@ -34,7 +60,7 @@ type LineItemMetadata = Record<string, LineItemMetadataValue> | GiftWrapMetadata
  */
 export const retrieveCart = cache(async (cartId?: string, fields?: string) => {
   const id = cartId || (await getCartId())
-  fields ??= "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+  fields ??= CART_RESPONSE_FIELDS
 
   if (!id) {
     return null
@@ -48,7 +74,7 @@ export const retrieveCart = cache(async (cartId?: string, fields?: string) => {
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
       method: "GET",
       query: {
-        fields
+        fields,
       },
       headers,
       cache: "no-store",
@@ -123,11 +149,13 @@ export async function addToCart({
   quantity,
   countryCode,
   metadata,
+  idempotencyKey,
 }: {
   variantId: string
   quantity: number
   countryCode: string
   metadata?: LineItemMetadata
+  idempotencyKey?: string
 }) {
   if (!variantId) {
     throw new Error("Missing variant ID when adding to cart")
@@ -139,8 +167,12 @@ export async function addToCart({
     throw new Error("Error retrieving or creating cart")
   }
 
-  const headers = {
+  const headers: Record<string, string> = {
     ...(await getAuthHeaders()),
+  }
+
+  if (idempotencyKey) {
+    headers["Idempotency-Key"] = idempotencyKey
   }
 
   const lineItemPayload: HttpTypes.StoreAddCartLineItem & {
@@ -154,16 +186,78 @@ export async function addToCart({
     lineItemPayload.metadata = metadata
   }
 
-  await sdk.store.cart
-    .createLineItem(cart.id, lineItemPayload, {}, headers)
-    .then(async () => {
+  return sdk.store.cart
+    .createLineItem(
+      cart.id,
+      lineItemPayload,
+      {
+        fields: CART_RESPONSE_FIELDS,
+      },
+      headers,
+    )
+    .then(async ({ cart: updatedCart }: { cart: HttpTypes.StoreCart }) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
 
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
+
+      return updatedCart
     })
     .catch(medusaError)
+}
+
+export async function createBuyNowCart({
+  variantId,
+  quantity,
+  countryCode,
+  metadata,
+}: {
+  variantId: string
+  quantity: number
+  countryCode: string
+  metadata?: LineItemMetadata
+}) {
+  if (!variantId) {
+    throw new Error("Missing variant ID when creating buy now cart")
+  }
+
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    throw new Error(`Region not found for country code: ${countryCode}`)
+  }
+
+  const headers: Record<string, string> = {
+    ...(await getAuthHeaders()),
+  }
+
+  const { cart } = await sdk.store.cart.create(
+    { region_id: region.id },
+    {},
+    headers
+  )
+
+  await sdk.store.cart.createLineItem(
+    cart.id,
+    {
+      variant_id: variantId,
+      quantity,
+      ...(metadata ? { metadata } : {}),
+    },
+    {},
+    headers
+  )
+
+  await setCartId(cart.id)
+
+  const cartCacheTag = await getCacheTag("carts")
+  revalidateTag(cartCacheTag)
+
+  const fulfillmentCacheTag = await getCacheTag("fulfillment")
+  revalidateTag(fulfillmentCacheTag)
+
+  return retrieveCart(cart.id)
 }
 
 export async function updateLineItem({

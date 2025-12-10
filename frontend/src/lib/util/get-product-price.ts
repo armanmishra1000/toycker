@@ -12,6 +12,13 @@ type VariantWithCalculatedPrice = HttpTypes.StoreProductVariant & {
   calculated_price: NonNullable<HttpTypes.StoreProductVariant["calculated_price"]>
 }
 
+type VariantWithPricesArray = HttpTypes.StoreProductVariant & {
+  prices?: Array<{
+    currency_code?: string | null
+    amount?: number | null
+  }>
+}
+
 const hasCalculatedPrice = (
   variant?: HttpTypes.StoreProductVariant | null
 ): variant is VariantWithCalculatedPrice => {
@@ -124,6 +131,46 @@ const buildManualVariantPrice = (manual: ManualPriceOverride): VariantPrice => {
   })
 }
 
+const buildFromMoneyAmounts = (variant: VariantWithPricesArray): VariantPrice | null => {
+  const prices = variant.prices ?? []
+  if (!prices.length) {
+    return null
+  }
+
+  const entries = prices
+    .map((price) => ({
+      currency: (price.currency_code ?? "").toUpperCase(),
+      amount: typeof price.amount === "number" ? price.amount : null,
+    }))
+    .filter((entry) => entry.currency && entry.amount !== null)
+
+  if (!entries.length) {
+    return null
+  }
+
+  const preferredCurrency = variant.calculated_price?.currency_code?.toUpperCase()
+  const inPreferredCurrency = entries.filter((entry) => entry.currency === preferredCurrency)
+  const targetEntries = preferredCurrency && inPreferredCurrency.length ? inPreferredCurrency : entries
+
+  const lowest = targetEntries.reduce<(typeof entries)[number] | null>((best, current) => {
+    if (!best) return current
+    return current.amount! < best.amount! ? current : best
+  }, null)
+
+  if (!lowest || lowest.amount === null) {
+    return null
+  }
+
+  const majorAmount = lowest.amount / 100
+
+  return buildVariantPriceFromAmounts({
+    calculatedAmount: majorAmount,
+    originalAmount: majorAmount,
+    currencyCode: lowest.currency,
+    priceType: "money-amount",
+  })
+}
+
 const parseStoredManualAmount = (value: unknown): number | null => {
   if (value === null || value === undefined) {
     return null
@@ -162,7 +209,8 @@ export const getPricesForVariant = (
 
   const manual = getManualPriceOverride(variant)
   if (!manual) {
-    return null
+    const fallback = buildFromMoneyAmounts(variant as VariantWithPricesArray)
+    return fallback
   }
 
   return buildManualVariantPrice(manual)
