@@ -1,7 +1,7 @@
 "use client"
 
 import { DEFAULT_COUNTRY_CODE } from "@lib/constants/region"
-import { addToCart, createBuyNowCart } from "@lib/data/cart"
+import { createBuyNowCart } from "@lib/data/cart"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { buildDisplayPrice } from "@lib/util/display-price"
 import getShortDescription from "@modules/products/utils/get-short-description"
@@ -32,6 +32,7 @@ import {
   Share2,
 } from "lucide-react"
 import { useCartSidebar } from "@modules/layout/context/cart-sidebar-context"
+import { useCartStore } from "@modules/cart/context/cart-store-context"
 
 const GIFT_WRAP_FEE = 50
 
@@ -74,7 +75,8 @@ export default function ProductActions({ product, disabled, showSupportActions =
   const [isAdding, startAddToCart] = useTransition()
   const [isBuying, setIsBuying] = useState(false)
   const countryCode = DEFAULT_COUNTRY_CODE
-  const { openCart, refreshCart, setCart } = useCartSidebar()
+  const { openCart, refreshCart } = useCartSidebar()
+  const { optimisticAdd } = useCartStore()
   const giftWrapInputId = useId()
 
   // If there is only 1 variant, preselect the options
@@ -230,31 +232,20 @@ export default function ProductActions({ product, disabled, showSupportActions =
       throw new Error("Missing selected variant")
     }
 
-    const idempotencyKey =
-      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : `cart-${Date.now()}-${Math.random()}`
-
-    const cart = await addToCart({
-      variantId: selectedVariant.id,
+    await optimisticAdd({
+      product,
+      variant: selectedVariant,
       quantity,
       countryCode,
       metadata: buildLineItemMetadata(),
-      idempotencyKey,
     })
-
-    if (cart) {
-      setCart(cart)
-    } else {
-      await refreshCart()
-    }
   }, [
     buildLineItemMetadata,
     countryCode,
+    optimisticAdd,
+    product,
     quantity,
-    refreshCart,
-    selectedVariant?.id,
-    setCart,
+    selectedVariant,
   ])
 
   const handleAddToCartClick = () => {

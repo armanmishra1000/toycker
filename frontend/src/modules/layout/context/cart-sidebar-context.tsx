@@ -1,11 +1,10 @@
 "use client"
 
-import { deleteLineItem } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { useRouter } from "next/navigation"
 import { ReactNode, createContext, useCallback, useContext, useMemo, useState } from "react"
 
-import { useLayoutData } from "./layout-data-context"
+import { useCartStore } from "@modules/cart/context/cart-store-context"
 
 type CartSidebarContextValue = {
   isOpen: boolean
@@ -24,7 +23,7 @@ const CartSidebarContext = createContext<CartSidebarContextValue | undefined>(
 export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
-  const { cart, setCart, refresh } = useLayoutData()
+  const { cart, setFromServer, optimisticRemove, reloadFromServer } = useCartStore()
 
   const openCart = useCallback(() => {
     setIsOpen(true)
@@ -36,24 +35,23 @@ export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshCart = useCallback(async () => {
     try {
-      await refresh()
+      await reloadFromServer()
     } catch (error) {
       console.error("Failed to refresh cart", error)
     }
-  }, [refresh])
+  }, [reloadFromServer])
 
   const removeLineItem = useCallback(
     async (lineItemId: string) => {
       try {
-        await deleteLineItem(lineItemId)
-        await refreshCart()
+        await optimisticRemove(lineItemId)
         router.refresh()
       } catch (error) {
         console.error("Failed to remove line item", error)
         throw error
       }
     },
-    [refreshCart, router],
+    [optimisticRemove, router],
   )
 
   const value = useMemo(
@@ -62,11 +60,11 @@ export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
       openCart,
       closeCart,
       cart,
-      setCart,
+      setCart: setFromServer,
       refreshCart,
       removeLineItem,
     }),
-    [cart, closeCart, isOpen, openCart, refreshCart, removeLineItem, setCart],
+    [cart, closeCart, isOpen, openCart, refreshCart, removeLineItem, setFromServer],
   )
 
   return (

@@ -10,6 +10,7 @@ import { StoreFreeShippingPrice } from "types/global"
 
 import { useLayoutData } from "@modules/layout/context/layout-data-context"
 import { useEffect } from "react"
+import { usePathname } from "next/navigation"
 
 const computeTarget = (
   cart: HttpTypes.StoreCart,
@@ -72,18 +73,21 @@ const computeTarget = (
 
 export default function ShippingPriceNudge({ variant = "inline" }: { variant?: "popup" | "inline" }) {
   const { cart, shippingOptions, loadShippingOptions } = useLayoutData()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!cart) {
       return
     }
 
-    if (!shippingOptions.length) {
+    const isCheckout = pathname?.includes("/checkout")
+
+    if (!shippingOptions.length && isCheckout) {
       loadShippingOptions().catch((error) => {
         console.error("Failed to load shipping options", error)
       })
     }
-  }, [cart, shippingOptions.length, loadShippingOptions])
+  }, [cart, shippingOptions.length, loadShippingOptions, pathname])
 
   if (!cart || !shippingOptions?.length) {
     return null
