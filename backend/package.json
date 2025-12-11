@@ -20,6 +20,7 @@
     "start:pm2": "pm2 start ./pm2.config.cjs --env production",
     "dev": "medusa develop",
     "migrate": "medusa migrations run",
+    "perf:indexes": "ts-node ./scripts/add-performance-indexes.ts",
     "test:integration:http": "cross-env TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit --passWithNoTests",
     "test:integration:modules": "cross-env TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit --passWithNoTests",
     "test:unit": "cross-env TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit --passWithNoTests"
