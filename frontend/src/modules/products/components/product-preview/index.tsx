@@ -3,19 +3,18 @@
 import { Text, clx } from "@medusajs/ui"
 import { DEFAULT_COUNTRY_CODE } from "@lib/constants/region"
 import { getProductPrice } from "@lib/util/get-product-price"
-import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { ViewMode } from "@modules/store/components/refinement-list/types"
 import WishlistButton from "@modules/products/components/wishlist-button"
 import { useOptionalCartSidebar } from "@modules/layout/context/cart-sidebar-context"
+import { useCartStore } from "@modules/cart/context/cart-store-context"
 import SafeRichText from "@modules/common/components/safe-rich-text"
 import { Loader2, ShoppingCart } from "lucide-react"
 
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
-import { MouseEvent, useMemo, useState, useTransition } from "react"
-import type { TransitionStartFunction } from "react"
+import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
 type ProductPreviewProps = {
@@ -36,8 +35,7 @@ export default function ProductPreview({
   const [status, setStatus] = useState<"idle" | "added" | "error">("idle")
   const cartSidebar = useOptionalCartSidebar()
   const openCart = cartSidebar?.openCart
-  const refreshCart = cartSidebar?.refreshCart
-  const setCart = cartSidebar?.setCart
+  const { optimisticAdd } = useCartStore()
   const countryCodeParam = DEFAULT_COUNTRY_CODE
   const multipleVariants = (product.variants?.length ?? 0) > 1
   const defaultVariant = useMemo(() => {
@@ -143,20 +141,33 @@ export default function ProductPreview({
             </div>
             <button
               type="button"
-              onClick={(event) =>
-                handleAddToCart(event, {
-                  multipleVariants,
-                  defaultVariantId: defaultVariant?.id,
-                  countryCode: countryCodeParam,
-                  productHandle: product.handle,
-                  startTransition,
-                  setStatus,
-                  router,
-                  openCart,
-                  refreshCart,
-                  setCart,
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+
+                if (multipleVariants || !defaultVariant?.id) {
+                  router.push(`/products/${product.handle}`)
+                  return
+                }
+
+                startTransition(async () => {
+                  setStatus("added")
+                  openCart?.()
+                  try {
+                    await optimisticAdd({
+                      product,
+                      variant: defaultVariant,
+                      quantity: 1,
+                      countryCode: countryCodeParam,
+                    })
+                    setTimeout(() => setStatus("idle"), 2000)
+                  } catch (error) {
+                    console.error("Failed to add to cart", error)
+                    setStatus("error")
+                    setTimeout(() => setStatus("idle"), 2000)
+                  }
                 })
-              }
+              }}
               className={clx(
                 "inline-flex items-center justify-center text-xs font-semibold text-white transition gap-0 sm:gap-2",
                 multipleVariants
@@ -187,68 +198,4 @@ export default function ProductPreview({
       </div>
     </LocalizedClientLink>
   )
-}
-
-const handleAddToCart = (
-  event: MouseEvent<HTMLButtonElement>,
-  {
-    multipleVariants,
-    defaultVariantId,
-    countryCode,
-    productHandle,
-    startTransition,
-    setStatus,
-    router,
-    openCart,
-    refreshCart,
-    setCart,
-  }: {
-    multipleVariants: boolean
-    defaultVariantId?: string | null
-    countryCode?: string
-    productHandle: string
-    startTransition: TransitionStartFunction
-    setStatus: (value: "idle" | "added" | "error") => void
-    router: ReturnType<typeof useRouter>
-    openCart?: () => void
-    refreshCart?: () => Promise<void>
-    setCart?: (cart: HttpTypes.StoreCart | null) => void
-  }
-) => {
-  event.preventDefault()
-  event.stopPropagation()
-
-  if (multipleVariants || !defaultVariantId) {
-    router.push(`/products/${productHandle}`)
-    return
-  }
-
-  startTransition(async () => {
-    setStatus("added")
-    openCart?.()
-    try {
-      const idempotencyKey =
-        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : `cart-${Date.now()}-${Math.random()}`
-
-      const cart = await addToCart({
-        variantId: defaultVariantId,
-        quantity: 1,
-        countryCode,
-        idempotencyKey,
-      })
-
-      if (cart) {
-        setCart?.(cart)
-      } else {
-        await refreshCart?.()
-      }
-      setTimeout(() => setStatus("idle"), 2000)
-    } catch (error) {
-      console.error("Failed to add to cart", error)
-      setStatus("error")
-      setTimeout(() => setStatus("idle"), 2000)
-    }
-  })
 }
