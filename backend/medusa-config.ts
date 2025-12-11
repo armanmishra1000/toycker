@@ -129,5 +129,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/product-short-description",
       options: {},
     },
+    {
+      resolve: "./src/modules/rewards",
+      options: {},
+    },
   ],
 })

@@ -27,8 +27,9 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [error, setError] = useState<string | null>(null)
 
   const giftWrapLine = isGiftWrapLine(item.metadata)
-  const displayTitle = giftWrapLine ? "Gift Wrap" : item.product_title
-  const canNavigate = Boolean(item.product_handle && !giftWrapLine)
+  const rewardLine = Boolean((item.metadata as Record<string, unknown> | null)?.reward_redemption)
+  const displayTitle = rewardLine ? "Reward redemption" : giftWrapLine ? "Gift Wrap" : item.product_title
+  const canNavigate = Boolean(item.product_handle && !giftWrapLine && !rewardLine)
 
   const changeQuantity = async (quantity: number) => {
     setError(null)
@@ -123,31 +124,39 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             {displayTitle}
           </Text>
         )}
-        {!giftWrapLine && (
+        {!giftWrapLine && !rewardLine && (
           <LineItemOptions variant={item.variant} data-testid="product-variant" />
         )}
       </Table.Cell>
 
       {type === "full" && (
         <Table.Cell>
-          <div className="flex gap-2 items-center w-28">
-            <DeleteButton id={item.id} data-testid="product-delete-button" />
-            <CartItemSelect
-              value={item.quantity}
-              onChange={(value) => changeQuantity(parseInt(value.target.value))}
-              className="w-14 h-10 p-4"
-              data-testid="product-select-button"
-            >
-              {/* TODO: Update this with the v2 way of managing inventory */}
-              {Array.from({ length: Math.min(maxQuantity, 10) }, (_, i) => (
-                <option value={i + 1} key={i + 1}>
-                  {i + 1}
-                </option>
-              ))}
-            </CartItemSelect>
-            {updating && <Spinner />}
-          </div>
-          <ErrorMessage error={error} data-testid="product-error-message" />
+          {rewardLine ? (
+            <Text size="small" className="text-ui-fg-subtle">
+              Applied automatically
+            </Text>
+          ) : (
+            <>
+              <div className="flex gap-2 items-center w-28">
+                <DeleteButton id={item.id} data-testid="product-delete-button" />
+                <CartItemSelect
+                  value={item.quantity}
+                  onChange={(value) => changeQuantity(parseInt(value.target.value))}
+                  className="w-14 h-10 p-4"
+                  data-testid="product-select-button"
+                >
+                  {/* TODO: Update this with the v2 way of managing inventory */}
+                  {Array.from({ length: Math.min(maxQuantity, 10) }, (_, i) => (
+                    <option value={i + 1} key={i + 1}>
+                      {i + 1}
+                    </option>
+                  ))}
+                </CartItemSelect>
+                {updating && <Spinner />}
+              </div>
+              <ErrorMessage error={error} data-testid="product-error-message" />
+            </>
+          )}
         </Table.Cell>
       )}
 

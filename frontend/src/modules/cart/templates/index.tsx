@@ -4,13 +4,16 @@ import EmptyCartMessage from "../components/empty-cart-message"
 import SignInPrompt from "../components/sign-in-prompt"
 import Divider from "@modules/common/components/divider"
 import { HttpTypes } from "@medusajs/types"
+import type { RewardBalance } from "@lib/data/rewards"
 
 const CartTemplate = ({
   cart,
   customer,
+  rewardBalance,
 }: {
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
+  rewardBalance: RewardBalance | null
 }) => {
   return (
     <div className="py-12">
@@ -31,7 +34,11 @@ const CartTemplate = ({
                 {cart && cart.region && (
                   <>
                     <div className="bg-white py-6">
-                      <Summary cart={cart as any} />
+                      <Summary
+                        cart={cart as any}
+                        isLoggedIn={Boolean(customer)}
+                        rewardBalance={rewardBalance}
+                      />
                     </div>
                   </>
                 )}
