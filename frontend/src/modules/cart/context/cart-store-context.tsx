@@ -54,10 +54,11 @@ const buildOptimisticLineItem = (
   variant: HttpTypes.StoreProductVariant,
   quantity: number,
   currencyCode: string,
+  cartRef: HttpTypes.StoreCart,
   metadata?: Record<string, string | number | boolean | null>,
 ): HttpTypes.StoreCartLineItem => {
   const tempId = `temp-${variant.id}-${Date.now()}`
-  const price = variant.calculated_price?.calculated_amount ?? variant.prices?.[0]?.amount ?? 0
+  const price = variant.calculated_price?.calculated_amount ?? 0
   const original = variant.calculated_price?.original_amount ?? price
   const total = price * quantity
   const originalTotal = original * quantity
@@ -65,13 +66,16 @@ const buildOptimisticLineItem = (
   return {
     id: tempId,
     title: variant.title ?? product.title,
-    description: product.title,
-    thumbnail: product.thumbnail ?? variant.product?.thumbnail ?? product.images?.[0]?.url ?? null,
+    thumbnail: product.thumbnail ?? variant.product?.thumbnail ?? product.images?.[0]?.url ?? undefined,
     quantity,
     variant_id: variant.id,
     product_id: product.id,
     cart_id: "temp",
+    cart: cartRef,
     metadata: metadata ?? {},
+    requires_shipping: true,
+    is_discountable: true,
+    is_tax_inclusive: false,
     variant: {
       ...variant,
       product,
@@ -84,35 +88,13 @@ const buildOptimisticLineItem = (
     subtotal: total,
     discount_total: 0,
     tax_total: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    returned_quantity: 0,
-    fulfilled_quantity: 0,
-    shipped_quantity: 0,
-    refundable: 0,
-    claim_order_id: null,
-    is_return: false,
-    swap_id: null,
+    created_at: new Date(),
+    updated_at: new Date(),
     tax_lines: [],
     adjustments: [],
     variant_sku: variant.sku ?? undefined,
     variant_barcode: variant.barcode ?? undefined,
     variant_title: variant.title ?? undefined,
-    unit_price_incl_tax: price,
-    includes_tax: false,
-    allow_discounts: true,
-    original_unit_price: original,
-    original_total_incl_tax: originalTotal,
-    original_tax_total: 0,
-    unit_price_incl_discounts: price,
-    total_incl_tax: total,
-    tax_rate: 0,
-    is_giftcard: false,
-    should_merge: true,
-    should_split: false,
-    refundable_total: originalTotal,
-    refundable_incl_tax_total: originalTotal,
-    currency_code: currencyCode,
   }
 }
 
@@ -122,6 +104,43 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastError, setLastError] = useState<string | null>(null)
   const previousCartRef = useRef<HttpTypes.StoreCart | null>(layoutCart ?? null)
+
+  const buildEmptyCart = useCallback(
+    (currencyCode: string): HttpTypes.StoreCart => ({
+      id: "temp-cart",
+      items: [],
+      region_id: undefined,
+      currency_code: currencyCode,
+      subtotal: 0,
+      total: 0,
+      original_total: 0,
+      original_subtotal: 0,
+      original_tax_total: 0,
+      original_item_total: 0,
+      original_item_subtotal: 0,
+      original_item_tax_total: 0,
+      item_total: 0,
+      item_subtotal: 0,
+      item_tax_total: 0,
+      tax_total: 0,
+      discount_total: 0,
+      discount_tax_total: 0,
+      gift_card_total: 0,
+      gift_card_tax_total: 0,
+      shipping_total: 0,
+      shipping_subtotal: 0,
+      shipping_tax_total: 0,
+      original_shipping_total: 0,
+      original_shipping_subtotal: 0,
+      original_shipping_tax_total: 0,
+      metadata: {},
+      shipping_methods: [],
+      promotions: [],
+      created_at: new Date(),
+      updated_at: new Date(),
+    }),
+    [],
+  )
 
 
   // Sync in-memory cart when layout cart updates
@@ -171,21 +190,11 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
 
       const previousCart = cart
 
-      const baseCart: HttpTypes.StoreCart = cart ?? {
-        id: "temp-cart",
-        items: [],
-        region_id: null,
-        currency_code:
+      const baseCart: HttpTypes.StoreCart =
+        cart ??
+        buildEmptyCart(
           variant.calculated_price?.currency_code ?? layoutCart?.currency_code ?? "USD",
-        subtotal: 0,
-        total: 0,
-        item_subtotal: 0,
-        discount_total: 0,
-        tax_total: 0,
-        shipping_subtotal: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
+        )
 
       const existing = baseCart.items?.find((item) => item.variant_id === variant.id)
       let nextItems: HttpTypes.StoreCartLineItem[]
@@ -196,8 +205,8 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
           quantity: existing.quantity + quantity,
           total: (existing.total ?? 0) + (existing.unit_price ?? 0) * quantity,
           original_total:
-            (existing.original_total ?? existing.total ?? 0) + (existing.original_unit_price ?? existing.unit_price ?? 0) * quantity,
-          updated_at: new Date().toISOString(),
+            (existing.original_total ?? existing.total ?? 0) + (existing.unit_price ?? 0) * quantity,
+          updated_at: new Date(),
         }
         nextItems = baseCart.items!.map((item) => (item.id === existing.id ? updatedItem : item))
       } else {
@@ -206,6 +215,7 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
           variant,
           quantity,
           baseCart.currency_code,
+          baseCart,
           metadata,
         )
         nextItems = [...(baseCart.items ?? []), optimistic]
@@ -231,12 +241,6 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
         if (serverCart) {
           setFromServer(serverCart)
           return
-        }
-
-        const refreshed = await fetch("/api/cart", { cache: "no-store" })
-        if (refreshed.ok) {
-          const payload = (await refreshed.json()) as { cart: HttpTypes.StoreCart | null }
-          setFromServer(payload.cart)
         }
       } catch (error) {
         setLastError((error as Error)?.message ?? "Failed to add to cart")

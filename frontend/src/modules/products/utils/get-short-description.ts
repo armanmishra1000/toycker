@@ -8,7 +8,11 @@ type ShortDescriptionCarrier = HttpTypes.StoreProduct & {
   } | null
 }
 
-export const getShortDescription = (product: ShortDescriptionCarrier) => {
+export const getShortDescription = (
+  product: ShortDescriptionCarrier,
+  options: { fallbackToDescription?: boolean } = { fallbackToDescription: true }
+) => {
+  const { fallbackToDescription = true } = options
   const metadataValue = (() => {
     const source = product.metadata as Record<string, unknown> | null | undefined
 
@@ -38,9 +42,11 @@ export const getShortDescription = (product: ShortDescriptionCarrier) => {
     return fromSubtitle
   }
 
-  const fromDescription = extractPlainText(product.description)?.trim()
-  if (fromDescription) {
-    return fromDescription
+  if (fallbackToDescription) {
+    const fromDescription = extractPlainText(product.description)?.trim()
+    if (fromDescription) {
+      return fromDescription
+    }
   }
 
   return ""

@@ -30,6 +30,8 @@ const CART_RESPONSE_FIELDS = [
   "+items.subtotal",
   "+items.discount_total",
   "*promotions",
+  "shipping_methods.id",
+  "shipping_methods.shipping_option_id",
   "+shipping_methods.name",
   "+shipping_methods.total",
   "+shipping_methods.subtotal",
@@ -305,7 +307,9 @@ export async function deleteLineItem(lineId: string) {
     throw new Error("Missing cart ID when deleting line item")
   }
 
-  const cart = await retrieveCart(cartId, "id,completed_at")
+  const cart = (await retrieveCart(cartId, "id,completed_at")) as (HttpTypes.StoreCart & {
+    completed_at?: string | null
+  }) | null
 
   if (cart?.completed_at) {
     await removeCartId()
