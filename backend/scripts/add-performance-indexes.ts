@@ -19,6 +19,8 @@ const statements: Array<{ table: string; sql: string }> = [
   // Products and variants
   { table: "product", sql: "CREATE INDEX IF NOT EXISTS idx_product_handle ON product (handle)" },
   { table: "product", sql: "CREATE INDEX IF NOT EXISTS idx_product_collection_id ON product (collection_id)" },
+  { table: "product", sql: "CREATE INDEX IF NOT EXISTS idx_product_created_at ON product (created_at)" },
+  { table: "product_category", sql: "CREATE INDEX IF NOT EXISTS idx_product_category_handle ON product_category (handle)" },
   { table: "product_variant", sql: "CREATE INDEX IF NOT EXISTS idx_product_variant_product_id ON product_variant (product_id)" },
 
   // Money amounts (pricing lookups by variant and currency)

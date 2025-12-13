@@ -22,13 +22,12 @@ const PRODUCT_FIELD_SELECTION = [
   "title",
   "handle",
   "thumbnail",
-  "*images",
+  "+short_description.*",
   "+metadata",
   "*variants.calculated_price",
   "*variants.prices",
-  "*variants.options",
-  "*variants.inventory_quantity",
   "+variants.metadata",
+  "+variants.inventory_quantity",
 ].join(",")
 
 const EXCLUSIVE_COLLECTIONS_REVALIDATE_SECONDS = (() => {
