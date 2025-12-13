@@ -75,9 +75,16 @@ export default function ProductActions({ product, disabled, showSupportActions =
   const [isAdding, startAddToCart] = useTransition()
   const [isBuying, setIsBuying] = useState(false)
   const countryCode = DEFAULT_COUNTRY_CODE
-  const { openCart, refreshCart } = useCartSidebar()
+  const { openCart } = useCartSidebar()
   const { optimisticAdd } = useCartStore()
   const giftWrapInputId = useId()
+
+  const isVariantAvailable = useCallback((variant: HttpTypes.StoreProductVariant) => {
+    if (!variant) return false
+    if (!variant.manage_inventory) return true
+    if (variant.allow_backorder) return true
+    return (variant.inventory_quantity ?? 0) > 0
+  }, [])
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
@@ -97,6 +104,27 @@ export default function ProductActions({ product, disabled, showSupportActions =
       return isEqual(variantOptions, options)
     })
   }, [product.variants, options])
+
+  useEffect(() => {
+    if (selectedVariant) {
+      return
+    }
+
+    const variants = product.variants ?? []
+    if (variants.length === 0) {
+      return
+    }
+
+    const preferred = variants.find((variant) => isVariantAvailable(variant)) ?? variants[0]
+    const variantOptions = optionsAsKeymap(preferred.options)
+
+    setOptions((prev) => {
+      if (Object.keys(prev).length > 0) {
+        return prev
+      }
+      return variantOptions ?? {}
+    })
+  }, [isVariantAvailable, product.variants, selectedVariant])
 
   useEffect(() => {
     if (wishlist || typeof window === "undefined") {
@@ -249,7 +277,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
   ])
 
   const handleAddToCartClick = () => {
-    if (!selectedVariant?.id) {
+    if (!selectedVariant?.id || isAdding) {
       return
     }
 
@@ -367,7 +395,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
             {product.title}
           </h1>
           {(() => {
-            const blurb = getShortDescription(product)
+            const blurb = getShortDescription(product, { fallbackToDescription: false })
             if (!blurb) {
               return null
             }

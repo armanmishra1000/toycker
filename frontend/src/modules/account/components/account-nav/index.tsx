@@ -2,7 +2,7 @@
 
 import { clx } from "@medusajs/ui"
 import { ArrowRightOnRectangle } from "@medusajs/icons"
-import { usePathname } from "next/navigation"
+import { usePathname, useParams } from "next/navigation"
 
 import ChevronDown from "@modules/common/icons/chevron-down"
 import User from "@modules/common/icons/user"

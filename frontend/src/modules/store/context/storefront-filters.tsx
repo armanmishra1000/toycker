@@ -75,6 +75,19 @@ type StorefrontFiltersContextValue = {
 
 const StorefrontFiltersContext = createContext<StorefrontFiltersContextValue | null>(null)
 
+const dedupeProducts = (items: HttpTypes.StoreProduct[]) => {
+  const seen = new Set<string>()
+  const result: HttpTypes.StoreProduct[] = []
+
+  for (const item of items) {
+    if (!item?.id || seen.has(item.id)) continue
+    seen.add(item.id)
+    result.push(item)
+  }
+
+  return result
+}
+
 const isPriceRangeEqual = (a?: PriceRangeFilter, b?: PriceRangeFilter) => {
   if (!a && !b) {
     return true
@@ -110,16 +123,24 @@ export const StorefrontFiltersProvider = ({
 }: StorefrontFiltersProviderProps) => {
   const [filters, setFilterState] = useState<FilterState>(initialFilters)
   const filtersRef = useRef(initialFilters)
-  const [listing, setListing] = useState<{ products: HttpTypes.StoreProduct[]; count: number }>({
-    products: initialProducts,
+  const [listing, setListing] = useState<{ products: HttpTypes.StoreProduct[]; count: number }>(() => ({
+    products: dedupeProducts(initialProducts),
     count: initialCount,
-  })
+  }))
   const [isFetching, setIsFetching] = useState(false)
   const [error, setError] = useState<string | undefined>()
   const [isPending, startTransition] = useTransition()
   const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => () => abortControllerRef.current?.abort(), [])
+
+  useEffect(() => {
+    filtersRef.current = initialFilters
+    setFilterState(initialFilters)
+    setListing({ products: dedupeProducts(initialProducts), count: initialCount })
+    setError(undefined)
+    setIsFetching(false)
+  }, [initialFilters, initialProducts, initialCount])
 
   const fetchProducts = useCallback(
     async (nextFilters: FilterState) => {
@@ -179,7 +200,10 @@ export const StorefrontFiltersProvider = ({
           count: number
         }
 
-        setListing(payload)
+        setListing({
+          products: dedupeProducts(payload.products),
+          count: payload.count,
+        })
       } catch (error) {
         if ((error as Error)?.name === "AbortError") {
           return
