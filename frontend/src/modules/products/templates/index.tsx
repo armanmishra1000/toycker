@@ -39,10 +39,10 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       >
         <Breadcrumbs className="mb-6" items={getProductBreadcrumbs(product)} />
         <div className="flex flex-col gap-10 xl:flex-row xl:items-start">
-          <div className="w-full xl:w-1/2">
+          <div className="w-full xl:w-3/5">
             <ImageGallery images={images} />
           </div>
-          <div className="w-full xl:w-1/2">
+          <div className="w-full xl:w-2/5">
             <Suspense
               fallback={<ProductActions disabled={true} product={product} />}
             >

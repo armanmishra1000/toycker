@@ -12,6 +12,7 @@ import CategoryMarquee from "@modules/home/components/category-marquee"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
 import { listExclusiveCollections } from "@lib/data/exclusive-collections"
+import { listHomeBanners } from "@lib/data/home-banners"
 import type { HttpTypes } from "@medusajs/types"
 
 export const metadata: Metadata = {
@@ -27,11 +28,12 @@ export default async function Home(props: {
 
   const { countryCode } = params
 
-  const [region, collectionsResult] = await Promise.all([
+  const [region, collectionsResult, homeBanners] = await Promise.all([
     getRegion(countryCode),
     listCollections({
       fields: "id, handle, title",
     }),
+    listHomeBanners(),
   ])
 
   const cookieStore = await cookies()
@@ -52,7 +54,7 @@ export default async function Home(props: {
 
   return (
     <>
-      <Hero />
+      <Hero banners={homeBanners} />
       <CategoryMarquee />
       <PopularToySet
         regionId={region.id}

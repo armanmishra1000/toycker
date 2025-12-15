@@ -25,14 +25,6 @@ export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter()
   const { cart, setFromServer, optimisticRemove, reloadFromServer } = useCartStore()
 
-  const openCart = useCallback(() => {
-    setIsOpen(true)
-  }, [])
-
-  const closeCart = useCallback(() => {
-    setIsOpen(false)
-  }, [])
-
   const refreshCart = useCallback(async () => {
     try {
       await reloadFromServer()
@@ -40,6 +32,15 @@ export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
       console.error("Failed to refresh cart", error)
     }
   }, [reloadFromServer])
+
+  const openCart = useCallback(() => {
+    refreshCart()
+    setIsOpen(true)
+  }, [refreshCart])
+
+  const closeCart = useCallback(() => {
+    setIsOpen(false)
+  }, [])
 
   const removeLineItem = useCallback(
     async (lineItemId: string) => {

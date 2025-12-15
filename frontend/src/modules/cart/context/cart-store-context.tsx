@@ -3,6 +3,7 @@
 import { addToCart, deleteLineItem } from "@lib/data/cart"
 import { DEFAULT_COUNTRY_CODE } from "@lib/constants/region"
 import { HttpTypes } from "@medusajs/types"
+import isEqual from "lodash/isEqual"
 import {
   createContext,
   useCallback,
@@ -104,6 +105,7 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastError, setLastError] = useState<string | null>(null)
   const previousCartRef = useRef<HttpTypes.StoreCart | null>(layoutCart ?? null)
+  const addQueueRef = useRef<Promise<void>>(Promise.resolve())
 
   const buildEmptyCart = useCallback(
     (currencyCode: string): HttpTypes.StoreCart => ({
@@ -190,13 +192,34 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
 
       const previousCart = cart
 
+      const refreshFromApi = async () => {
+        try {
+          const response = await fetch("/api/cart", { cache: "no-store" })
+          if (response.ok) {
+            const payload = (await response.json()) as { cart: HttpTypes.StoreCart | null }
+            if (payload.cart) {
+              setFromServer(payload.cart)
+            }
+          }
+        } catch (error) {
+          console.error("Failed to refresh cart after add", error)
+        }
+      }
+
       const baseCart: HttpTypes.StoreCart =
         cart ??
         buildEmptyCart(
           variant.calculated_price?.currency_code ?? layoutCart?.currency_code ?? "USD",
         )
 
-      const existing = baseCart.items?.find((item) => item.variant_id === variant.id)
+      const areMetadataEqual = (
+        left?: Record<string, string | number | boolean | null>,
+        right?: Record<string, string | number | boolean | null>,
+      ) => isEqual(left ?? {}, right ?? {})
+
+      const existing = baseCart.items?.find(
+        (item) => item.variant_id === variant.id && areMetadataEqual(item.metadata as any, metadata),
+      )
       let nextItems: HttpTypes.StoreCartLineItem[]
 
       if (existing) {
@@ -224,29 +247,35 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
       const optimisticCart = mergeLineItems(baseCart, nextItems)
       setCart(optimisticCart)
 
-      try {
-        const idempotencyKey =
-          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-            ? crypto.randomUUID()
-            : `cart-${Date.now()}-${Math.random()}`
+      const runServerAdd = async () => {
+        try {
+          const idempotencyKey =
+            typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+              ? crypto.randomUUID()
+              : `cart-${Date.now()}-${Math.random()}`
 
-        const serverCart = await addToCart({
-          variantId: variant.id,
-          quantity,
-          countryCode: targetCountry,
-          metadata,
-          idempotencyKey,
-        })
+          const serverCart = await addToCart({
+            variantId: variant.id,
+            quantity,
+            countryCode: targetCountry,
+            metadata,
+            idempotencyKey,
+          })
 
-        if (serverCart) {
-          setFromServer(serverCart)
-          return
+          if (serverCart) {
+            setFromServer(serverCart)
+            await refreshFromApi()
+            return
+          }
+        } catch (error) {
+          setLastError((error as Error)?.message ?? "Failed to add to cart")
+          setCart(previousCart)
+          throw error
         }
-      } catch (error) {
-        setLastError((error as Error)?.message ?? "Failed to add to cart")
-        setCart(previousCart)
-        throw error
       }
+
+      addQueueRef.current = addQueueRef.current.then(() => runServerAdd())
+      await addQueueRef.current
     },
     [cart, layoutCart?.currency_code, setFromServer],
   )

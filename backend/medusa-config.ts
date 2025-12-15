@@ -126,6 +126,10 @@ module.exports = defineConfig({
       options: {},
     },
     {
+      resolve: "./src/modules/home-hero",
+      options: {},
+    },
+    {
       resolve: "./src/modules/product-short-description",
       options: {},
     },
