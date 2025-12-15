@@ -26,6 +26,7 @@ import {
   Gift,
   GitCompare,
   Heart,
+  Loader2,
   MessageCircleQuestion,
   Minus,
   Plus,
@@ -40,6 +41,8 @@ type ProductActionsProps = {
   product: HttpTypes.StoreProduct
   disabled?: boolean
   showSupportActions?: boolean
+  onActionComplete?: () => void
+  syncVariantParam?: boolean
 }
 
 const optionsAsKeymap = (
@@ -51,7 +54,7 @@ const optionsAsKeymap = (
   }, {})
 }
 
-export default function ProductActions({ product, disabled, showSupportActions = true }: ProductActionsProps) {
+export default function ProductActions({ product, disabled, showSupportActions = true, syncVariantParam = true, onActionComplete }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -165,6 +168,10 @@ export default function ProductActions({ product, disabled, showSupportActions =
   }, [product.variants, options])
 
   useEffect(() => {
+    if (!syncVariantParam) {
+      return
+    }
+
     const params = new URLSearchParams(searchParams.toString())
     const value = isValidVariant ? selectedVariant?.id : null
 
@@ -179,7 +186,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
     }
 
     router.replace(pathname + "?" + params.toString())
-  }, [selectedVariant, isValidVariant, pathname, router, searchParams])
+  }, [isValidVariant, pathname, router, searchParams, selectedVariant?.id, syncVariantParam])
 
   // check if the selected variant is in stock
   const inStock = useMemo(() => {
@@ -267,6 +274,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
       countryCode,
       metadata: buildLineItemMetadata(),
     })
+    onActionComplete?.()
   }, [
     buildLineItemMetadata,
     countryCode,
@@ -274,6 +282,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
     product,
     quantity,
     selectedVariant,
+    onActionComplete,
   ])
 
   const handleAddToCartClick = () => {
@@ -304,6 +313,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
         countryCode,
         metadata: buildLineItemMetadata(),
       })
+      onActionComplete?.()
       router.push(`/checkout?step=address`)
     } catch (error) {
       console.error("Failed to start checkout", error)
@@ -376,8 +386,6 @@ export default function ProductActions({ product, disabled, showSupportActions =
     ? "Select options"
     : !inStock
     ? "Out of stock"
-    : isAdding
-    ? "Adding..."
     : "Add to Cart"
 
   const disableAddButton = !canTransactBase || isAdding
@@ -427,7 +435,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
         <p className="text-sm text-slate-500">Inclusive of all taxes</p>
       </div>
 
-      {(product.variants?.length ?? 0) > 1 && (
+      {(product.options?.length ?? 0) > 0 && (
         <div className="flex flex-col gap-y-4">
           {(product.options || []).map((option) => {
             const normalizedTitle = option.title?.toLowerCase() ?? ""
@@ -521,14 +529,17 @@ export default function ProductActions({ product, disabled, showSupportActions =
             type="button"
             onClick={handleAddToCartClick}
             disabled={disableAddButton}
-            className={`h-14 flex-1 rounded-full px-10 text-base font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A] ${
+            className={`relative h-14 flex-1 rounded-full px-10 text-base font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E7353A] ${
               !disableAddButton
                 ? "bg-[#F6E36C] text-slate-900 hover:brightness-95"
                 : "cursor-not-allowed bg-slate-200 text-slate-500"
             }`}
             data-testid="add-product-button"
           >
-            {addToCartLabel}
+            {isAdding && (
+              <Loader2 className="absolute left-4 h-5 w-5 animate-spin text-slate-700" aria-hidden="true" />
+            )}
+            <span className={isAdding ? "opacity-70" : ""}>{addToCartLabel}</span>
           </button>
           <button
             type="button"
