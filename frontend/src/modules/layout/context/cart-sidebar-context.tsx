@@ -14,6 +14,7 @@ type CartSidebarContextValue = {
   setCart: (cart: HttpTypes.StoreCart | null) => void
   refreshCart: () => Promise<void>
   removeLineItem: (lineItemId: string) => Promise<void>
+  isRemoving: (lineItemId: string) => boolean
 }
 
 const CartSidebarContext = createContext<CartSidebarContextValue | undefined>(
@@ -23,7 +24,7 @@ const CartSidebarContext = createContext<CartSidebarContextValue | undefined>(
 export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
-  const { cart, setFromServer, optimisticRemove, reloadFromServer } = useCartStore()
+  const { cart, setFromServer, optimisticRemove, reloadFromServer, isRemoving } = useCartStore()
 
   const refreshCart = useCallback(async () => {
     try {
@@ -46,13 +47,13 @@ export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
     async (lineItemId: string) => {
       try {
         await optimisticRemove(lineItemId)
-        router.refresh()
+        await reloadFromServer()
       } catch (error) {
         console.error("Failed to remove line item", error)
         throw error
       }
     },
-    [optimisticRemove, router],
+    [optimisticRemove, reloadFromServer],
   )
 
   const value = useMemo(
@@ -64,8 +65,9 @@ export const CartSidebarProvider = ({ children }: { children: ReactNode }) => {
       setCart: setFromServer,
       refreshCart,
       removeLineItem,
+      isRemoving,
     }),
-    [cart, closeCart, isOpen, openCart, refreshCart, removeLineItem, setFromServer],
+    [cart, closeCart, isOpen, openCart, refreshCart, removeLineItem, setFromServer, isRemoving],
   )
 
   return (

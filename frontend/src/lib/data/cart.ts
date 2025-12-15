@@ -61,7 +61,7 @@ type LineItemMetadata = Record<string, LineItemMetadataValue> | GiftWrapMetadata
  * @param cartId - optional - The ID of the cart to retrieve.
  * @returns The cart object if found, or null if not found.
  */
-export const retrieveCart = cache(async (cartId?: string, fields?: string) => {
+export const retrieveCart = cache(async (cartId?: string, fields?: string, cacheBust?: number) => {
   const id = cartId || (await getCartId())
   fields ??= CART_RESPONSE_FIELDS
 
