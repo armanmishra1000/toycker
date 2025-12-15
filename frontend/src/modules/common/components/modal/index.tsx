@@ -10,6 +10,7 @@ type ModalProps = {
   close: () => void
   size?: "small" | "medium" | "large" | "xlarge"
   search?: boolean
+  fullScreen?: boolean
   children: React.ReactNode
   'data-testid'?: string
 }
@@ -19,6 +20,7 @@ const Modal = ({
   close,
   size = "medium",
   search = false,
+  fullScreen = false,
   children,
   'data-testid': dataTestId
 }: ModalProps) => {
@@ -42,8 +44,9 @@ const Modal = ({
             className={clx(
               "flex min-h-full h-full justify-center p-4 text-center",
               {
-                "items-center": !search,
-                "items-start": search,
+                "items-center": !search || fullScreen,
+                "items-start": search && !fullScreen,
+                "p-0": fullScreen,
               }
             )}
           >
@@ -61,14 +64,17 @@ const Modal = ({
                 className={clx(
                   "flex flex-col justify-start w-full transform p-5 text-left align-middle transition-all h-fit",
                   {
-                    "max-w-md": size === "small",
-                    "max-w-xl": size === "medium",
-                    "max-w-3xl": size === "large",
-                    "max-w-5xl": size === "xlarge",
-                    "max-h-[75vh]": size !== "xlarge",
-                    "max-h-[90vh]": size === "xlarge",
+                    "max-w-md": size === "small" && !fullScreen,
+                    "max-w-xl": size === "medium" && !fullScreen,
+                    "max-w-3xl": size === "large" && !fullScreen,
+                    "max-w-5xl": size === "xlarge" && !fullScreen,
+                    "max-h-[75vh]": size !== "xlarge" && !fullScreen,
+                    "max-h-[90vh]": size === "xlarge" && !fullScreen,
+                    "w-full h-full max-w-none max-h-none p-0": fullScreen,
                     "bg-transparent shadow-none": search,
-                    "bg-white shadow-xl border rounded-rounded": !search,
+                    "bg-white shadow-xl border rounded-rounded": !search && !fullScreen,
+                    "bg-white": fullScreen,
+                    "shadow-none border-0 rounded-none": fullScreen,
                   }
                 )}
               >

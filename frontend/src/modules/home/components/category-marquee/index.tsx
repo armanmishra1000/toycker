@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Fragment, useMemo, useState, type MouseEvent, type FocusEvent } from "react"
 
 type CategoryItem = {
@@ -139,7 +140,7 @@ const CategoryMarquee = () => {
         >
           {marqueeItems.map((item, index) => (
             <Fragment key={`${item.id}-${index}`}>
-              <a
+              <Link
                 href={`/categories/${item.slug}`}
                 className="flex items-center gap-3 whitespace-nowrap px-4 text-black transition-colors hover:text-[#5921ff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                 onMouseEnter={handlePreview}
@@ -150,7 +151,7 @@ const CategoryMarquee = () => {
                 tabIndex={item.isDuplicate ? -1 : undefined}
               >
                 {item.label}
-              </a>
+              </Link>
               <StarSeparator />
             </Fragment>
           ))}

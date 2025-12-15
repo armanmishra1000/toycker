@@ -9,7 +9,7 @@ export default function CategoryPageLoading() {
         {[...Array(4)].map((_, index) => (
           <span
             key={index}
-            className="h-9 w-full animate-pulse rounded-full bg-slate-200"
+            className="h-9 w-24 animate-pulse rounded-full bg-slate-200"
             aria-hidden
           />
         ))}
