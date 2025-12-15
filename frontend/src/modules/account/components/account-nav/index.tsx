@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { clx } from "@medusajs/ui"
 import { ArrowRightOnRectangle } from "@medusajs/icons"
 import { usePathname, useParams } from "next/navigation"
@@ -23,7 +24,7 @@ const AccountNav = ({
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="small:hidden" data-testid="mobile-account-nav">
         {route !== "/account" ? (
           <LocalizedClientLink
@@ -33,63 +34,36 @@ const AccountNav = ({
           >
             <>
               <ChevronDown className="transform rotate-90" />
-              <span>Account</span>
+              <span>Back to account</span>
             </>
           </LocalizedClientLink>
         ) : (
-          <>
-            <div className="text-xl-semi mb-4 px-8">
-              Hello {customer?.first_name}
-            </div>
+          <div className="flex flex-col rounded-lg border border-ui-border bg-ui-bg-subtle">
+            <div className="text-xl-semi px-4 pt-4 pb-2">Hello {customer?.first_name}</div>
             <div className="text-base-regular">
               <ul>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/profile"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="profile-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>Profile</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/addresses"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="addresses-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <MapPin size={20} />
-                        <span>Addresses</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/orders"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="orders-link"
-                  >
-                    <div className="flex items-center gap-x-2">
-                      <Package size={20} />
-                      <span>Orders</span>
-                    </div>
-                    <ChevronDown className="transform -rotate-90" />
-                  </LocalizedClientLink>
-                </li>
+                <MobileLink
+                  href="/account/profile"
+                  icon={<User size={20} />}
+                  label="Profile"
+                  data-testid="profile-link"
+                />
+                <MobileLink
+                  href="/account/addresses"
+                  icon={<MapPin size={20} />}
+                  label="Addresses"
+                  data-testid="addresses-link"
+                />
+                <MobileLink
+                  href="/account/orders"
+                  icon={<Package size={20} />}
+                  label="Orders"
+                  data-testid="orders-link"
+                />
                 <li>
                   <button
                     type="button"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8 w-full"
+                    className="flex items-center justify-between py-4 border-t border-ui-border px-4 w-full"
                     onClick={handleLogout}
                     data-testid="logout-button"
                   >
@@ -102,23 +76,25 @@ const AccountNav = ({
                 </li>
               </ul>
             </div>
-          </>
+          </div>
         )}
       </div>
       <div className="hidden small:block" data-testid="account-nav">
-        <div>
-          <div className="pb-4">
-            <h3 className="text-base-semi">Account</h3>
+        <div className="space-y-4">
+          <div className="pb-2">
+            <h3 className="text-base-semi text-ui-fg-subtle uppercase tracking-wide">
+              Manage
+            </h3>
           </div>
           <div className="text-base-regular">
-            <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
+            <ul className="flex mb-0 justify-start items-start flex-col gap-y-2">
               <li>
                 <AccountNavLink
                   href="/account"
                   route={route!}
                   data-testid="overview-link"
                 >
-                  Overview
+                  <NavRow icon={<ChevronDown className="-rotate-90" />} label="Overview" />
                 </AccountNavLink>
               </li>
               <li>
@@ -127,7 +103,7 @@ const AccountNav = ({
                   route={route!}
                   data-testid="profile-link"
                 >
-                  Profile
+                  <NavRow icon={<User size={18} />} label="Profile" />
                 </AccountNavLink>
               </li>
               <li>
@@ -136,7 +112,7 @@ const AccountNav = ({
                   route={route!}
                   data-testid="addresses-link"
                 >
-                  Addresses
+                  <NavRow icon={<MapPin size={18} />} label="Addresses" />
                 </AccountNavLink>
               </li>
               <li>
@@ -145,13 +121,14 @@ const AccountNav = ({
                   route={route!}
                   data-testid="orders-link"
                 >
-                  Orders
+                  <NavRow icon={<Package size={18} />} label="Orders" />
                 </AccountNavLink>
               </li>
-              <li className="text-grey-700">
+              <li className="pt-2">
                 <button
                   type="button"
                   onClick={handleLogout}
+                  className="text-ui-fg-subtle hover:text-ui-fg-base transition-colors"
                   data-testid="logout-button"
                 >
                   Log out
@@ -184,14 +161,54 @@ const AccountNavLink = ({
   return (
     <LocalizedClientLink
       href={href}
-      className={clx("text-ui-fg-subtle hover:text-ui-fg-base", {
-        "text-ui-fg-base font-semibold": active,
-      })}
+      className={clx(
+        "flex items-center gap-x-3 px-3 py-2 rounded-md transition-colors",
+        {
+          "bg-ui-bg-subtle text-ui-fg-base font-semibold border border-ui-border":
+            active,
+          "text-ui-fg-subtle hover:text-ui-fg-base": !active,
+        }
+      )}
       data-testid={dataTestId}
     >
       {children}
     </LocalizedClientLink>
   )
 }
+
+const NavRow = ({ icon, label }: { icon: React.ReactNode; label: string }) => {
+  return (
+    <span className="flex items-center gap-x-3 text-base-regular">
+      {icon}
+      {label}
+    </span>
+  )
+}
+
+const MobileLink = ({
+  href,
+  icon,
+  label,
+  "data-testid": dataTestId,
+}: {
+  href: string
+  icon: React.ReactNode
+  label: string
+  "data-testid"?: string
+}) => (
+  <li>
+    <LocalizedClientLink
+      href={href}
+      className="flex items-center justify-between py-4 border-t border-ui-border px-4"
+      data-testid={dataTestId}
+    >
+      <div className="flex items-center gap-x-2">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <ChevronDown className="transform -rotate-90" />
+    </LocalizedClientLink>
+  </li>
+)
 
 export default AccountNav
