@@ -1,4 +1,40 @@
+import { DEFAULT_COUNTRY_CODE } from "@lib/constants/region"
 import { isEmpty } from "./isEmpty"
+
+const COUNTRY_CURRENCY_MAP: Record<string, string> = {
+  IN: "INR",
+  US: "USD",
+  GB: "GBP",
+  CA: "CAD",
+  AU: "AUD",
+  SG: "SGD",
+  AE: "AED",
+}
+
+const DEFAULT_CURRENCY_CODE = (() => {
+  const fromEnv = process.env.NEXT_PUBLIC_DEFAULT_CURRENCY_CODE
+  if (fromEnv && !isEmpty(fromEnv)) {
+    return fromEnv.toUpperCase()
+  }
+
+  const byCountry = COUNTRY_CURRENCY_MAP[DEFAULT_COUNTRY_CODE.toUpperCase()]
+  if (byCountry) {
+    return byCountry
+  }
+
+  return "USD"
+})()
+
+const warnedFallbacks = new Set<string>()
+
+const warnMissingCurrency = (fallbackCurrency: string) => {
+  const key = fallbackCurrency || "UNKNOWN"
+  if (warnedFallbacks.has(key)) {
+    return
+  }
+  warnedFallbacks.add(key)
+  console.warn(`[money] currency_code missing; using fallback ${fallbackCurrency}`)
+}
 
 type ConvertToLocaleParams = {
   amount: number
@@ -17,7 +53,11 @@ export const convertToLocale = ({
 }: ConvertToLocaleParams) => {
   const normalizedCurrency = currency_code && !isEmpty(currency_code)
     ? currency_code.toUpperCase()
-    : ""
+    : DEFAULT_CURRENCY_CODE
+
+  if (!currency_code || isEmpty(currency_code)) {
+    warnMissingCurrency(normalizedCurrency)
+  }
 
   const normalizedLocale = (() => {
     const hasLocale = locale && !isEmpty(locale)
@@ -25,10 +65,6 @@ export const convertToLocale = ({
     if (normalizedCurrency === "INR") return "en-IN"
     return "en-US"
   })()
-
-  if (!currency_code || isEmpty(currency_code)) {
-    return amount.toString()
-  }
 
   const format = () =>
     new Intl.NumberFormat(normalizedLocale, {

@@ -59,6 +59,7 @@ const Shipping: React.FC<ShippingProps> = ({
   const [calculatedPricesMap, setCalculatedPricesMap] = useState<
     Record<string, number>
   >({})
+  const currencyCode = cart.currency_code || cart.region?.currency_code || "INR"
   const [error, setError] = useState<string | null>(null)
   const [shippingMethodId, setShippingMethodId] = useState<string | null>(
     cart.shipping_methods?.at(-1)?.shipping_option_id || null
@@ -274,12 +275,12 @@ const Shipping: React.FC<ShippingProps> = ({
                           {option.price_type === "flat" ? (
                             convertToLocale({
                               amount: option.amount!,
-                              currency_code: cart?.currency_code,
+                              currency_code: currencyCode,
                             })
                           ) : calculatedPricesMap[option.id] ? (
                             convertToLocale({
                               amount: calculatedPricesMap[option.id],
-                              currency_code: cart?.currency_code,
+                              currency_code: currencyCode,
                             })
                           ) : isLoadingPrices ? (
                             <Loader />
@@ -351,7 +352,7 @@ const Shipping: React.FC<ShippingProps> = ({
                           <span className="justify-self-end text-ui-fg-base">
                             {convertToLocale({
                               amount: option.amount!,
-                              currency_code: cart?.currency_code,
+                              currency_code: currencyCode,
                             })}
                           </span>
                         </Radio>
@@ -392,7 +393,7 @@ const Shipping: React.FC<ShippingProps> = ({
                   {cart.shipping_methods!.at(-1)!.name}{" "}
                   {convertToLocale({
                     amount: cart.shipping_methods!.at(-1)!.amount!,
-                    currency_code: cart?.currency_code,
+                    currency_code: currencyCode,
                   })}
                 </Text>
               </div>
