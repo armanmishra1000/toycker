@@ -435,7 +435,7 @@ export default function ProductActions({ product, disabled, showSupportActions =
         <p className="text-sm text-slate-500">Inclusive of all taxes</p>
       </div>
 
-      {(product.options?.length ?? 0) > 0 && (
+      {(product.options?.length ?? 0) > 0 && (product.variants?.length ?? 0) > 1 && (
         <div className="flex flex-col gap-y-4">
           {(product.options || []).map((option) => {
             const normalizedTitle = option.title?.toLowerCase() ?? ""
