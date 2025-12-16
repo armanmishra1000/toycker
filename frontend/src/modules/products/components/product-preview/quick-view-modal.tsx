@@ -125,11 +125,11 @@ const ProductQuickViewModal = ({
 
         <div className="flex-1 overflow-y-auto md:overflow-visible">
           <div className="flex flex-col gap-0 md:grid md:grid-cols-[1.05fr,1fr] xl:grid-cols-[1.1fr,0.9fr] md:gap-6">
-            <div className="relative w-full md:max-h-[60vh] overflow-hidden">
+            <div className="relative w-full md:max-h-[57vh] overflow-hidden">
               <ImageGallery images={galleryImages} variant="modal" />
             </div>
 
-            <div className="flex flex-col md:max-h-[60vh] md:overflow-hidden pb-4 md:pb-0 px-4 md:px-0">
+            <div className="flex flex-col md:max-h-[57vh] md:overflow-hidden pb-4 md:pb-0 px-4 md:px-0">
               <div className="md:flex-1 md:overflow-y-auto pr-1 pt-3 md:pt-1">
                 <ProductActions
                   product={resolvedProduct}
