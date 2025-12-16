@@ -12,7 +12,7 @@ import type { HomeHeroBanner } from "@lib/data/home-banners"
 const FALLBACK_BANNERS: HomeHeroBanner[] = [
   {
     id: "fallback-1",
-    image_url: "/assets/images/slider_1.png",
+    image_url: "/assets/images/slider_default.png",
     alt_text: "Featured toys adventure",
     sort_order: 0,
     starts_at: null,

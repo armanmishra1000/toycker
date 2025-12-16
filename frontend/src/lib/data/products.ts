@@ -99,6 +99,8 @@ const ensureVariantMetadataSelection = (fields?: string) => {
   ensurePart("+variants.prices")
   ensurePart("*variants.calculated_price")
   ensurePart("+short_description.*")
+  ensurePart("*options")
+  ensurePart("*variants.options")
 
   return parts.join(",")
 }

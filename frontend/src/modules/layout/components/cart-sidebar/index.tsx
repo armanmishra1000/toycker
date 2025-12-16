@@ -201,12 +201,16 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
               </div>
 
               <div className="border-t border-slate-200 px-6 py-5 space-y-4">
+                {(() => {
+                  const currencyCode = cart?.currency_code || cart?.region?.currency_code || "INR"
+                  return (
+                    <>
                 <div className="flex items-center justify-between text-sm text-slate-500">
                   <span>Subtotal</span>
                   <span className="text-lg font-semibold text-slate-900" data-testid="cart-sidebar-subtotal">
                     {convertToLocale({
                       amount: subtotal,
-                      currency_code: cart?.currency_code ?? "inr",
+                      currency_code: currencyCode,
                     })}
                   </span>
                 </div>
@@ -229,6 +233,9 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                 <p className="text-xs text-slate-500">
                   Secure checkout • Duties & import taxes included where applicable
                 </p>
+                    </>
+                  )
+                })()}
               </div>
             </Dialog.Panel>
           </Transition.Child>

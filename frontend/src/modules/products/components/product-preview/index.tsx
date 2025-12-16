@@ -11,11 +11,12 @@ import { useOptionalCartSidebar } from "@modules/layout/context/cart-sidebar-con
 import { useCartStore } from "@modules/cart/context/cart-store-context"
 import SafeRichText from "@modules/common/components/safe-rich-text"
 import { Loader2, ShoppingCart } from "lucide-react"
+import ProductQuickViewModal from "./quick-view-modal"
 
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
+import type { MouseEvent } from "react"
 import { useMemo, useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
 
 type ProductPreviewProps = {
   product: HttpTypes.StoreProduct
@@ -30,9 +31,11 @@ export default function ProductPreview({
 }: ProductPreviewProps) {
   const { cheapestPrice } = getProductPrice({ product })
   const isListView = viewMode === "list"
-  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [status, setStatus] = useState<"idle" | "added" | "error">("idle")
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false)
+  const [isQuickViewLoading, setIsQuickViewLoading] = useState(false)
+  const [quickViewProduct, setQuickViewProduct] = useState<HttpTypes.StoreProduct>(product)
   const cartSidebar = useOptionalCartSidebar()
   const openCart = cartSidebar?.openCart
   const { optimisticAdd } = useCartStore()
@@ -77,28 +80,56 @@ export default function ProductPreview({
     titleSizeMap[viewMode] ?? "text-lg"
   )
   const descriptionPreview = isListView && product.description ? product.description : undefined
-  const buttonLabel = multipleVariants
-    ? "View options"
-    : status === "added"
-    ? "Added!"
-    : status === "error"
-    ? "Try again"
-    : isPending
-    ? "Adding..."
-    : "Add to cart"
+  const buttonLabel = multipleVariants ? "View options" : status === "added" ? "Added!" : status === "error" ? "Try again" : "Add to cart"
   const showMobileLoadingState = !multipleVariants && isPending
 
+  const openQuickView = async (event: MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setIsQuickViewLoading(true)
+    try {
+      const response = await fetch("/api/storefront/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          countryCode: countryCodeParam,
+          limit: 1,
+          productsIds: [product.id],
+        }),
+      })
+
+      if (response.ok) {
+        const payload = (await response.json()) as { products?: HttpTypes.StoreProduct[] }
+        const fetched = payload.products?.[0]
+        if (fetched?.id) {
+          setQuickViewProduct(fetched)
+        } else {
+          setQuickViewProduct(product)
+        }
+      } else {
+        setQuickViewProduct(product)
+      }
+    } catch (error) {
+      console.error("Failed to load quick view product", error)
+      setQuickViewProduct(product)
+    } finally {
+      setIsQuickViewLoading(false)
+      setIsQuickViewOpen(true)
+    }
+  }
+
   return (
-    <LocalizedClientLink
-      href={`/products/${product.handle}`}
-      className={cardClassName}
-    >
-      <div
-        className={clx("flex flex-col gap-4", {
-          "flex w-full flex-row gap-6": isListView,
-        })}
-        data-testid="product-wrapper"
+    <>
+      <LocalizedClientLink
+        href={`/products/${product.handle}`}
+        className={cardClassName}
       >
+        <div
+          className={clx("flex flex-col gap-4", {
+            "flex w-full flex-row gap-6": isListView,
+          })}
+          data-testid="product-wrapper"
+        >
         <div className={imageWrapperClassName}>
           <Thumbnail
             thumbnail={product.thumbnail}
@@ -146,7 +177,7 @@ export default function ProductPreview({
                 event.stopPropagation()
 
                 if (multipleVariants || !defaultVariant?.id) {
-                  router.push(`/products/${product.handle}`)
+                  void openQuickView(event)
                   return
                 }
 
@@ -182,12 +213,10 @@ export default function ProductPreview({
                 }
               )}
               aria-label={buttonLabel}
-              disabled={isPending && !multipleVariants}
+              disabled={(isPending && !multipleVariants) || isQuickViewLoading}
             >
-              {multipleVariants ? (
-                <ShoppingCart className="h-4 w-4 sm:hidden" aria-hidden="true" />
-              ) : showMobileLoadingState ? (
-                <Loader2 className="h-4 w-4 animate-spin sm:hidden" aria-hidden="true" />
+              {isQuickViewLoading || showMobileLoadingState ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               ) : (
                 <ShoppingCart className="h-4 w-4 sm:hidden" aria-hidden="true" />
               )}
@@ -196,6 +225,12 @@ export default function ProductPreview({
           </div>
         </div>
       </div>
-    </LocalizedClientLink>
+      </LocalizedClientLink>
+      <ProductQuickViewModal
+        product={quickViewProduct}
+        isOpen={isQuickViewOpen}
+        onClose={() => setIsQuickViewOpen(false)}
+      />
+    </>
   )
 }

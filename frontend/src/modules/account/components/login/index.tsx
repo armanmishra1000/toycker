@@ -13,16 +13,9 @@ const Login = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(login, null)
 
   return (
-    <div
-      className="max-w-sm w-full flex flex-col items-center"
-      data-testid="login-page"
-    >
-      <h1 className="text-large-semi uppercase mb-6">Welcome back</h1>
-      <p className="text-center text-base-regular text-ui-fg-base mb-8">
-        Sign in to access an enhanced shopping experience.
-      </p>
-      <form className="w-full" action={formAction}>
-        <div className="flex flex-col w-full gap-y-2">
+    <div className="w-full flex flex-col gap-y-6" data-testid="login-page">
+      <form className="w-full flex flex-col" action={formAction}>
+        <div className="flex flex-col w-full gap-y-3">
           <Input
             label="Email"
             name="email"
@@ -41,22 +34,25 @@ const Login = ({ setCurrentView }: Props) => {
             data-testid="password-input"
           />
         </div>
-        <ErrorMessage error={message} data-testid="login-error-message" />
-        <SubmitButton data-testid="sign-in-button" className="w-full mt-6">
+        <div aria-live="polite" className="min-h-[24px] mt-3">
+          <ErrorMessage error={message} data-testid="login-error-message" />
+        </div>
+        <SubmitButton data-testid="sign-in-button" className="w-full mt-4 rounded-xl py-4 bg-primary border-primary shadow-none hover:bg-foreground transition-all">
           Sign in
         </SubmitButton>
       </form>
-      <span className="text-center text-ui-fg-base text-small-regular mt-6">
-        Not a member?{" "}
-        <button
-          onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
-          className="underline"
-          data-testid="register-button"
-        >
-          Join us
-        </button>
-        .
-      </span>
+      <div className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
+        <span className="text-center">Need an account?</span>
+        <div className="flex items-center justify-center gap-x-4">
+          <button
+            onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
+            className="underline font-semibold text-black text-lg"
+            data-testid="register-button"
+          >
+            Join Toycker
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

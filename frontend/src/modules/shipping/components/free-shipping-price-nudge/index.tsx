@@ -149,6 +149,7 @@ function FreeShippingInline({
     remaining_percentage: number
   }
 }) {
+  const currencyCode = cart.currency_code || cart.region?.currency_code || "INR"
   return (
     <div className="bg-neutral-100 p-2 rounded-lg border">
       <div className="space-y-1.5">
@@ -173,7 +174,7 @@ function FreeShippingInline({
             <span className="text-neutral-950">
               {convertToLocale({
                 amount: price.target_remaining,
-                currency_code: cart.currency_code,
+                currency_code: currencyCode,
               })}
             </span>{" "}
             away
@@ -204,6 +205,7 @@ function FreeShippingPopup({
   price: StoreFreeShippingPrice
 }) {
   const [isClosed, setIsClosed] = useState(false)
+  const currencyCode = cart.currency_code || cart.region?.currency_code || "INR"
 
   return (
     <div
@@ -249,7 +251,7 @@ function FreeShippingPopup({
                 <span className="text-white">
                   {convertToLocale({
                     amount: price.target_remaining,
-                    currency_code: cart.currency_code,
+                    currency_code: currencyCode,
                   })}
                 </span>{" "}
                 away

@@ -11,6 +11,11 @@ type ModalProps = {
   size?: "small" | "medium" | "large" | "xlarge"
   search?: boolean
   fullScreen?: boolean
+  panelPadding?: "none" | "default"
+  rounded?: boolean
+  roundedSize?: "none" | "sm" | "md" | "lg" | "xl"
+  overflowHidden?: boolean
+  panelClassName?: string
   children: React.ReactNode
   'data-testid'?: string
 }
@@ -21,9 +26,26 @@ const Modal = ({
   size = "medium",
   search = false,
   fullScreen = false,
+  panelPadding = "default",
+  rounded = true,
+  roundedSize,
+  overflowHidden = false,
+  panelClassName,
   children,
   'data-testid': dataTestId
 }: ModalProps) => {
+  const resolvedRounded: "none" | "sm" | "md" | "lg" | "xl" = (() => {
+    if (roundedSize) return roundedSize
+    return rounded ? "lg" : "none"
+  })()
+
+  const roundedClassMap: Record<typeof resolvedRounded, string> = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+  }
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-[75]" onClose={close}>
@@ -36,13 +58,13 @@ const Modal = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 h-screen bg-black/40 backdrop-blur-sm" />
+          <div className="fixed inset-0 h-screen w-screen bg-black/40" />
         </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-hidden">
+        <div className="fixed inset-0 w-screen overflow-y-hidden">
           <div
             className={clx(
-              "flex min-h-full h-full justify-center p-4 text-center",
+              "flex min-h-full h-full justify-center p-0 text-center",
               {
                 "items-center": !search || fullScreen,
                 "items-start": search && !fullScreen,
@@ -62,8 +84,10 @@ const Modal = ({
               <Dialog.Panel
                 data-testid={dataTestId}
                 className={clx(
-                  "flex flex-col justify-start w-full transform p-5 text-left align-middle transition-all h-fit",
+                  "flex flex-col justify-start w-full transform text-left align-middle transition-all h-fit",
                   {
+                    "p-0": panelPadding === "none",
+                    "p-5": panelPadding !== "none",
                     "max-w-md": size === "small" && !fullScreen,
                     "max-w-xl": size === "medium" && !fullScreen,
                     "max-w-3xl": size === "large" && !fullScreen,
@@ -72,10 +96,13 @@ const Modal = ({
                     "max-h-[90vh]": size === "xlarge" && !fullScreen,
                     "w-full h-full max-w-none max-h-none p-0": fullScreen,
                     "bg-transparent shadow-none": search,
-                    "bg-white shadow-xl border rounded-rounded": !search && !fullScreen,
+                    "bg-white shadow-xl border": !search && !fullScreen,
+                    [roundedClassMap[resolvedRounded]]: !search && !fullScreen,
                     "bg-white": fullScreen,
                     "shadow-none border-0 rounded-none": fullScreen,
-                  }
+                    "overflow-hidden": overflowHidden,
+                  },
+                  panelClassName
                 )}
               >
                 <ModalProvider close={close}>{children}</ModalProvider>

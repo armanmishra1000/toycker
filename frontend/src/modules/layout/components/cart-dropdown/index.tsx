@@ -180,6 +180,10 @@ const CartDropdown = ({
                     ))}
                 </div>
                 <div className="p-4 flex flex-col gap-y-4 text-small-regular">
+                {(() => {
+                  const currencyCode = cart.currency_code || cart.region?.currency_code || "INR"
+                  return (
+                    <>
                   <div className="flex items-center justify-between">
                     <span className="text-ui-fg-base font-semibold">
                       Subtotal{" "}
@@ -192,7 +196,7 @@ const CartDropdown = ({
                     >
                       {convertToLocale({
                         amount: subtotal,
-                      currency_code: cart.currency_code,
+                      currency_code: currencyCode,
                       })}
                     </span>
                   </div>
@@ -205,6 +209,9 @@ const CartDropdown = ({
                       Go to cart
                     </Button>
                   </LocalizedClientLink>
+                    </>
+                  )
+                })()}
                 </div>
               </>
             ) : (

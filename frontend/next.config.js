@@ -7,9 +7,9 @@ checkEnvVariables()
  */
 const S3_HOSTNAME = process.env.MEDUSA_CLOUD_S3_HOSTNAME
 const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
-const R2_PROTOCOL = process.env.NEXT_PUBLIC_R2_MEDIA_PROTOCOL
-const R2_HOSTNAME = process.env.NEXT_PUBLIC_R2_MEDIA_HOSTNAME
-const R2_PATHNAME = process.env.NEXT_PUBLIC_R2_MEDIA_PATHNAME
+const R2_PROTOCOL = process.env.NEXT_PUBLIC_R2_MEDIA_PROTOCOL || "https"
+const R2_HOSTNAME = process.env.NEXT_PUBLIC_R2_MEDIA_HOSTNAME || "cdn.toycker.in"
+const R2_PATHNAME = process.env.NEXT_PUBLIC_R2_MEDIA_PATHNAME || "/uploads/**"
 
 /**
  * @type {import('next').NextConfig}
@@ -57,6 +57,16 @@ const nextConfig = {
         hostname: "*.r2.dev",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.toycker.in",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.cdn.toycker.in",
+        pathname: "/**",
+      },
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
             {
@@ -69,9 +79,15 @@ const nextConfig = {
       ...(R2_HOSTNAME
         ? [
             {
-              protocol: R2_PROTOCOL || "https",
+              protocol: R2_PROTOCOL,
               hostname: R2_HOSTNAME,
-              pathname: R2_PATHNAME || "/**",
+              pathname: R2_PATHNAME,
+            },
+            // Support bucket-style subdomains like <bucket>.cdn.toycker.in
+            {
+              protocol: R2_PROTOCOL,
+              hostname: `*.${R2_HOSTNAME}`,
+              pathname: R2_PATHNAME,
             },
           ]
         : []),
