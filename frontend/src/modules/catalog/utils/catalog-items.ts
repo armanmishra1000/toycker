@@ -76,10 +76,11 @@ export const buildCollectionCardItems = (
     .map<CatalogCardItem>((collection) => {
       const metadata = collection.metadata as Record<string, unknown> | null | undefined
       const featuredFlag = Boolean(metadata?.["featured"])
+      const description = (collection as { description?: string | null }).description ?? null
       return {
         id: collection.id,
         title: collection.title,
-        description: collection.description ?? null,
+        description,
         href: `/collections/${collection.handle}`,
         image: extractCardImage(collection),
         badge: featuredFlag ? "Featured" : undefined,

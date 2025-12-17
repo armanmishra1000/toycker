@@ -9,7 +9,7 @@ import { HttpTypes } from "@medusajs/types"
 
 type AddressSelectProps = {
   addresses: HttpTypes.StoreCustomerAddress[]
-  addressInput: HttpTypes.StoreCartAddress | null
+  addressInput: Partial<HttpTypes.StoreCartAddress> | null
   onSelect: (
     address: HttpTypes.StoreCartAddress | undefined,
     email?: string

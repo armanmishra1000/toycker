@@ -35,12 +35,12 @@ const buildVariantPriceFromCalculated = (
   variant: VariantWithCalculatedPrice
 ): VariantPrice => {
   const manualPrice = getManualPriceOverride(variant)
-  const baseCalculatedAmount = variant.calculated_price.calculated_amount
+  const baseCalculatedAmount = variant.calculated_price.calculated_amount ?? 0
   const baseOriginalAmount =
     typeof variant.calculated_price.original_amount === "number"
       ? variant.calculated_price.original_amount
       : baseCalculatedAmount
-  let currencyCode = variant.calculated_price.currency_code
+  let currencyCode = variant.calculated_price.currency_code || ""
   const priceListType =
     variant.calculated_price.calculated_price?.price_list_type ?? "default"
 
@@ -76,15 +76,22 @@ const buildVariantPriceFromAmounts = ({
   currencyCode: string
   priceType: string
 }): VariantPrice => {
-  const safeOriginal = originalAmount === 0 ? calculatedAmount || 1 : originalAmount
-  const percentageDiff = getPercentageDiff(safeOriginal, calculatedAmount)
-  const isDiscounted = priceType === "sale" || originalAmount > calculatedAmount
+  const normalizedCalculated = Number.isFinite(calculatedAmount)
+    ? calculatedAmount
+    : 0
+  const normalizedOriginal = Number.isFinite(originalAmount)
+    ? originalAmount
+    : normalizedCalculated
+
+  const safeOriginal = normalizedOriginal === 0 ? normalizedCalculated || 1 : normalizedOriginal
+  const percentageDiff = getPercentageDiff(safeOriginal, normalizedCalculated)
+  const isDiscounted = priceType === "sale" || normalizedOriginal > normalizedCalculated
 
   return {
-    calculated_price_number: calculatedAmount,
-    calculated_price: convertToLocale({ amount: calculatedAmount, currency_code: currencyCode }),
-    original_price_number: originalAmount,
-    original_price: convertToLocale({ amount: originalAmount, currency_code: currencyCode }),
+    calculated_price_number: normalizedCalculated,
+    calculated_price: convertToLocale({ amount: normalizedCalculated, currency_code: currencyCode }),
+    original_price_number: normalizedOriginal,
+    original_price: convertToLocale({ amount: normalizedOriginal, currency_code: currencyCode }),
     currency_code: currencyCode,
     price_type: priceType,
     percentage_diff: percentageDiff,

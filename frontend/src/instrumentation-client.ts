@@ -2,7 +2,14 @@
 
 import { onCLS, onINP, onLCP, onTTFB, type Metric } from "web-vitals"
 
-type LoggedMetric = Metric & {
+type LoggedMetric = {
+  name: string
+  id?: string
+  value?: number
+  rating?: string
+  delta?: number
+  entries?: Metric["entries"]
+  navigationType?: Metric["navigationType"]
   detail?: Record<string, unknown>
 }
 

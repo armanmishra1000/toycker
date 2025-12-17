@@ -31,6 +31,11 @@ const CART_RESPONSE_FIELDS = [
   "+items.subtotal",
   "+items.discount_total",
   "*promotions",
+  "*shipping_address",
+  "*billing_address",
+  "email",
+  "*payment_collection",
+  "*payment_collection.payment_sessions",
   "shipping_methods.id",
   "shipping_methods.shipping_option_id",
   "+shipping_methods.name",
@@ -457,7 +462,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     if (!formData) {
       throw new Error("No form data found when setting addresses")
     }
-    const cartId = getCartId()
+    const cartId = await getCartId()
     if (!cartId) {
       throw new Error("No existing cart found when setting addresses")
     }

@@ -11,7 +11,7 @@ type WishlistPageProps = {
   params: Promise<{ countryCode: string }>
 }
 
-const buildLoginRedirect = (countryCode: string) => {
+const buildLoginRedirect = () => {
   const loginPath = `/account`
   const wishlistPath = `/wishlist`
   return `${loginPath}?redirect=${encodeURIComponent(wishlistPath)}`
@@ -23,13 +23,13 @@ export default async function WishlistPage({ params }: WishlistPageProps) {
 
   const isCustomerLoggedIn = Boolean(customer)
   const customerName = customer?.first_name ?? customer?.email ?? "Friend"
-  const loginRedirect = buildLoginRedirect(countryCode)
+  const loginPath = buildLoginRedirect()
 
   return (
     <WishlistPageTemplate
       countryCode={countryCode}
       customerName={customerName}
-      loginRedirect={loginRedirect}
+      loginPath={loginPath}
       isCustomerLoggedIn={isCustomerLoggedIn}
     />
   )

@@ -21,7 +21,16 @@ type ShippingProps = {
   availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null
 }
 
-function formatAddress(address: HttpTypes.StoreCartAddress) {
+type ShippingOptionWithZone = HttpTypes.StoreCartShippingOption & {
+  service_zone?: {
+    fulfillment_set?: {
+      type?: string
+      location?: { address?: HttpTypes.StoreCartAddress }
+    }
+  }
+}
+
+function formatAddress(address?: HttpTypes.StoreCartAddress) {
   if (!address) {
     return ""
   }
@@ -51,6 +60,7 @@ const Shipping: React.FC<ShippingProps> = ({
   cart,
   availableShippingMethods,
 }) => {
+  const shippingOptions = availableShippingMethods as ShippingOptionWithZone[] | null
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingPrices, setIsLoadingPrices] = useState(true)
 
@@ -71,11 +81,11 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const isOpen = searchParams.get("step") === "delivery"
 
-  const _shippingMethods = availableShippingMethods?.filter(
+  const _shippingMethods = shippingOptions?.filter(
     (sm) => sm.service_zone?.fulfillment_set?.type !== "pickup"
   )
 
-  const _pickupMethods = availableShippingMethods?.filter(
+  const _pickupMethods = shippingOptions?.filter(
     (sm) => sm.service_zone?.fulfillment_set?.type === "pickup"
   )
 

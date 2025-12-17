@@ -13,8 +13,14 @@ type ShippingOptionsCacheEntry = {
 
 const shippingOptionsCache = new Map<string, ShippingOptionsCacheEntry>()
 
-const buildCacheKey = (cartId: string, regionId?: string | null, updatedAt?: string | null) => {
-  return `${cartId}-${regionId ?? ""}-${updatedAt ?? ""}`
+const normalizeUpdatedAt = (value?: string | Date | null) => {
+  if (!value) return ""
+  if (typeof value === "string") return value
+  return value.toISOString()
+}
+
+const buildCacheKey = (cartId: string, regionId?: string | null, updatedAt?: string | Date | null) => {
+  return `${cartId}-${regionId ?? ""}-${normalizeUpdatedAt(updatedAt)}`
 }
 
 const setCache = (
@@ -28,7 +34,7 @@ const setCache = (
 }
 
 const pruneCacheForCart = (cartId: string) => {
-  for (const cacheKey of shippingOptionsCache.keys()) {
+  for (const cacheKey of Array.from(shippingOptionsCache.keys())) {
     if (!cacheKey.startsWith(`${cartId}-`)) {
       continue
     }

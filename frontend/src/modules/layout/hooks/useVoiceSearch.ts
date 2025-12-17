@@ -2,11 +2,43 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-type SpeechRecognitionConstructor = new () => SpeechRecognition
+type SpeechRecognitionResultItem = {
+  transcript?: string
+}
+
+type SpeechRecognitionResult = {
+  length: number
+  [index: number]: SpeechRecognitionResultItem
+  isFinal?: boolean
+}
+
+type SpeechRecognitionErrorEvent = {
+  error: string
+}
+
+type SpeechRecognitionEvent = {
+  results: SpeechRecognitionResult[]
+}
+
+type SpeechRecognitionShape = {
+  lang: string
+  interimResults: boolean
+  maxAlternatives: number
+  start: () => void
+  stop: () => void
+  onstart?: () => void
+  onerror?: (event: SpeechRecognitionErrorEvent) => void
+  onend?: () => void
+  onspeechend?: () => void
+  onresult?: (event: SpeechRecognitionEvent) => void
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionShape
 
 declare global {
   interface Window {
     webkitSpeechRecognition?: SpeechRecognitionConstructor
+    SpeechRecognition?: SpeechRecognitionConstructor
   }
 }
 
@@ -23,7 +55,7 @@ export const useVoiceSearch = ({
   const [isListening, setIsListening] = useState(false)
   const [transcript, setTranscript] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<SpeechRecognitionShape | null>(null)
   const onResultRef = useRef<(value: string) => void>()
   const inactivityTimeoutRef = useRef<number | null>(null)
 
