@@ -17,14 +17,15 @@ const POLICY_CONTENT: Record<PolicySlug, { title: string; intro: string; section
       {
         heading: "Order cancellation",
         body: [
-          "Orders can be cancelled only before shipment. Once a parcel is dispatched, cancellation via the website is disabled.",
+          "Orders can be cancelled only before shipment. Once a parcel is dispatched, Cancellations should be done within 7 days.",
           "Write to customercare@toycker.com or call +91 9925819694 with your order ID for manual support.",
         ],
       },
       {
         heading: "Return & exchange basics",
         body: [
-          "Eligible products show their return window on the product page; requests after that window are declined.",
+          "Eligible products show their return window on the product page, Exchange or Replacement will be done Within 7 days.",
+          "Return will be done within 7 business days.",
           "Items must be unused, unwashed, and sent back with original packaging, tags, and accessories for hygiene and quality reasons.",
           "If Toycker pickup isn’t available in your pin code, self-ship to: Toycker.com Returns Department, Shed No. 7/8, Sardar Campus, Opp. River Kent, Mota Varachha, Surat, Gujarat, 394101.",
         ],
@@ -39,7 +40,7 @@ const POLICY_CONTENT: Record<PolicySlug, { title: string; intro: string; section
       {
         heading: "Refund timelines",
         body: [
-          "Once the returned item passes inspection, we trigger refunds within 3 business days to the original payment source.",
+          "Once the returned item passes inspection, If approved ,Refund will be credited within 7 days to the original payment method.",
           "Bank/issuer processing can add extra days before the credit reflects in your account.",
         ],
       },
@@ -60,8 +61,8 @@ const POLICY_CONTENT: Record<PolicySlug, { title: string; intro: string; section
       {
         heading: "Methods & timelines",
         body: [
-          "Standard shipping reaches you in 5–7 business days; express shipping typically arrives within 2–4 days.",
-          "Orders are processed in 1–2 business days after payment confirmation; anything placed after the cutoff moves to the next day.",
+          "Product will be delivered within 7-10 business days.",
+          "Orders are processed after confirmation; anything placed after the cutoff moves to the next day.",
         ],
       },
       {
@@ -140,7 +141,7 @@ const POLICY_CONTENT: Record<PolicySlug, { title: string; intro: string; section
   privacy: {
     title: "Privacy Policy",
     intro:
-      "Effective 11 August 2025 – This Privacy Policy explains how Toycker.com collects, uses, and protects data every time you browse or shop with us.",
+      "Effective 11 August 2025 – This Privacy Policy explains how Keshav Enterprises (Toycker.com) collects, uses, and protects data every time you browse or shop with us.",
     sections: [
       {
         heading: "What we collect",
