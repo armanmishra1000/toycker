@@ -83,7 +83,10 @@ export const retrieveCart = cache(async (cartId?: string, fields?: string, cache
       cache: "no-store",
     })
     .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
-    .catch(() => null)
+    .catch((error) => {
+      console.error("Error retrieving cart:", error.message)
+      return null
+    })
 })
 
 export async function getOrSetCart(countryCode: string = DEFAULT_COUNTRY_CODE) {
@@ -189,25 +192,30 @@ export async function addToCart({
     lineItemPayload.metadata = metadata
   }
 
-  return sdk.store.cart
-    .createLineItem(
-      cart.id,
-      lineItemPayload,
-      {
-        fields: CART_RESPONSE_FIELDS,
-      },
-      headers,
-    )
-    .then(async ({ cart: updatedCart }: { cart: HttpTypes.StoreCart }) => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
+  try {
+    return await sdk.store.cart
+      .createLineItem(
+        cart.id,
+        lineItemPayload,
+        {
+          fields: CART_RESPONSE_FIELDS,
+        },
+        headers
+      )
+      .then(async ({ cart: updatedCart }: { cart: HttpTypes.StoreCart }) => {
+        const cartCacheTag = await getCacheTag("carts")
+        revalidateTag(cartCacheTag)
 
-      const fulfillmentCacheTag = await getCacheTag("fulfillment")
-      revalidateTag(fulfillmentCacheTag)
+        const fulfillmentCacheTag = await getCacheTag("fulfillment")
+        revalidateTag(fulfillmentCacheTag)
 
-      return updatedCart
-    })
-    .catch(medusaError)
+        return updatedCart
+      })
+      .catch(medusaError)
+  } catch (error: any) {
+    console.error("Error in addToCart:", error.message)
+    throw error
+  }
 }
 
 export async function createBuyNowCart({
@@ -241,26 +249,31 @@ export async function createBuyNowCart({
     headers
   )
 
-  await sdk.store.cart.createLineItem(
-    cart.id,
-    {
-      variant_id: variantId,
-      quantity,
-      ...(metadata ? { metadata } : {}),
-    },
-    {},
-    headers
-  )
+  try {
+    await sdk.store.cart.createLineItem(
+      cart.id,
+      {
+        variant_id: variantId,
+        quantity,
+        ...(metadata ? { metadata } : {}),
+      },
+      {},
+      headers
+    )
 
-  await setCartId(cart.id)
+    await setCartId(cart.id)
 
-  const cartCacheTag = await getCacheTag("carts")
-  revalidateTag(cartCacheTag)
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
 
-  const fulfillmentCacheTag = await getCacheTag("fulfillment")
-  revalidateTag(fulfillmentCacheTag)
+    const fulfillmentCacheTag = await getCacheTag("fulfillment")
+    revalidateTag(fulfillmentCacheTag)
 
-  return retrieveCart(cart.id)
+    return retrieveCart(cart.id)
+  } catch (error: any) {
+    console.error("Error in createBuyNowCart:", error.message)
+    throw error
+  }
 }
 
 export async function updateLineItem({
