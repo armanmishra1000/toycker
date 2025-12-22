@@ -69,7 +69,7 @@ const Shipping: React.FC<ShippingProps> = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "delivery"
+  const isOpen = !cart.shipping_methods?.length || searchParams.get("step") === "delivery"
 
   const _shippingMethods = availableShippingMethods?.filter(
     (sm) => sm.service_zone?.fulfillment_set?.type !== "pickup"
@@ -109,10 +109,6 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const handleEdit = () => {
     router.push(pathname + "?step=delivery", { scroll: false })
-  }
-
-  const handleSubmit = () => {
-    router.push(pathname + "?step=payment", { scroll: false })
   }
 
   const handleSetShippingMethod = async (
@@ -369,16 +365,6 @@ const Shipping: React.FC<ShippingProps> = ({
               error={error}
               data-testid="delivery-option-error-message"
             />
-            <Button
-              size="large"
-              className="mt"
-              onClick={handleSubmit}
-              isLoading={isLoading}
-              disabled={!cart.shipping_methods?.[0]}
-              data-testid="submit-delivery-option-button"
-            >
-              Continue to payment
-            </Button>
           </div>
         </>
       ) : (
