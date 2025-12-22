@@ -34,6 +34,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  serverExternalPackages: ["jsdom", "parse5", "isomorphic-dompurify"],
   images: {
     remotePatterns: [
       {
