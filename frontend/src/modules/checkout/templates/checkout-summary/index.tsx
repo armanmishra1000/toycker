@@ -71,12 +71,12 @@ const CheckoutSummary = ({ cart }: { cart: HttpTypes.StoreCart }) => {
           Confirm Order
         </Button>
         
-        <ErrorMessage error={error} className="mt-2" />
+        <ErrorMessage error={error} data-testid="checkout-error-message" />
 
         <Divider className="my-6" />
         <ItemsPreviewTemplate cart={cart} />
         <div className="my-6">
-          <DiscountCode cart={cart} />
+          <DiscountCode cart={cart as any} />
         </div>
       </div>
     </div>
