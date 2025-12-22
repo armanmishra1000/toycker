@@ -45,9 +45,10 @@ const loadDefaultRegion = async (forceRefresh?: boolean) => {
         next,
       })
       .then(({ regions }) => regions?.[0])
+      .catch(medusaError)
 
     if (!fallbackRegion) {
-      throw new Error("No regions available to use as default.")
+      throw new Error("No regions available to use as default in backend response.")
     }
 
     cachedRegion = fallbackRegion
@@ -57,9 +58,10 @@ const loadDefaultRegion = async (forceRefresh?: boolean) => {
       )
     }
     return cachedRegion
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Critical: Failed to load default region.", error.message)
     throw new Error(
-      "Missing NEXT_PUBLIC_DEFAULT_REGION_ID and unable to load a fallback region. Set the env to your India region id."
+      `Failed to load region data: ${error.message}. Please check NEXT_PUBLIC_MEDUSA_BACKEND_URL and your backend regions configuration.`
     )
   }
 }
