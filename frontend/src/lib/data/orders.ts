@@ -10,10 +10,6 @@ export const retrieveOrder = async (id: string) => {
     ...(await getAuthHeaders()),
   }
 
-  if (!headers.authorization) {
-    return Promise.resolve(null)
-  }
-
   return sdk.client
     .fetch<HttpTypes.StoreOrderResponse>(`/store/orders/${id}`, {
       method: "GET",
