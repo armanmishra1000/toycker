@@ -43,7 +43,20 @@ const Payment = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "payment"
+  const currentStep = searchParams.get("step")
+  const isOpen = currentStep === "payment"
+
+  // Scroll to top when payment step opens
+  useEffect(() => {
+    if (isOpen) {
+      // Use requestAnimationFrame to ensure DOM has updated before scrolling
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: "smooth" })
+        })
+      })
+    }
+  }, [isOpen])
 
   const setPaymentMethod = async (method: string) => {
     setError(null)
@@ -70,9 +83,7 @@ const Payment = ({
   )
 
   const handleEdit = () => {
-    router.push(pathname + "?" + createQueryString("step", "payment"), {
-      scroll: false,
-    })
+    router.push(pathname + "?" + createQueryString("step", "payment"))
   }
 
   const handleSubmit = async () => {
@@ -92,10 +103,7 @@ const Payment = ({
 
       if (!shouldInputCard) {
         return router.push(
-          pathname + "?" + createQueryString("step", "review"),
-          {
-            scroll: false,
-          }
+          pathname + "?" + createQueryString("step", "review")
         )
       }
     } catch (err: unknown) {

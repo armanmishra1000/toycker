@@ -15,6 +15,7 @@ import {
   type ReactNode,
 } from "react"
 import { useLayoutData } from "@modules/layout/context/layout-data-context"
+import { useOptionalToast } from "@modules/common/context/toast-context"
 
 type OptimisticAddInput = {
   product: HttpTypes.StoreProduct
@@ -102,6 +103,8 @@ const buildOptimisticLineItem = (
 
 export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
   const { cart: layoutCart } = useLayoutData()
+  const toast = useOptionalToast()
+  const showToast = toast?.showToast
   const [cart, setCart] = useState<HttpTypes.StoreCart | null>(layoutCart ?? null)
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastError, setLastError] = useState<string | null>(null)
@@ -190,9 +193,12 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
           if (refreshed.ok) {
             const payload = (await refreshed.json()) as { cart: HttpTypes.StoreCart | null }
             setFromServer(payload.cart)
+            showToast?.("Item removed from cart", "success")
           }
         } catch (error) {
-          setLastError((error as Error)?.message ?? "Failed to remove item")
+          const errorMessage = (error as Error)?.message ?? "Failed to remove item"
+          setLastError(errorMessage)
+          showToast?.(errorMessage, "error")
           throw error
         } finally {
           setRemovingIds((prev) => {
@@ -208,7 +214,7 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
         .then(() => runServerRemove())
       await removeQueueRef.current
     },
-    [cart, setFromServer],
+    [cart, setFromServer, toast],
   )
 
   const optimisticAdd = useCallback(
@@ -291,10 +297,13 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
           if (serverCart) {
             setFromServer(serverCart)
             await refreshFromApi()
+            showToast?.("Item added to cart", "success")
             return
           }
         } catch (error) {
-          setLastError((error as Error)?.message ?? "Failed to add to cart")
+          const errorMessage = (error as Error)?.message ?? "Failed to add to cart"
+          setLastError(errorMessage)
+          showToast?.(errorMessage, "error")
           setCart(previousCart)
           throw error
         }
@@ -303,7 +312,7 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
       addQueueRef.current = addQueueRef.current.then(() => runServerAdd())
       await addQueueRef.current
     },
-    [buildEmptyCart, cart, layoutCart?.currency_code, setFromServer],
+    [buildEmptyCart, cart, layoutCart?.currency_code, setFromServer, toast],
   )
 
   const reloadFromServer = useCallback(async () => {
@@ -316,12 +325,15 @@ export const CartStoreProvider = ({ children }: { children: ReactNode }) => {
       }
       const payload = (await response.json()) as { cart: HttpTypes.StoreCart | null }
       setFromServer(payload.cart)
+      showToast?.("Cart reloaded", "success")
     } catch (error) {
-      setLastError((error as Error)?.message ?? "Failed to reload cart")
+      const errorMessage = (error as Error)?.message ?? "Failed to reload cart"
+      setLastError(errorMessage)
+      showToast?.(errorMessage, "error")
     } finally {
       setIsSyncing(false)
     }
-  }, [setFromServer])
+  }, [setFromServer, toast])
 
   const value = useMemo(
     () => ({

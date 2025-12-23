@@ -10,6 +10,7 @@ import { Button, clx, Heading, Text } from "@medusajs/ui"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import Divider from "@modules/common/components/divider"
 import MedusaRadio from "@modules/common/components/radio"
+import { useShippingPrice } from "@modules/common/context/shipping-price-context"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -79,7 +80,16 @@ const Shipping: React.FC<ShippingProps> = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "delivery"
+  const currentStep = searchParams.get("step")
+  const isOpen = currentStep === "delivery"
+  const { setSelectedShippingPrice } = useShippingPrice()
+
+  // Scroll to top when delivery step opens
+  useEffect(() => {
+    if (isOpen) {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }, [isOpen])
 
   const _shippingMethods = shippingOptions?.filter(
     (sm) => sm.service_zone?.fulfillment_set?.type !== "pickup"
@@ -103,13 +113,21 @@ const Shipping: React.FC<ShippingProps> = ({
         Promise.allSettled(promises).then((res) => {
           const pricesMap: Record<string, number> = {}
           res
-            .filter((r) => r.status === "fulfilled")
-            .forEach((p) => (pricesMap[p.value?.id || ""] = p.value?.amount!))
+            .filter((r) => r.status === "fulfilled" && r.value?.amount != null)
+            .forEach((p) => {
+              if (p.value?.id && typeof p.value.amount === "number") {
+                pricesMap[p.value.id] = p.value.amount
+              }
+            })
 
           setCalculatedPricesMap(pricesMap)
           setIsLoadingPrices(false)
         })
+      } else {
+        setIsLoadingPrices(false)
       }
+    } else {
+      setIsLoadingPrices(false)
     }
 
     if (_pickupMethods?.find((m) => m.id === shippingMethodId)) {
@@ -118,11 +136,11 @@ const Shipping: React.FC<ShippingProps> = ({
   }, [availableShippingMethods])
 
   const handleEdit = () => {
-    router.push(pathname + "?step=delivery", { scroll: false })
+    router.push(pathname + "?step=delivery")
   }
 
   const handleSubmit = () => {
-    router.push(pathname + "?step=payment", { scroll: false })
+    router.push(pathname + "?step=payment")
   }
 
   const handleSetShippingMethod = async (
@@ -145,6 +163,20 @@ const Shipping: React.FC<ShippingProps> = ({
     })
 
     await setShippingMethod({ cartId: cart.id, shippingMethodId: id })
+      .then(() => {
+        // Set the shipping price in context after successfully setting the method
+        const selectedOption = shippingOptions?.find((opt) => opt.id === id)
+        if (selectedOption) {
+          if (selectedOption.price_type === "flat" && selectedOption.amount) {
+            setSelectedShippingPrice(selectedOption.amount)
+          } else if (selectedOption.price_type === "calculated") {
+            const calculatedPrice = calculatedPricesMap[id]
+            if (calculatedPrice != null) {
+              setSelectedShippingPrice(calculatedPrice)
+            }
+          }
+        }
+      })
       .catch((err) => {
         setShippingMethodId(currentId)
 
@@ -284,10 +316,10 @@ const Shipping: React.FC<ShippingProps> = ({
                         <span className="justify-self-end text-ui-fg-base">
                           {option.price_type === "flat" ? (
                             convertToLocale({
-                              amount: option.amount!,
+                              amount: option.amount ?? 0,
                               currency_code: currencyCode,
                             })
-                          ) : calculatedPricesMap[option.id] ? (
+                          ) : calculatedPricesMap[option.id] != null ? (
                             convertToLocale({
                               amount: calculatedPricesMap[option.id],
                               currency_code: currencyCode,
@@ -361,7 +393,7 @@ const Shipping: React.FC<ShippingProps> = ({
                           </div>
                           <span className="justify-self-end text-ui-fg-base">
                             {convertToLocale({
-                              amount: option.amount!,
+                              amount: option.amount ?? 0,
                               currency_code: currencyCode,
                             })}
                           </span>
@@ -394,20 +426,93 @@ const Shipping: React.FC<ShippingProps> = ({
       ) : (
         <div>
           <div className="text-small-regular">
-            {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
+            {cart && (cart.shipping_methods?.length ?? 0) > 0 ? (
               <div className="flex flex-col w-1/3">
                 <Text className="txt-medium-plus text-ui-fg-base mb-1">
                   Method
                 </Text>
                 <Text className="txt-medium text-ui-fg-subtle">
-                  {cart.shipping_methods!.at(-1)!.name}{" "}
-                  {convertToLocale({
-                    amount: cart.shipping_methods!.at(-1)!.amount!,
-                    currency_code: currencyCode,
-                  })}
+                  {(() => {
+                    const shippingMethod = cart.shipping_methods!.at(-1)!
+
+                    // First priority: Try to use the shipping method's total field (includes tax)
+                    if (shippingMethod.total && shippingMethod.total > 0) {
+                      return (
+                        <>
+                          {shippingMethod.name}{" "}
+                          {convertToLocale({
+                            amount: shippingMethod.total,
+                            currency_code: currencyCode,
+                          })}
+                        </>
+                      )
+                    }
+
+                    // Second priority: Try to use the shipping method's subtotal field (excludes tax)
+                    if (shippingMethod.subtotal && shippingMethod.subtotal > 0) {
+                      return (
+                        <>
+                          {shippingMethod.name}{" "}
+                          {convertToLocale({
+                            amount: shippingMethod.subtotal,
+                            currency_code: currencyCode,
+                          })}
+                        </>
+                      )
+                    }
+
+                    // Third priority: If cart data is 0, try to get price from available shipping options
+                    if (shippingOptions?.length) {
+                      const matchedOption = shippingOptions.find(
+                        (opt) => opt.id === shippingMethod.shipping_option_id
+                      )
+                      if (matchedOption && matchedOption.price_type === "flat" && matchedOption.amount) {
+                        return (
+                          <>
+                            {shippingMethod.name}{" "}
+                            {convertToLocale({
+                              amount: matchedOption.amount,
+                              currency_code: currencyCode,
+                            })}
+                          </>
+                        )
+                      }
+                      // For calculated prices, check the calculatedPricesMap
+                      if (matchedOption && matchedOption.price_type === "calculated") {
+                        const calculatedAmount = calculatedPricesMap[matchedOption.id]
+                        if (calculatedAmount != null) {
+                          return (
+                            <>
+                              {shippingMethod.name}{" "}
+                              {convertToLocale({
+                                amount: calculatedAmount,
+                                currency_code: currencyCode,
+                              })}
+                            </>
+                          )
+                        }
+                      }
+                    }
+
+                    // Default: show 0
+                    return (
+                      <>
+                        {shippingMethod.name}{" "}
+                        {convertToLocale({
+                          amount: 0,
+                          currency_code: currencyCode,
+                        })}
+                      </>
+                    )
+                  })()}
                 </Text>
               </div>
-            )}
+            ) : cart?.shipping_address ? (
+              <div className="flex flex-col gap-y-4">
+                <div className="w-48 h-10 bg-gray-200 animate-pulse rounded" />
+                <div className="w-64 h-6 bg-gray-200 animate-pulse rounded" />
+              </div>
+            ) : null}
           </div>
         </div>
       )}
