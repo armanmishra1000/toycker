@@ -494,12 +494,14 @@ export async function setDefaultShippingMethod(cartId: string) {
   }
 
   try {
-    // Get available shipping options
-    const { shipping_options } = await sdk.store.cart.listShippingOptions(
-      { cart_id: cartId },
-      {},
-      headers
-    )
+    // Get available shipping options using the direct API
+    const { shipping_options } = await sdk.client.fetch<{
+      shipping_options: HttpTypes.StoreCartShippingOption[]
+    }>("/store/shipping-options", {
+      query: { cart_id: cartId },
+      headers,
+      cache: "no-store",
+    })
 
     // Select the first available shipping option
     if (shipping_options && shipping_options.length > 0) {
@@ -520,7 +522,7 @@ export async function setDefaultShippingMethod(cartId: string) {
 
 /**
  * Places an order for a cart. If no cart ID is provided, it will use the cart ID from the cookies.
- * @param cartId - optional - The ID of the cart to place an order for.
+ * @returns The cart object if the order was successful, or null if not.
  * @returns The order ID if successful, or the cart object if not yet completed.
  */
 export async function placeOrder(cartId?: string) {
@@ -550,60 +552,10 @@ export async function placeOrder(cartId?: string) {
     revalidateTag(orderCacheTag)
 
     removeCartId()
-    // Return the order ID instead of redirecting - let the client handle navigation
-    return { orderId: cartRes.order.id }
+    redirect(`/order/${cartRes?.order.id}/confirmed`)
   }
 
-  return { cart: cartRes.cart }
-}
-
-/**
- * Server action for placing orders with redirect.
- * This is designed to work with useActionState for proper form handling.
- * @param currentState - The current state from useActionState
- * @returns Error message string if failed, or void if successful (will redirect)
- */
-export async function placeOrderAction(currentState: unknown) {
-  try {
-    const id = await getCartId()
-
-    if (!id) {
-      return "No existing cart found when placing an order"
-    }
-
-    const headers: Record<string, string> = {
-      ...(await getAuthHeaders()),
-    }
-
-    headers["Idempotency-Key"] = `checkout-complete-${id}-${randomUUID()}`
-
-    const cartRes = await sdk.store.cart
-      .complete(id, {}, headers)
-      .then(async (cartRes) => {
-        const cartCacheTag = await getCacheTag("carts")
-        revalidateTag(cartCacheTag)
-        return cartRes
-      })
-      .catch(medusaError)
-
-    if (cartRes?.type === "order") {
-      const orderCacheTag = await getCacheTag("orders")
-      revalidateTag(orderCacheTag)
-
-      removeCartId()
-      redirect(`/order/${cartRes?.order.id}/confirmed`)
-    }
-
-    return "Unable to place order. Please try again."
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      return e.message
-    }
-    if (typeof e === "string") {
-      return e
-    }
-    return "An unexpected error occurred while placing your order"
-  }
+  return cartRes.cart
 }
 
 /**

@@ -1,12 +1,11 @@
 "use client"
 
 import { isManual, isStripeLike } from "@lib/constants"
-import { placeOrder, placeOrderAction } from "@lib/data/cart"
+import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
-import { useRouter } from "next/navigation"
-import React, { useActionState, useState } from "react"
+import React, { useState } from "react"
 import ErrorMessage from "../error-message"
 
 type PaymentButtonProps = {
@@ -53,12 +52,18 @@ const StripePaymentButton = ({
   notReady: boolean
   "data-testid"?: string
 }) => {
-  const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  // Use placeOrderAction server action with useActionState for proper redirect handling
-  const [state, formAction, isPending] = useActionState(placeOrderAction, null)
+  const onPaymentCompleted = async () => {
+    await placeOrder()
+      .catch((err) => {
+        setErrorMessage(err.message)
+      })
+      .finally(() => {
+        setSubmitting(false)
+      })
+  }
 
   const stripe = useStripe()
   const elements = useElements()
@@ -72,7 +77,6 @@ const StripePaymentButton = ({
 
   const handlePayment = async () => {
     setSubmitting(true)
-    setErrorMessage(null)
 
     if (!stripe || !elements || !card || !cart) {
       setSubmitting(false)
@@ -109,13 +113,10 @@ const StripePaymentButton = ({
             (pi && pi.status === "requires_capture") ||
             (pi && pi.status === "succeeded")
           ) {
-            // Call the server action which will handle the redirect
-            formAction()
-            return
+            onPaymentCompleted()
           }
 
           setErrorMessage(error.message || null)
-          setSubmitting(false)
           return
         }
 
@@ -123,35 +124,20 @@ const StripePaymentButton = ({
           (paymentIntent && paymentIntent.status === "requires_capture") ||
           paymentIntent.status === "succeeded"
         ) {
-          // Call the server action which will handle the redirect
-          formAction()
-          return
+          return onPaymentCompleted()
         }
 
-        setSubmitting(false)
         return
       })
   }
 
-  // Handle state changes from the server action
-  React.useEffect(() => {
-    if (state && typeof state === "string") {
-      // state contains error message
-      setErrorMessage(state)
-      setSubmitting(false)
-    }
-  }, [state])
-
-  // Show pending state from useActionState or local submitting state
-  const isLoading = isPending || submitting
-
   return (
     <>
       <Button
-        disabled={disabled || notReady || isLoading}
+        disabled={disabled || notReady || submitting}
         onClick={handlePayment}
         size="large"
-        isLoading={isLoading}
+        isLoading={submitting}
         data-testid={dataTestId}
       >
         Place order
@@ -168,34 +154,27 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  // Use placeOrderAction server action with useActionState for proper redirect handling
-  const [state, formAction, isPending] = useActionState(placeOrderAction, null)
+  const onPaymentCompleted = async () => {
+    await placeOrder()
+      .catch((err) => {
+        setErrorMessage(err.message)
+      })
+      .finally(() => {
+        setSubmitting(false)
+      })
+  }
 
   const handlePayment = () => {
     setSubmitting(true)
-    setErrorMessage(null)
 
-    // Call the server action which will handle the redirect
-    formAction()
+    onPaymentCompleted()
   }
-
-  // Handle state changes from the server action
-  React.useEffect(() => {
-    if (state && typeof state === "string") {
-      // state contains error message
-      setErrorMessage(state)
-      setSubmitting(false)
-    }
-  }, [state])
-
-  // Show pending state from useActionState or local submitting state
-  const isLoading = isPending || submitting
 
   return (
     <>
       <Button
-        disabled={notReady || isLoading}
-        isLoading={isLoading}
+        disabled={notReady || submitting}
+        isLoading={submitting}
         onClick={handlePayment}
         size="large"
         data-testid="submit-order-button"
