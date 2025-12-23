@@ -5,16 +5,15 @@ import WishlistContent from "@modules/wishlist/components/wishlist-content"
 
 type WishlistPageClientProps = {
   countryCode: string
-  loginRedirect: string
-  loginRedirect: string
+  loginPath: string
   isCustomerLoggedIn: boolean
 }
 
-const WishlistPageClient = ({ countryCode, loginPath, loginRedirect, isCustomerLoggedIn }: WishlistPageClientProps) => {
+const WishlistPageClient = ({ countryCode, loginPath, isCustomerLoggedIn }: WishlistPageClientProps) => {
   return (
     <WishlistProvider
       isAuthenticated={isCustomerLoggedIn}
-      loginPath={loginRedirect}
+      loginPath={loginPath}
     >
       <WishlistContent countryCode={countryCode} />
     </WishlistProvider>

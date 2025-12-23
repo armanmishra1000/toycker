@@ -15,6 +15,8 @@ type LocalizedClientLinkProps = Omit<LinkProps, "href"> & {
   href: string
   className?: string
   prefetchIntent?: PrefetchIntent
+  onMouseEnter?: React.MouseEventHandler<HTMLAnchorElement>
+  onFocus?: React.FocusEventHandler<HTMLAnchorElement>
 }
 
 const LocalizedClientLink = ({
@@ -40,8 +42,8 @@ const LocalizedClientLink = ({
     }
 
     try {
-      const maybePromise = router.prefetch?.(resolvedHref)
-      if (maybePromise instanceof Promise) {
+      const maybePromise = router.prefetch?.(resolvedHref) as Promise<unknown> | undefined
+      if (maybePromise) {
         maybePromise.catch((error) => {
           if (process.env.NODE_ENV !== "production") {
             console.warn("Prefetch failed", error)

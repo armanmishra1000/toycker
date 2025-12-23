@@ -40,22 +40,36 @@ export const searchByImage = async ({
   )
 
   return {
-    products: response.products.map((product) => ({
-      id: product.id,
-      title: product.title,
-      handle: product.handle,
-      thumbnail: product.thumbnail || product.images?.[0]?.url || null,
-      price: product.variants?.[0]?.prices?.[0]
+    products: response.products.map((product) => {
+      const firstVariant = Array.isArray(product.variants)
+        ? (product.variants[0] as
+            | (typeof product.variants[number] & {
+                prices?: Array<{ amount: number; currency_code: string }>
+              })
+            | undefined)
+        : undefined
+
+      const firstPrice = firstVariant?.prices?.[0]
+
+      const price = firstPrice
         ? {
-            amount: product.variants[0].prices[0].amount,
-            currencyCode: product.variants[0].prices[0].currency_code,
-            formatted: product.variants[0].prices[0].amount.toLocaleString(undefined, {
+            amount: firstPrice.amount,
+            currencyCode: firstPrice.currency_code,
+            formatted: firstPrice.amount.toLocaleString(undefined, {
               style: "currency",
-              currency: product.variants[0].prices[0].currency_code,
+              currency: firstPrice.currency_code,
             }),
           }
-        : undefined,
-    })),
+        : undefined
+
+      return {
+        id: product.id,
+        title: product.title,
+        handle: product.handle,
+        thumbnail: product.thumbnail || product.images?.[0]?.url || null,
+        price,
+      }
+    }),
     categories: [],
     collections: [],
     suggestions: [],

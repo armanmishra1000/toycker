@@ -1,6 +1,5 @@
 import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
-import { HttpTypes } from "@medusajs/types"
 import type { HttpTypes } from "@medusajs/types"
 import Product from "../product-preview"
 type RelatedProductsProps = {
@@ -26,7 +25,7 @@ export default async function RelatedProducts({
   const collectionCandidates = [
     ...(product.collection_id ? [product.collection_id] : []),
     ...(((product as HttpTypes.StoreProduct & {
-      additional_collections?: HttpTypes.StoreProductCollection[]
+      additional_collections?: Array<{ id: string }>
     }).additional_collections || []).map((collection) => collection.id)),
   ].filter(Boolean)
 
@@ -67,7 +66,7 @@ export default async function RelatedProducts({
       <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
         {products.map((product) => (
           <li key={product.id}>
-            <Product region={region} product={product} />
+            <Product product={product} />
           </li>
         ))}
       </ul>

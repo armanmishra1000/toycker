@@ -5,14 +5,14 @@ import WishlistPageClient from "@modules/wishlist/components/wishlist-page-clien
 type WishlistPageTemplateProps = {
   countryCode: string
   customerName: string
-  loginRedirect: string
+  loginPath: string
   isCustomerLoggedIn: boolean
 }
 
 const WishlistPageTemplate = ({
   countryCode,
   customerName,
-  loginRedirect,
+  loginPath,
   isCustomerLoggedIn,
 }: WishlistPageTemplateProps) => {
   return (
@@ -42,7 +42,7 @@ const WishlistPageTemplate = ({
       <div className="mt-8">
         <WishlistPageClient
           countryCode={countryCode}
-          loginRedirect={loginRedirect}
+          loginPath={loginPath}
           isCustomerLoggedIn={isCustomerLoggedIn}
         />
       </div>
