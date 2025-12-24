@@ -208,6 +208,7 @@ const PayUPaymentButton = ({
 }) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const formRef = React.useRef<HTMLFormElement>(null)
 
   const handlePayment = () => {
     setSubmitting(true)
@@ -215,19 +216,38 @@ const PayUPaymentButton = ({
       const session = cart.payment_collection?.payment_sessions?.find(
         (s) => s.status === "pending"
       )
+      
+      // Check if we have params for form submission (POST)
+      const params = session?.data?.params as Record<string, string> | undefined
       const paymentUrl = session?.data?.payment_url as string | undefined
 
-      if (paymentUrl) {
-        window.location.href = paymentUrl
+      if (paymentUrl && params) {
+        // Trigger form submission
+        setTimeout(() => {
+          formRef.current?.submit()
+        }, 100)
       } else {
-        setErrorMessage("Payment initialization failed. Please try again.")
-        setSubmitting(false)
+        // Fallback for older sessions or misconfiguration
+        const url = session?.data?.payment_url as string | undefined
+        if (url) {
+           window.location.href = url
+        } else {
+           setErrorMessage("Payment initialization failed. Please try again.")
+           setSubmitting(false)
+        }
       }
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Payment failed")
       setSubmitting(false)
     }
   }
+
+  // Extract params for rendering the hidden form
+  const session = cart.payment_collection?.payment_sessions?.find(
+    (s) => s.status === "pending"
+  )
+  const params = session?.data?.params as Record<string, string> | undefined
+  const paymentUrl = session?.data?.payment_url as string | undefined
 
   return (
     <>
@@ -240,6 +260,21 @@ const PayUPaymentButton = ({
       >
         Pay with PayU
       </Button>
+      
+      {/* Hidden form for PayU POST submission */}
+      {paymentUrl && params && (
+        <form 
+          ref={formRef} 
+          action={paymentUrl} 
+          method="POST" 
+          style={{ display: 'none' }}
+        >
+          {Object.entries(params).map(([key, value]) => (
+            <input key={key} type="hidden" name={key} value={value} />
+          ))}
+        </form>
+      )}
+
       <ErrorMessage
         error={errorMessage}
         data-testid="payu-payment-error-message"

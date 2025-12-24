@@ -142,21 +142,14 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
       hash: hash,
     }
 
-    // Construct complete payment URL
-    const paymentUrl = `${PAYU_API_ENDPOINTS[this.options_.environment]}?${new URLSearchParams(
-      urlParams
-    ).toString()}`
-
-    this.logger_.info(`[PayU] Redirect URL prepared: ${PAYU_API_ENDPOINTS[this.options_.environment]}?key=${this.options_.merchantKey}&txnid=${transactionId}&amount=${formatAmount(amount)}&...`)
-    this.logger_.info(`[PayU] URL contains hash: ${hash.substring(0, 16)}...`)
-
-    // Return payment session data with fresh hash (never reuse old hash)
+    // Return payment session data with params for form submission (POST required)
+    // PayU Hosted Checkout requires POST request, not GET redirect
     return {
       id: transactionId,
       data: {
         transactionId,
-        payment_url: paymentUrl,
-        hash,
+        payment_url: PAYU_API_ENDPOINTS[this.options_.environment],
+        params: urlParams,
       } as PayUTransactionData,
     }
   }

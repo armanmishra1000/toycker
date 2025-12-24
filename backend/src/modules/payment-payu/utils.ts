@@ -34,9 +34,8 @@ export function generatePayUHash(
   // Construct hash string with exact parameter sequence per PayU
   // Format: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||||||salt
   //
-  // IMPORTANT: Despite documentation stating 10 empty fields after email,
-  // PayU actually requires 12 empty fields (verified via hash investigation).
-  // This is: 5 UDF slots + 7 additional empty fields = 12 empty fields total
+  // IMPORTANT: PayU requires 5 empty fields after UDF5 (udf6-udf10) if not used.
+  // Format: key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||salt
   const hashString = [
     params.key,
     params.txnid,
@@ -49,7 +48,7 @@ export function generatePayUHash(
     udf3,
     udf4,
     udf5,
-    "", "", "", "", "", "", "", // 7 additional empty fields after UDFs (REQUIRED)
+    "", "", "", "", "", // 5 empty fields for udf6-udf10
     salt,
   ].join("|")
 

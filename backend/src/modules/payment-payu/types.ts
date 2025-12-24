@@ -13,6 +13,7 @@ export type PayUTransactionData = {
   transactionId: string
   payment_url?: string
   hash?: string
+  params?: Record<string, string>
   status?: PaymentSessionStatus
 }
 
