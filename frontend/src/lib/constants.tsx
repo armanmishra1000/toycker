@@ -30,6 +30,11 @@ export const paymentInfoMap: Record<
     title: "PayPal",
     icon: <PayPal />,
   },
+  pp_payu_payu: {
+    title: "PayU",
+    icon: <CreditCard />,
+    description: "Pay securely using cards, UPI, net banking, or wallets.",
+  },
   pp_system_default: {
     title: "Cash on Delivery",
     icon: <CreditCard />,
@@ -48,6 +53,11 @@ export const isStripeLike = (providerId?: string) => {
 export const isPaypal = (providerId?: string) => {
   return providerId?.startsWith("pp_paypal")
 }
+
+export const isPayU = (providerId?: string) => {
+  return providerId?.startsWith("pp_payu")
+}
+
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
 }

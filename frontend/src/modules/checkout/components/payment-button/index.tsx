@@ -1,6 +1,6 @@
 "use client"
 
-import { isManual, isStripeLike } from "@lib/constants"
+import { isManual, isStripeLike, isPayU } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
@@ -37,6 +37,14 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isManual(paymentSession?.provider_id):
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
+      )
+    case isPayU(paymentSession?.provider_id):
+      return (
+        <PayUPaymentButton
+          notReady={notReady}
+          cart={cart}
+          data-testid={dataTestId}
+        />
       )
     default:
       return <Button disabled>Select a payment method</Button>
@@ -184,6 +192,57 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
       <ErrorMessage
         error={errorMessage}
         data-testid="manual-payment-error-message"
+      />
+    </>
+  )
+}
+
+const PayUPaymentButton = ({
+  cart,
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  cart: HttpTypes.StoreCart
+  notReady: boolean
+  "data-testid"?: string
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handlePayment = () => {
+    setSubmitting(true)
+    try {
+      const session = cart.payment_collection?.payment_sessions?.find(
+        (s) => s.status === "pending"
+      )
+      const paymentUrl = session?.data?.payment_url as string | undefined
+
+      if (paymentUrl) {
+        window.location.href = paymentUrl
+      } else {
+        setErrorMessage("Payment initialization failed. Please try again.")
+        setSubmitting(false)
+      }
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Payment failed")
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady || submitting}
+        onClick={handlePayment}
+        size="large"
+        isLoading={submitting}
+        data-testid={dataTestId}
+      >
+        Pay with PayU
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="payu-payment-error-message"
       />
     </>
   )

@@ -1,0 +1,54 @@
+import { BigNumberInput, PaymentSessionStatus } from "@medusajs/framework/types"
+
+// Provider configuration options
+export type PayUOptions = {
+  merchantKey: string
+  merchantSalt: string
+  environment: "test" | "production"
+  webhookSecret?: string
+}
+
+// PayU transaction data stored in payment session
+export type PayUTransactionData = {
+  transactionId: string
+  payment_url?: string
+  hash?: string
+  status?: PaymentSessionStatus
+}
+
+// PayU API request types
+export type PayUPaymentRequest = {
+  key: string
+  txnid: string
+  amount: string
+  productinfo: string
+  firstname: string
+  email: string
+  phone: string
+  surl: string
+  furl: string
+  hash: string
+}
+
+// PayU API response types
+export type PayUAPIResponse = {
+  status: number
+  message: string
+  mihpayid?: string
+  txnid?: string
+  amount?: string
+  bankcode?: string
+}
+
+// PayU webhook payload type
+export type PayUWebhookPayload = {
+  txnid: string
+  mihpayid: string
+  status: string
+  amount: string
+  hash: string
+  productinfo: string
+  firstname: string
+  email: string
+  phone: string
+}

@@ -133,5 +133,22 @@ module.exports = defineConfig({
       resolve: "./src/modules/product-short-description",
       options: {},
     },
+    {
+      resolve: "@medusajs/medusa/payment",
+      options: {
+        providers: [
+          {
+            resolve: "./src/modules/payment-payu",
+            id: "payu",
+            options: {
+              merchantKey: process.env.PAYU_MERCHANT_KEY!,
+              merchantSalt: process.env.PAYU_MERCHANT_SALT!,
+              environment: (process.env.PAYU_ENVIRONMENT as "test" | "production") || "test",
+              webhookSecret: process.env.PAYU_WEBHOOK_SECRET,
+            },
+          },
+        ],
+      },
+    },
   ],
 })
