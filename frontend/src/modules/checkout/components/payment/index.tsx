@@ -72,6 +72,7 @@ const Payment = ({
           email: cart.email,
           phone: cart.shipping_address?.phone,
           first_name: cart.shipping_address?.first_name,
+          cart_id: cart.id,
         }
       }
 
@@ -117,6 +118,7 @@ const Payment = ({
             email: cart.email,
             phone: cart.shipping_address?.phone,
             first_name: cart.shipping_address?.first_name,
+            cart_id: cart.id,
           }
         }
 

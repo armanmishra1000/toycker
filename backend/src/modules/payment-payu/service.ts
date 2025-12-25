@@ -90,15 +90,18 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
     let phone = customer?.phone || ""
 
     // Check if additional data is provided (from frontend for guest checkout)
+    let cartId = ""
     if (inputData && typeof inputData === "object") {
       const dataRecord = inputData as Record<string, unknown>
       const dataEmail = dataRecord.email as string | undefined
       const dataPhone = dataRecord.phone as string | undefined
       const dataFirstName = dataRecord.first_name as string | undefined
+      const dataCartId = dataRecord.cart_id as string | undefined
 
       if (dataEmail) email = dataEmail
       if (dataFirstName) firstName = dataFirstName
       if (dataPhone) phone = dataPhone
+      cartId = dataCartId || ""
     }
 
     this.logger_.info(`[PayU] Customer info - Email: ${email}, Firstname: ${firstName}, Phone: ${phone}`)
@@ -128,6 +131,7 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
       productinfo: `Order payment`,
       firstname: firstName,
       email: email,
+      udf1: cartId,
     }
 
     // Generate hash using official PayU format
@@ -137,8 +141,8 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
     const urlParams = {
       ...hashParams,
       phone: phone,
-      surl: `${process.env.STORE_URL}/order/confirmed`,
-      furl: `${process.env.STORE_URL}/checkout?error=payment_failed`,
+      surl: `${process.env.STORE_URL}/api/payu/callback`,
+      furl: `${process.env.STORE_URL}/api/payu/callback`,
       hash: hash,
     }
 
