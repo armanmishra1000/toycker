@@ -1,7 +1,7 @@
 "use client"
 
 import { RadioGroup } from "@headlessui/react"
-import { isStripeLike, paymentInfoMap } from "@lib/constants"
+import { isPayU, isStripeLike, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
 import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
@@ -43,15 +43,40 @@ const Payment = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "payment"
+  const currentStep = searchParams.get("step")
+  const isOpen = currentStep === "payment"
+
+  // Scroll to top when payment step opens
+  useEffect(() => {
+    if (isOpen) {
+      // Use requestAnimationFrame to ensure DOM has updated before scrolling
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: "smooth" })
+        })
+      })
+    }
+  }, [isOpen])
 
   const setPaymentMethod = async (method: string) => {
     setError(null)
     setSelectedPaymentMethod(method)
-    if (isStripeLike(method)) {
-      await initiatePaymentSession(cart, {
+    if (isStripeLike(method) || isPayU(method)) {
+      // For PayU, pass cart email and shipping phone for guest checkout
+      const paymentData: HttpTypes.StoreInitializePaymentSession = {
         provider_id: method,
-      })
+      }
+
+      if (isPayU(method)) {
+        paymentData.data = {
+          email: cart.email,
+          phone: cart.shipping_address?.phone,
+          first_name: cart.shipping_address?.first_name,
+          cart_id: cart.id,
+        }
+      }
+
+      await initiatePaymentSession(cart, paymentData)
     }
   }
 
@@ -70,9 +95,7 @@ const Payment = ({
   )
 
   const handleEdit = () => {
-    router.push(pathname + "?" + createQueryString("step", "payment"), {
-      scroll: false,
-    })
+    router.push(pathname + "?" + createQueryString("step", "payment"))
   }
 
   const handleSubmit = async () => {
@@ -85,17 +108,26 @@ const Payment = ({
         activeSession?.provider_id === selectedPaymentMethod
 
       if (!checkActiveSession) {
-        await initiatePaymentSession(cart, {
+        // For PayU, pass cart email and shipping phone for guest checkout
+        const paymentData: HttpTypes.StoreInitializePaymentSession = {
           provider_id: selectedPaymentMethod,
-        })
+        }
+
+        if (isPayU(selectedPaymentMethod)) {
+          paymentData.data = {
+            email: cart.email,
+            phone: cart.shipping_address?.phone,
+            first_name: cart.shipping_address?.first_name,
+            cart_id: cart.id,
+          }
+        }
+
+        await initiatePaymentSession(cart, paymentData)
       }
 
       if (!shouldInputCard) {
         return router.push(
-          pathname + "?" + createQueryString("step", "review"),
-          {
-            scroll: false,
-          }
+          pathname + "?" + createQueryString("step", "review")
         )
       }
     } catch (err: unknown) {

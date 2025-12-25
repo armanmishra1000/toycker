@@ -33,6 +33,10 @@ export const listOrders = async (
     ...(await getAuthHeaders()),
   }
 
+  if (!headers.authorization) {
+    return Promise.resolve(null)
+  }
+
   return sdk.client
     .fetch<HttpTypes.StoreOrderListResponse>(`/store/orders`, {
       method: "GET",

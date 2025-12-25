@@ -1,14 +1,33 @@
 "use client"
 
+import { HttpTypes } from "@medusajs/types"
 import { Heading, Text, clx } from "@medusajs/ui"
 
 import PaymentButton from "../payment-button"
 import { useSearchParams } from "next/navigation"
+import { useEffect } from "react"
 
-const Review = ({ cart }: { cart: any }) => {
+// Extended cart type with gift_cards property
+type CartWithGiftCards = HttpTypes.StoreCart & {
+  gift_cards?: Array<{ id: string }>
+}
+
+const Review = ({ cart }: { cart: CartWithGiftCards }) => {
   const searchParams = useSearchParams()
 
   const isOpen = searchParams.get("step") === "review"
+
+  // Scroll to top when review step opens
+  useEffect(() => {
+    if (isOpen) {
+      // Use requestAnimationFrame to ensure DOM has updated before scrolling
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: "smooth" })
+        })
+      })
+    }
+  }, [isOpen])
 
   const paidByGiftcard =
     cart?.gift_cards && cart?.gift_cards?.length > 0 && cart?.total === 0
@@ -32,7 +51,7 @@ const Review = ({ cart }: { cart: any }) => {
           Review
         </Heading>
       </div>
-      {isOpen && previousStepsCompleted && (
+      {isOpen && previousStepsCompleted ? (
         <>
           <div className="flex items-start gap-x-1 w-full mb-6">
             <div className="w-full">
@@ -46,7 +65,7 @@ const Review = ({ cart }: { cart: any }) => {
           </div>
           <PaymentButton cart={cart} data-testid="submit-order-button" />
         </>
-      )}
+      ) : null}
     </div>
   )
 }

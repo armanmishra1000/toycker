@@ -50,6 +50,7 @@ const CART_RESPONSE_FIELDS = [
   "+discount_total",
   "+shipping_total",
   "+shipping_subtotal",
+  "*shipping_methods.shipping_option",
 ].join(",")
 
 type LineItemMetadataValue = string | number | boolean | null
@@ -275,7 +276,7 @@ export async function updateLineItem({
 }: {
   lineId: string
   quantity: number
-}) {
+}): Promise<HttpTypes.StoreCart> {
   if (!lineId) {
     throw new Error("Missing lineItem ID when updating line item")
   }
@@ -290,14 +291,16 @@ export async function updateLineItem({
     ...(await getAuthHeaders()),
   }
 
-  await sdk.store.cart
+  return sdk.store.cart
     .updateLineItem(cartId, lineId, { quantity }, {}, headers)
-    .then(async () => {
+    .then(async ({ cart }: { cart: HttpTypes.StoreCart }) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
 
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
+
+      return cart
     })
     .catch(medusaError)
 }
@@ -401,49 +404,6 @@ export async function applyPromotions(codes: string[]) {
     .catch(medusaError)
 }
 
-export async function applyGiftCard(code: string) {
-  //   const cartId = getCartId()
-  //   if (!cartId) return "No cartId cookie found"
-  //   try {
-  //     await updateCart(cartId, { gift_cards: [{ code }] }).then(() => {
-  //       revalidateTag("cart")
-  //     })
-  //   } catch (error: any) {
-  //     throw error
-  //   }
-}
-
-export async function removeDiscount(code: string) {
-  // const cartId = getCartId()
-  // if (!cartId) return "No cartId cookie found"
-  // try {
-  //   await deleteDiscount(cartId, code)
-  //   revalidateTag("cart")
-  // } catch (error: any) {
-  //   throw error
-  // }
-}
-
-export async function removeGiftCard(
-  codeToRemove: string,
-  giftCards: any[]
-  // giftCards: GiftCard[]
-) {
-  //   const cartId = getCartId()
-  //   if (!cartId) return "No cartId cookie found"
-  //   try {
-  //     await updateCart(cartId, {
-  //       gift_cards: [...giftCards]
-  //         .filter((gc) => gc.code !== codeToRemove)
-  //         .map((gc) => ({ code: gc.code })),
-  //     }).then(() => {
-  //       revalidateTag("cart")
-  //     })
-  //   } catch (error: any) {
-  //     throw error
-  //   }
-}
-
 export async function submitPromotionForm(
   currentState: unknown,
   formData: FormData
@@ -451,8 +411,15 @@ export async function submitPromotionForm(
   const code = formData.get("code") as string
   try {
     await applyPromotions([code])
-  } catch (e: any) {
-    return e.message
+  } catch (e: unknown) {
+    // Return error message string for useActionState
+    if (e instanceof Error) {
+      return e.message
+    }
+    if (typeof e === "string") {
+      return e
+    }
+    return "An error occurred applying the promotion code"
   }
 }
 
@@ -507,17 +474,56 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
         phone: getString("billing_address.phone"),
       }
     await updateCart(data)
-  } catch (e: any) {
-    return e.message
+
+    // Auto-select the first available shipping method
+    await setDefaultShippingMethod(cartId)
+  } catch (e: unknown) {
+    return medusaError(e)
   }
 
   redirect(`/checkout?step=payment`)
 }
 
 /**
+ * Auto-selects the first available shipping method for a cart
+ * @param cartId - The ID of the cart to set the shipping method for
+ */
+export async function setDefaultShippingMethod(cartId: string) {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  try {
+    // Get available shipping options using the direct API
+    const { shipping_options } = await sdk.client.fetch<{
+      shipping_options: HttpTypes.StoreCartShippingOption[]
+    }>("/store/shipping-options", {
+      query: { cart_id: cartId },
+      headers,
+      cache: "no-store",
+    })
+
+    // Select the first available shipping option
+    if (shipping_options && shipping_options.length > 0) {
+      const firstOption = shipping_options[0]
+      await sdk.store.cart
+        .addShippingMethod(cartId, { option_id: firstOption.id }, {}, headers)
+        .then(async () => {
+          const cartCacheTag = await getCacheTag("carts")
+          revalidateTag(cartCacheTag)
+        })
+        .catch(medusaError)
+    }
+  } catch (e) {
+    // Silently fail - shipping method selection is not critical
+    console.error("Failed to set default shipping method:", e)
+  }
+}
+
+/**
  * Places an order for a cart. If no cart ID is provided, it will use the cart ID from the cookies.
- * @param cartId - optional - The ID of the cart to place an order for.
  * @returns The cart object if the order was successful, or null if not.
+ * @returns The order ID if successful, or the cart object if not yet completed.
  */
 export async function placeOrder(cartId?: string) {
   const id = cartId || (await getCartId())

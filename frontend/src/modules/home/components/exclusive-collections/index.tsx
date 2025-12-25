@@ -19,7 +19,7 @@ type ExclusiveCollectionsProps = {
   items: ExclusiveCollectionEntry[]
 }
 
-const FALLBACK_POSTER = "/assets/images/slider_1.png"
+const FALLBACK_POSTER = "/assets/images/slider_default.png"
 
 const resolvePosterSource = (entry: ExclusiveCollectionEntry) => {
   return (

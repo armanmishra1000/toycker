@@ -1,3 +1,4 @@
+import { listCartOptions } from "@lib/data/cart"
 import { listCartPaymentMethods } from "@lib/data/payment"
 import { HttpTypes } from "@medusajs/types"
 import Addresses from "@modules/checkout/components/addresses"
@@ -21,9 +22,11 @@ export default async function CheckoutForm({
     return null
   }
 
+  const shippingOptions = await listCartOptions()
+
   return (
     <div className="w-full grid grid-cols-1 gap-y-8">
-      <Addresses cart={cart} customer={customer} />
+      <Addresses cart={cart} customer={customer} availableShippingMethods={shippingOptions?.shipping_options ?? null} />
 
       <Payment cart={cart} availablePaymentMethods={paymentMethods} />
 

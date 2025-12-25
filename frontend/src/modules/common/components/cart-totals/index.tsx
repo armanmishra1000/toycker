@@ -1,7 +1,9 @@
 "use client"
 
 import { convertToLocale } from "@lib/util/money"
+import { HttpTypes } from "@medusajs/types"
 import React from "react"
+import { useShippingPrice } from "@modules/common/context/shipping-price-context"
 
 type CartTotalsProps = {
   totals: {
@@ -13,9 +15,13 @@ type CartTotalsProps = {
     shipping_subtotal?: number | null
     discount_subtotal?: number | null
   }
+  cart?: HttpTypes.StoreCart
 }
 
-const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
+const CartTotals: React.FC<CartTotalsProps> = ({
+  totals,
+  cart
+}) => {
   const {
     currency_code,
     total,
@@ -25,6 +31,40 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
     discount_subtotal,
   } = totals
   const normalizedCurrency = currency_code?.trim() || "INR"
+  const { selectedShippingPrice } = useShippingPrice()
+
+  // Calculate shipping subtotal from various sources
+  const getDisplayShippingSubtotal = (): number => {
+    // First priority: If cart has shipping methods, try to get the total from the last shipping method
+    if (cart?.shipping_methods && cart.shipping_methods.length > 0) {
+      const lastShippingMethod = cart.shipping_methods[cart.shipping_methods.length - 1]
+
+      // Try to use the shipping method's total field (includes tax)
+      if (lastShippingMethod.total && lastShippingMethod.total > 0) {
+        return lastShippingMethod.total
+      }
+
+      // Try to use the shipping method's subtotal field (excludes tax)
+      if (lastShippingMethod.subtotal && lastShippingMethod.subtotal > 0) {
+        return lastShippingMethod.subtotal
+      }
+    }
+
+    // Second priority: If shipping_subtotal is already set and non-zero, use it
+    if (shipping_subtotal && shipping_subtotal > 0) {
+      return shipping_subtotal
+    }
+
+    // Third priority: Use the selected shipping price from context (for newly selected methods)
+    if (selectedShippingPrice && selectedShippingPrice > 0) {
+      return selectedShippingPrice
+    }
+
+    // Default to the provided shipping_subtotal (might be 0)
+    return shipping_subtotal ?? 0
+  }
+
+  const displayShippingSubtotal = getDisplayShippingSubtotal()
 
   return (
     <div>
@@ -37,8 +77,8 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
         </div>
         <div className="flex items-center justify-between">
           <span>Shipping</span>
-          <span data-testid="cart-shipping" data-value={shipping_subtotal || 0}>
-            {convertToLocale({ amount: shipping_subtotal ?? 0, currency_code: normalizedCurrency })}
+          <span data-testid="cart-shipping" data-value={displayShippingSubtotal}>
+            {convertToLocale({ amount: displayShippingSubtotal, currency_code: normalizedCurrency })}
           </span>
         </div>
         {!!discount_subtotal && (

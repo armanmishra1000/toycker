@@ -128,7 +128,7 @@ const REVIEWS: Review[] = [
     tag: "Dodge Mini Metal Car",
     priceCurrent: "₹160.00",
     priceOriginal: "₹250.00",
-    productImage: "/assets/images/slider_4.png",
+    productImage: "/assets/images/frictions-airplanes.jpg",
   },
 ]
 
@@ -138,7 +138,7 @@ const AUDIO_REVIEWS: AudioReview[] = [
     title: "Playroom onboarding in 3 minutes",
     author: "Vandana Kapoor",
     durationLabel: "03:12",
-    coverImage: "/assets/images/slider_5.png",
+    coverImage: "/assets/images/51acyqZLHsL._UF1000_1000_QL80.jpg",
     audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
   },
   {
@@ -146,7 +146,7 @@ const AUDIO_REVIEWS: AudioReview[] = [
     title: "Dodge Mini showcase walkthrough",
     author: "Rishi Malhotra",
     durationLabel: "02:27",
-    coverImage: "/assets/images/slider_6.png",
+    coverImage: "/assets/images/61K1TDQYuCL._SL1280.jpg",
     audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
   },
   {
@@ -154,7 +154,7 @@ const AUDIO_REVIEWS: AudioReview[] = [
     title: "Weekend workshop recap",
     author: "Garima Patel",
     durationLabel: "04:05",
-    coverImage: "/assets/images/slider_7.png",
+    coverImage: "/assets/images/frictions-airplanes.jpg",
     audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
   },
 ]
