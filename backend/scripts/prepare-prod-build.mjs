@@ -34,7 +34,7 @@ if (!existsSync(adminIndex)) {
 const nodeModulesDir = path.join(serverDir, 'node_modules')
 if (!existsSync(nodeModulesDir)) {
   console.log('Installing production dependencies inside .medusa/server ...')
-  const installArgs = ['install', '--production', '--legacy-peer-deps']
+  const installArgs = ['install', '--prod']
   const installResult = spawnSync('pnpm', installArgs, {
     cwd: serverDir,
     stdio: 'inherit',
