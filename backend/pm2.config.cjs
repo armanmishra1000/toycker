@@ -7,7 +7,7 @@ module.exports = {
     {
       name: 'medusa',
       cwd: serverCwd,
-      script: 'npm',
+      script: 'pnpm',
       args: 'run start',
       env: {
         NODE_ENV: 'production',
