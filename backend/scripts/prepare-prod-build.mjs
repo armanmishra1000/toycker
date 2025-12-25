@@ -9,7 +9,7 @@ const projectRoot = path.resolve(__dirname, '..')
 const serverDir = path.join(projectRoot, '.medusa', 'server')
 
 if (!existsSync(serverDir)) {
-  throw new Error('Medusa build directory (.medusa/server) was not found. Run "npm run build" first.')
+  throw new Error('Medusa build directory (.medusa/server) was not found. Run "pnpm run build" first.')
 }
 
 const envSource = path.join(projectRoot, '.env')
@@ -28,24 +28,24 @@ if (!existsSync(envTarget)) {
 
 const adminIndex = path.join(serverDir, 'public', 'admin', 'index.html')
 if (!existsSync(adminIndex)) {
-  throw new Error('Admin build artifact (.medusa/server/public/admin/index.html) is missing. Re-run "npm run build" or check admin bundler settings.')
+  throw new Error('Admin build artifact (.medusa/server/public/admin/index.html) is missing. Re-run "pnpm run build" or check admin bundler settings.')
 }
 
 const nodeModulesDir = path.join(serverDir, 'node_modules')
 if (!existsSync(nodeModulesDir)) {
   console.log('Installing production dependencies inside .medusa/server ...')
   const installArgs = ['install', '--production', '--legacy-peer-deps']
-  const installResult = spawnSync('npm', installArgs, {
+  const installResult = spawnSync('pnpm', installArgs, {
     cwd: serverDir,
     stdio: 'inherit',
     shell: process.platform === 'win32',
   })
 
   if (installResult.status !== 0) {
-    throw new Error('npm install inside .medusa/server failed')
+    throw new Error('pnpm install inside .medusa/server failed')
   }
 } else {
-  console.log('Dependencies already installed inside .medusa/server; skipping npm install')
+  console.log('Dependencies already installed inside .medusa/server; skipping pnpm install')
 }
 
 console.log('Production build assets prepared successfully.')
