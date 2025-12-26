@@ -229,9 +229,13 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
         ? (JSON.parse(rawData) as PayUWebhookPayload)
         : (rawData as unknown as PayUWebhookPayload)
 
-    // Verify webhook hash
+    // Verify webhook hash (add merchant key to payload for verification)
     if (this.options_.webhookSecret) {
-      const isValid = verifyPayUWebhash(webhookData, this.options_.merchantSalt)
+      const payloadWithKey: PayUWebhookPayload = {
+        ...webhookData,
+        key: this.options_.merchantKey,
+      }
+      const isValid = verifyPayUWebhash(payloadWithKey, this.options_.merchantSalt)
       if (!isValid) {
         throw new Error("Invalid webhook signature")
       }

@@ -17,5 +17,10 @@ export default defineMiddlewares({
         short_description: z.string().nullish(),
       },
     },
+    {
+      method: ["POST"],
+      matcher: "/store/payu-webhook",
+      bodyParser: { preserveRawBody: true },
+    },
   ],
 })
