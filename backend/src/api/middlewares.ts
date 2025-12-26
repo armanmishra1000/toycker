@@ -17,10 +17,5 @@ export default defineMiddlewares({
         short_description: z.string().nullish(),
       },
     },
-    {
-      method: ["POST"],
-      matcher: "/hooks/payment/payu",
-      bodyParser: { preserveRawBody: true },
-    },
   ],
 })

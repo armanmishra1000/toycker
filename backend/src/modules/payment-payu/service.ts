@@ -223,31 +223,56 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
   ): Promise<WebhookActionResult> {
     const { rawData } = payload
 
-    // Safely cast rawData to PayUWebhookPayload
-    const webhookData =
-      typeof rawData === "string"
-        ? (JSON.parse(rawData) as PayUWebhookPayload)
-        : (rawData as unknown as PayUWebhookPayload)
+    // Medusa's built-in webhook system parses form data as Record<string, unknown>
+    // PayU sends application/x-www-form-urlencoded with key-value pairs
+    const webhookData = typeof rawData === "string"
+      ? (JSON.parse(rawData) as PayUWebhookPayload)
+      : (rawData as unknown as Record<string, string | string[]>)
 
-    // Verify webhook hash (add merchant key to payload for verification)
-    if (this.options_.webhookSecret) {
-      const payloadWithKey: PayUWebhookPayload = {
-        ...webhookData,
-        key: this.options_.merchantKey,
-      }
-      const isValid = verifyPayUWebhash(payloadWithKey, this.options_.merchantSalt)
-      if (!isValid) {
-        throw new Error("Invalid webhook signature")
-      }
+    // Extract string values (handle potential arrays from form parsing)
+    const getValue = (val: string | string[] | undefined): string => {
+      if (Array.isArray(val)) return val[0] || ""
+      return val || ""
     }
 
-    const action = PAYU_WEBHOOK_ACTIONS[webhookData.status] || "not_supported"
+    // Build PayUWebhookPayload with merchant key for hash verification
+    // Key is not in webhook data, added from merchant options
+    const payloadForVerification: PayUWebhookPayload = {
+      key: this.options_.merchantKey,
+      txnid: getValue(webhookData.txnid),
+      mihpayid: getValue(webhookData.mihpayid),
+      status: getValue(webhookData.status),
+      amount: getValue(webhookData.amount),
+      hash: getValue(webhookData.hash),
+      productinfo: getValue(webhookData.productinfo),
+      firstname: getValue(webhookData.firstname),
+      email: getValue(webhookData.email),
+      phone: getValue(webhookData.phone),
+      udf1: getValue(webhookData.udf1),
+      udf2: getValue(webhookData.udf2),
+      udf3: getValue(webhookData.udf3),
+      udf4: getValue(webhookData.udf4),
+      udf5: getValue(webhookData.udf5),
+    }
+
+    // Verify webhook hash for security
+    const isValid = verifyPayUWebhash(payloadForVerification, this.options_.merchantSalt)
+    if (!isValid) {
+      throw new Error("Invalid webhook signature")
+    }
+
+    // Map PayU status to Medusa webhook action
+    const action = PAYU_WEBHOOK_ACTIONS[payloadForVerification.status] || "not_supported"
+
+    this.logger_.info(
+      `[PayU Webhook] txnid=${payloadForVerification.txnid}, status=${payloadForVerification.status} -> action=${action}`
+    )
 
     return {
       action,
       data: {
-        session_id: webhookData.txnid,
-        amount: webhookData.amount,
+        session_id: payloadForVerification.txnid,
+        amount: payloadForVerification.amount,
       },
     }
   }
