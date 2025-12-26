@@ -221,13 +221,10 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
   async getWebhookActionAndData(
     payload: ProviderWebhookPayload["payload"]
   ): Promise<WebhookActionResult> {
-    const { rawData } = payload
-
-    // Medusa's built-in webhook system parses form data as Record<string, unknown>
-    // PayU sends application/x-www-form-urlencoded with key-value pairs
-    const webhookData = typeof rawData === "string"
-      ? (JSON.parse(rawData) as PayUWebhookPayload)
-      : (rawData as unknown as Record<string, string | string[]>)
+    // Use payload.data which contains the parsed form data
+    // For PayU which sends application/x-www-form-urlencoded, this is Record<string, unknown>
+    const { data } = payload
+    const webhookData = data as Record<string, string | string[] | undefined>
 
     // Extract string values (handle potential arrays from form parsing)
     const getValue = (val: string | string[] | undefined): string => {
