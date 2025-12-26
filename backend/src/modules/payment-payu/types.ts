@@ -15,6 +15,8 @@ export type PayUTransactionData = {
   hash?: string
   params?: Record<string, string>
   status?: PaymentSessionStatus
+  mihpayid?: string      // PayU payment ID from webhook response
+  payuStatus?: string    // Original PayU status (success/failure/pending)
 }
 
 // PayU API request types
@@ -48,6 +50,7 @@ export type PayUAPIResponse = {
 
 // PayU webhook payload type
 export type PayUWebhookPayload = {
+  key: string         // Merchant key (not in webhook, added from options)
   txnid: string
   mihpayid: string
   status: string

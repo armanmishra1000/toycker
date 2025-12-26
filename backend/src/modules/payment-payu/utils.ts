@@ -79,17 +79,23 @@ export function verifyPayUWebhash(
   payload: PayUWebhookPayload,
   salt: string
 ): boolean {
-  // Verify hash format: sha512(salt|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key)
+  // Verify hash format: sha512(SALT|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key)
+  // Reference: https://docs.payu.in/docs/hashing-request-and-response
   const hashString = [
     salt,
     payload.status,
-    "", "", "", "", "", // empty fields
-    "", "", "", "", "", // udf5-1 (reversed)
+    "", "", "", "", "", // 6 empty fields after status
+    payload.udf5 || "",
+    payload.udf4 || "",
+    payload.udf3 || "",
+    payload.udf2 || "",
+    payload.udf1 || "",
     payload.email,
     payload.firstname,
     payload.productinfo,
     payload.amount,
     payload.txnid,
+    payload.key,
   ].join("|")
 
   const calculatedHash = crypto
