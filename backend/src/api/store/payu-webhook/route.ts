@@ -5,6 +5,10 @@ import { verifyPayUWebhash } from "../../../modules/payment-payu/utils"
 import { PAYU_STATUS_MAP } from "../../../modules/payment-payu/constants"
 import { parse as queryParse } from "querystring"
 
+// Disable authentication for PayU webhook (server-to-server)
+// PayU sends webhooks without x-publishable-api-key header
+export const AUTHENTICATE = false
+
 /**
  * PayU Webhook Endpoint
  *
