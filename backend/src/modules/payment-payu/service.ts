@@ -168,16 +168,24 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
   async authorizePayment(
     input: AuthorizePaymentInput
   ): Promise<AuthorizePaymentOutput> {
-    // For PayU, authorization happens via webhook after redirect
-    // Return authorized if webhook has confirmed payment
+    // For PayU hosted checkout, the payment is authorized/captured via webhook
+    // When the webhook returns with action "captured", it will update the payment data
     const data = input.data as PayUTransactionData
 
+    // If webhook has already processed and set status to captured, return that
     if (data.status === "captured") {
       return { data, status: "captured" }
     }
 
-    // Still pending customer completion
-    return { data, status: "pending" }
+    // For PayU hosted checkout payments, return "authorized" status
+    // This allows Medusa to proceed with the payment flow
+    // The webhook will finalize the payment with "captured" action
+    this.logger_.info(`[PayU] Authorizing hosted checkout payment: ${data.transactionId}`)
+
+    return {
+      data: { ...data, status: "authorized" as PaymentSessionStatus },
+      status: "authorized",
+    }
   }
 
   async capturePayment(
