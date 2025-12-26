@@ -19,7 +19,7 @@ export default defineMiddlewares({
     },
     {
       method: ["POST"],
-      matcher: "/store/payu-webhook",
+      matcher: "/hooks/payment/payu",
       bodyParser: { preserveRawBody: true },
     },
   ],

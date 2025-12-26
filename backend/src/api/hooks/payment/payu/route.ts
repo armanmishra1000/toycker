@@ -1,13 +1,9 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { PayUWebhookPayload } from "../../../modules/payment-payu/types"
-import { verifyPayUWebhash } from "../../../modules/payment-payu/utils"
-import { PAYU_STATUS_MAP } from "../../../modules/payment-payu/constants"
+import { PayUWebhookPayload } from "../../../../modules/payment-payu/types"
+import { verifyPayUWebhash } from "../../../../modules/payment-payu/utils"
+import { PAYU_STATUS_MAP } from "../../../../modules/payment-payu/constants"
 import { parse as queryParse } from "querystring"
-
-// Disable authentication for PayU webhook (server-to-server)
-// PayU sends webhooks without x-publishable-api-key header
-export const AUTHENTICATE = false
 
 /**
  * PayU Webhook Endpoint
@@ -22,8 +18,12 @@ export const AUTHENTICATE = false
  * {
  *   method: ["POST"],
  *   bodyParser: { preserveRawBody: true },
- *   matcher: "/store/payu-webhook",
+ *   matcher: "/hooks/payment/payu",
  * }
+ *
+ * NOTE: This route is under /hooks/payment/* prefix which bypasses the
+ * publishable API key middleware, allowing PayU's server-to-server webhooks
+ * to work without the x-publishable-api-key header.
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
