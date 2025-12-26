@@ -106,6 +106,12 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
 
     this.logger_.info(`[PayU] Customer info - Email: ${email}, Firstname: ${firstName}, Phone: ${phone}`)
 
+    // Get the Medusa payment session ID from input data
+    // This is critical: the webhook needs to return the Medusa session_id, not the PayU txnid
+    const paymentSessionId = (inputData as Record<string, string>)?.session_id || ""
+
+    this.logger_.info(`[PayU] Payment session ID: ${paymentSessionId}`)
+
     // For test environment, provide default values if not set
     if (!email) {
       this.logger_.warn("[PayU] Email not provided, using test email")
@@ -124,6 +130,7 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
     this.logger_.info(`[PayU] Generated transaction ID: ${transactionId}`)
 
     // Build payment params for hash generation (excluding URL-only params)
+    // udf1 stores the Medusa payment session ID so the webhook can find the correct session
     const hashParams = {
       key: this.options_.merchantKey,
       txnid: transactionId,
@@ -131,7 +138,7 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
       productinfo: `Order payment`,
       firstname: firstName,
       email: email,
-      udf1: cartId,
+      udf1: paymentSessionId,
     }
 
     // Generate hash using official PayU format
@@ -268,7 +275,7 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
     return {
       action,
       data: {
-        session_id: payloadForVerification.txnid,
+        session_id: payloadForVerification.udf1 || payloadForVerification.txnid,
         amount: payloadForVerification.amount,
       },
     }
