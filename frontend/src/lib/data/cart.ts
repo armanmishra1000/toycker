@@ -63,6 +63,13 @@ export type GiftWrapMetadata = {
 
 type LineItemMetadata = Record<string, LineItemMetadataValue> | GiftWrapMetadata
 
+// Extended cart type with completion status and order
+// Used to check if cart was already completed (e.g., by webhook) before calling complete()
+type CartWithCompletion = HttpTypes.StoreCart & {
+  completed_at?: string | null
+  order?: { id: string }
+}
+
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
  * @param cartId - optional - The ID of the cart to retrieve.
@@ -522,8 +529,14 @@ export async function setDefaultShippingMethod(cartId: string) {
 
 /**
  * Places an order for a cart. If no cart ID is provided, it will use the cart ID from the cookies.
- * @returns The cart object if the order was successful, or null if not.
- * @returns The order ID if successful, or the cart object if not yet completed.
+ *
+ * This function handles two scenarios:
+ * 1. Cart is NOT yet completed: Calls Medusa's complete() to create order and redirects
+ * 2. Cart IS already completed (e.g., by webhook): Retrieves order ID and redirects
+ *
+ * @param cartId - Optional cart ID. If not provided, uses cart ID from cookies.
+ * @returns Never returns (always redirects).
+ * @throws Error if cart is not found or order creation fails.
  */
 export async function placeOrder(cartId?: string) {
   const id = cartId || (await getCartId())
@@ -538,6 +551,21 @@ export async function placeOrder(cartId?: string) {
 
   headers["Idempotency-Key"] = `checkout-complete-${id}-${randomUUID()}`
 
+  // First, check if cart is already completed (e.g., by PayU webhook)
+  // This prevents errors when trying to complete an already-completed cart
+  const cart = (await retrieveCart(id, "id,completed_at,order")) as CartWithCompletion | null
+
+  if (cart?.completed_at && cart.order) {
+    // Cart was already completed by webhook or another process
+    // Remove the cart ID from cookies and redirect to order confirmation
+    const orderCacheTag = await getCacheTag("orders")
+    revalidateTag(orderCacheTag)
+
+    await removeCartId()
+    redirect(`/order/${cart.order.id}/confirmed`)
+  }
+
+  // Cart is not yet completed, proceed with normal completion flow
   const cartRes = await sdk.store.cart
     .complete(id, {}, headers)
     .then(async (cartRes) => {
@@ -551,10 +579,12 @@ export async function placeOrder(cartId?: string) {
     const orderCacheTag = await getCacheTag("orders")
     revalidateTag(orderCacheTag)
 
-    removeCartId()
-    redirect(`/order/${cartRes?.order.id}/confirmed`)
+    await removeCartId()
+    redirect(`/order/${cartRes.order.id}/confirmed`)
   }
 
+  // If we reach here, order creation failed
+  // cartRes might contain error information
   return cartRes.cart
 }
 
