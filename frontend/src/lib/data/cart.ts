@@ -16,6 +16,7 @@ import {
   removeCartId,
   setCartId,
 } from "./cookies"
+import { findOrderByCartId } from "./orders"
 import { getRegion } from "./regions"
 
 const CART_RESPONSE_FIELDS = [
@@ -565,9 +566,22 @@ export async function placeOrder(cartId?: string) {
     const message = error instanceof Error ? error.message : "Order creation failed"
     console.error("[placeOrder] Error:", message)
 
-    // If cart is already completed, we cannot get the order ID from the API
-    // The user should check their email or orders page
+    // If cart is already completed, try to find the order by cart ID
     if (message.includes("already been placed") || message.includes("completed") || message.includes("already completed")) {
+      console.log("[placeOrder] Cart already completed, trying to find order by cart ID")
+
+      const order = await findOrderByCartId(id)
+
+      if (order) {
+        console.log("[placeOrder] Found order:", order.id)
+        const orderCacheTag = await getCacheTag("orders")
+        revalidateTag(orderCacheTag)
+
+        await removeCartId()
+        redirect(`/order/${order.id}/confirmed`)
+      }
+
+      // If order not found, provide helpful error message
       throw new Error("Order already placed. Please check your email for order confirmation.")
     }
 

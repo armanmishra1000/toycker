@@ -24,6 +24,46 @@ export const retrieveOrder = async (id: string) => {
     .catch((err) => medusaError(err))
 }
 
+/**
+ * Find an order by cart ID.
+ * This is useful when a webhook has already completed a cart and created an order,
+ * but we need to find that order from the frontend.
+ *
+ * @param cartId - The cart ID to search for
+ * @returns The order if found, or null if not found
+ */
+export const findOrderByCartId = async (cartId: string) => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  // Try to find order by filtering with cart_id
+  // In Medusa v2, orders have a cart_id field that references the original cart
+  try {
+    const response = await sdk.client
+      .fetch<HttpTypes.StoreOrderListResponse>(`/store/orders`, {
+        method: "GET",
+        query: {
+          limit: 1,
+          offset: 0,
+          order: "-created_at",
+          fields: "id",
+          cart_id: cartId,
+        },
+        headers,
+        cache: "no-store",
+      })
+
+    if (response.orders && response.orders.length > 0) {
+      return response.orders[0]
+    }
+  } catch (err) {
+    console.error("[findOrderByCartId] Error:", err)
+  }
+
+  return null
+}
+
 export const listOrders = async (
   limit: number = 10,
   offset: number = 0,
