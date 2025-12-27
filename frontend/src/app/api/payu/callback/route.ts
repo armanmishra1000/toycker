@@ -5,7 +5,8 @@ import { cookies } from "next/headers"
  * PayU Payment Callback Handler
  *
  * PayU POSTs to this endpoint after payment completion with:
- * - udf1: Cart ID (passed during payment initiation)
+ * - udf1: Payment session ID (passed during payment initiation)
+ * - udf2: Cart ID (passed during payment initiation)
  * - status: Payment status (success/failed/pending)
  * - txnid: PayU transaction ID
  * - hash: Response signature for verification
@@ -14,7 +15,8 @@ import { cookies } from "next/headers"
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
-    const cartId = formData.get("udf1") as string
+    // udf2 contains the cart ID (udf1 is payment session ID)
+    const cartId = formData.get("udf2") as string
     const status = formData.get("status") as string
     const txnid = formData.get("txnid") as string
     const hash = formData.get("hash") as string
