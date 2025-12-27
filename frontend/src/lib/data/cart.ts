@@ -16,6 +16,7 @@ import {
   removeCartId,
   setCartId,
 } from "./cookies"
+import { findOrderByCartId } from "./orders"
 import { getRegion } from "./regions"
 
 const CART_RESPONSE_FIELDS = [
@@ -540,28 +541,52 @@ export async function placeOrder(cartId?: string) {
 
   headers["Idempotency-Key"] = `checkout-complete-${id}-${randomUUID()}`
 
-  // Complete the cart
-  // If webhook already completed it, this will handle it gracefully
-  const cartRes = await sdk.store.cart
-    .complete(id, {}, headers)
-    .then(async (cartRes) => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
-      return cartRes
-    })
-    .catch(medusaError)
+  try {
+    // Complete the cart
+    const cartRes = await sdk.store.cart
+      .complete(id, {}, headers)
+      .then(async (cartRes) => {
+        const cartCacheTag = await getCacheTag("carts")
+        revalidateTag(cartCacheTag)
+        return cartRes
+      })
+      .catch(medusaError)
 
-  if (cartRes?.type === "order") {
-    const orderCacheTag = await getCacheTag("orders")
-    revalidateTag(orderCacheTag)
+    if (cartRes?.type === "order") {
+      const orderCacheTag = await getCacheTag("orders")
+      revalidateTag(orderCacheTag)
 
-    await removeCartId()
-    redirect(`/order/${cartRes.order.id}/confirmed`)
+      await removeCartId()
+      redirect(`/order/${cartRes.order.id}/confirmed`)
+    }
+
+    // If we reach here, order creation failed but didn't throw
+    return cartRes.cart
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Order creation failed"
+    console.error("[placeOrder] Error:", message)
+
+    // If cart is already completed, try to find the order by cart ID
+    if (message.includes("already been placed") || message.includes("completed") || message.includes("already completed")) {
+      console.log("[placeOrder] Cart already completed, trying to find order by cart ID")
+
+      const order = await findOrderByCartId(id)
+
+      if (order) {
+        console.log("[placeOrder] Found order:", order.id)
+        const orderCacheTag = await getCacheTag("orders")
+        revalidateTag(orderCacheTag)
+
+        await removeCartId()
+        redirect(`/order/${order.id}/confirmed`)
+      }
+
+      // If order not found, provide helpful error message
+      throw new Error("Order already placed. Please check your email for order confirmation.")
+    }
+
+    throw error
   }
-
-  // If we reach here, order creation failed
-  // cartRes might contain error information
-  return cartRes.cart
 }
 
 /**
