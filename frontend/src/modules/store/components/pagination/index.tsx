@@ -85,7 +85,7 @@ export function Pagination({
       if (currentPage <= 4) {
         // Show 1, 2, 3, 4, 5, ..., lastpage
         buttons.push(
-          ...arrayRange(1, 5).map((p) => renderPageButton(p, p, p === currentPage))
+          ...arrayRange(1, 3).map((p) => renderPageButton(p, p, p === currentPage))
         )
         buttons.push(renderEllipsis("ellipsis1"))
         buttons.push(

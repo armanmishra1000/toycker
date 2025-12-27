@@ -39,6 +39,8 @@ export const navLinks: NavLink[] = [
   { id: "about", label: "About Us", href: "/about" },
   { id: "contact", label: "Contact", href: "/contact" },
   { id: "metal-cars", label: "Metal Car", href: "/collections/metal-car" },
+  { id: "boys", label: "Boys", href: "/collections/boys" },
+  { id: "girls", label: "Girls", href: "/collections/girls" },
 ]
 
 export const ageCategories: AgeCategory[] = [
@@ -50,6 +52,37 @@ export const ageCategories: AgeCategory[] = [
   { id: "9-12-years", label: "9-12 Years", href: "/collections/9-12-years" },
   { id: "12-14-years", label: "12-14 Years", href: "/collections/12-14-years" },
   { id: "14-plus-years", label: "14+ Years", href: "/collections/14-plus-years" },
+]
+
+export const toyCategories: ShopMenuLink[] = [
+  { id: "soft-toys", label: "Soft Toys", href: "/collections/soft-toys" },
+  { id: "doll-doll-house", label: "Doll & Doll House", href: "/collections/doll-doll-house" },
+  { id: "rattles", label: "Rattles", href: "/collections/rattles" },
+  { id: "bath-toys", label: "Bath Toys", href: "/collections/bath-toys" },
+  { id: "musical-toys", label: "Musical Toys", href: "/collections/musical-toys" },
+  { id: "role-play-toys", label: "Role Play Toys", href: "/collections/role-play-toys" },
+  { id: "die-cast-toy-vehicles", label: "Die-cast & Toy Vehicles", href: "/collections/die-cast-toy-vehicles" },
+  { id: "toy-guns", label: "Toy Guns", href: "/collections/toy-guns" },
+  { id: "coin-bank", label: "Coin Bank", href: "/collections/coin-bank" },
+]
+
+export const rideOutdoorCategories: ShopMenuLink[] = [
+  { id: "ride-on-toys", label: "Ride-On Toys", href: "/collections/ride-on-toys" },
+  { id: "tricycles", label: "Tricycles", href: "/collections/tricycles" },
+  { id: "swing-car", label: "Swing Car", href: "/collections/swing-car" },
+  { id: "kick-scooter", label: "Kick Scooter", href: "/collections/kick-scooter" },
+  { id: "skating", label: "Skating", href: "/collections/skating" },
+  { id: "sports-outdoor", label: "Sports & Outdoor", href: "/collections/sports-outdoor" },
+]
+
+export const gamesLearningCategories: ShopMenuLink[] = [
+  { id: "remote-controlled-toys", label: "Remote Controlled Toys", href: "/collections/remote-controlled-toys" },
+  { id: "drone", label: "Drone", href: "/collections/drone" },
+  { id: "hover-board", label: "Hover Board", href: "/collections/hover-board" },
+  { id: "games", label: "Games (Board Games, Indoor Games)", href: "/collections/games" },
+  { id: "pc-tv-games", label: "PC Games & TV Games", href: "/collections/pc-tv-games" },
+  { id: "learning-education", label: "Learning & Education", href: "/collections/learning-education" },
+  { id: "arts-crafts", label: "Arts & Crafts", href: "/collections/arts-crafts" },
 ]
 
 type PriceTier = {
@@ -75,11 +108,11 @@ const buildStorePriceHref = ({ min, max }: Pick<PriceTier, "min" | "max">) => {
 }
 
 const priceTiers: PriceTier[] = [
-  { id: "under-299", label: "Under 299", max: 299 },
-  { id: "under-499", label: "Under 499", max: 499 },
-  { id: "under-699", label: "Under 699", max: 699 },
-  { id: "under-999", label: "Under 999", max: 999 },
-  { id: "above-999", label: "Above 999", min: 1000 },
+  { id: "under-299", label: "Under ₹299", max: 299 },
+  { id: "under-499", label: "Under ₹499", max: 499 },
+  { id: "under-699", label: "Under ₹699", max: 699 },
+  { id: "under-999", label: "Under ₹999", max: 999 },
+  { id: "above-999", label: "Above ₹999", min: 1000 },
 ]
 
 const priceTierLinks: ShopMenuLink[] = priceTiers.map((tier) => ({
@@ -100,13 +133,24 @@ export const shopMenuSections: ShopMenuSection[] = [
     })),
   },
   {
+    id: "toy-categories",
+    title: "Toy Categories",
+    items: toyCategories,
+  },
+  {
+    id: "ride-outdoor",
+    title: "Ride & Outdoor",
+    items: rideOutdoorCategories,
+  },
+  {
+    id: "games-learning",
+    title: "Games & Learning",
+    items: gamesLearningCategories,
+  },
+  {
     id: "price",
-    title: "Shop By Price",
-    items: [
-      ...priceTierLinks,
-      { id: "boys", label: "Boys", href: "/collections/boys" },
-      { id: "girls", label: "Girls", href: "/collections/girls" },
-    ],
+    title: "Shop by Price",
+    items: priceTierLinks,
   },
 ]
 
