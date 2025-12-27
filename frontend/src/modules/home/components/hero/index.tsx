@@ -185,7 +185,7 @@ const Hero = ({ banners }: HeroProps) => {
           </Swiper>
           <button
             type="button"
-            className="hero-swiper-prev absolute left-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-ui-border-base bg-ui-bg-base text-ui-fg-base shadow-sm transition hover:bg-ui-bg-subtle z-40"
+            className="hero-swiper-prev absolute left-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-ui-border-base bg-ui-bg-base text-ui-fg-base shadow-sm transition hover:bg-ui-bg-subtle z-20"
             aria-label="Previous banner"
             ref={prevElRef}
             onClick={handlePrev}
@@ -194,7 +194,7 @@ const Hero = ({ banners }: HeroProps) => {
           </button>
           <button
             type="button"
-            className="hero-swiper-next absolute right-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-ui-border-base bg-ui-bg-base text-ui-fg-base shadow-sm transition hover:bg-ui-bg-subtle z-40"
+            className="hero-swiper-next absolute right-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-ui-border-base bg-ui-bg-base text-ui-fg-base shadow-sm transition hover:bg-ui-bg-subtle z-20"
             aria-label="Next banner"
             ref={nextElRef}
             onClick={handleNext}

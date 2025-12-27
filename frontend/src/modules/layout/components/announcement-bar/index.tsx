@@ -20,7 +20,7 @@ const AnnouncementBar = () => {
   const leftItems: AnnouncementItem[] = [
     { 
       id: "delivery", 
-      text: "Get free home delivery (Order More than $300)",
+      text: "Get free home delivery (Order More than $500)",
       icon: TruckIcon,
       ariaLabel: "Free home delivery offer"
     }

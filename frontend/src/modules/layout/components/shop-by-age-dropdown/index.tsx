@@ -15,7 +15,7 @@ const ShopByAgeDropdown = ({ isOpen, items, activePathname, onItemClick }: Dropd
 
   return (
     <div
-      className={`absolute top-10 left-0 mt-0.5 bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 ease-out origin-top z-40 ${
+      className={`absolute top-10 left-0 mt-0.5 bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 ease-out origin-top z-30 ${
         isOpen
           ? "opacity-100 scale-y-100 visible"
           : "opacity-0 scale-y-95 invisible"

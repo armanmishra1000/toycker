@@ -261,7 +261,7 @@ const ReviewCard = ({ review }: { review: Review }) => {
             type="button"
             aria-label={`Play ${review.author}'s story`}
             onClick={handlePlayClick}
-            className="absolute inset-x-0 bottom-6 z-40 mx-auto flex w-max items-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-semibold text-[#111827] opacity-0 transition delay-150 group-hover:translate-y-0 group-hover:opacity-100"
+            className="absolute inset-x-0 bottom-6 z-20 mx-auto flex w-max items-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-semibold text-[#111827] opacity-0 transition delay-150 group-hover:translate-y-0 group-hover:opacity-100"
           >
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#111827] text-white">
               <Play className="h-3.5 w-3.5" />
@@ -273,7 +273,7 @@ const ReviewCard = ({ review }: { review: Review }) => {
             type="button"
             aria-label={`Pause ${review.author}'s story`}
             onClick={handlePauseClick}
-            className="absolute inset-x-0 bottom-6 z-40 mx-auto flex w-max items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-[#111827]"
+            className="absolute inset-x-0 bottom-6 z-20 mx-auto flex w-max items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-[#111827]"
           >
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#111827] text-white">
               <Pause className="h-3.5 w-3.5" />
