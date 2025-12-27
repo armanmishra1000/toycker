@@ -99,6 +99,13 @@ export default function PayUProcessor({ cartId }: Props) {
       const message = err instanceof Error ? err.message : "Order creation failed"
       console.error("[PayU] Order creation failed:", message)
 
+      // NEXT_REDIRECT is thrown by Next.js redirect() - re-throw it
+      // The error object has a digest property that starts with "NEXT_REDIRECT"
+      const error = err as { digest?: string }
+      if (error.digest?.startsWith("NEXT_REDIRECT")) {
+        throw err  // Let Next.js handle the redirect
+      }
+
       // Check if the error is because order was already created
       // In this case, the user might need to check their email or go to orders page
       if (message.includes("already been placed") || message.includes("completed")) {
