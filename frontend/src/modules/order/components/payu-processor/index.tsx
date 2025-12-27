@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation"
 import { retrieveCart, placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 
+// Extended cart type with completion status
 type CartWithCompletion = HttpTypes.StoreCart & {
   completed_at?: string | null
-  order?: { id: string }
 }
 
 type Props = {
@@ -32,7 +32,7 @@ export default function PayUProcessor({ cartId }: Props) {
       // Retrieve the cart to check its status
       const cart = (await retrieveCart(
         cartId,
-        "id,completed_at,order,*payment_collection,*payment_collection.payment_sessions"
+        "id,completed_at,*payment_collection,*payment_collection.payment_sessions"
       )) as CartWithCompletion | null
 
       if (!cart) {
@@ -41,11 +41,12 @@ export default function PayUProcessor({ cartId }: Props) {
         return
       }
 
-      // If cart is already completed (order created by webhook), redirect immediately
-      if (cart.completed_at && cart.order) {
-        console.log("[PayU] Order already created by webhook:", cart.order.id)
-        setState("redirecting")
-        router.push(`/order/${cart.order.id}/confirmed`)
+      // If cart is already completed, directly call placeOrder
+      // placeOrder will handle completing the cart or redirecting appropriately
+      if (cart.completed_at) {
+        console.log("[PayU] Cart already completed, calling placeOrder")
+        setState("creating")
+        await placeOrder(cartId)
         return
       }
 
@@ -83,11 +84,11 @@ export default function PayUProcessor({ cartId }: Props) {
       }
 
       // Check again if cart was completed while waiting
-      const updatedCart = (await retrieveCart(cartId, "id,completed_at,order")) as CartWithCompletion | null
-      if (updatedCart?.completed_at && updatedCart?.order) {
-        console.log("[PayU] Order created during wait:", updatedCart.order.id)
-        setState("redirecting")
-        router.push(`/order/${updatedCart.order.id}/confirmed`)
+      const updatedCart = (await retrieveCart(cartId, "id,completed_at")) as CartWithCompletion | null
+      if (updatedCart?.completed_at) {
+        console.log("[PayU] Order created during wait, calling placeOrder")
+        setState("creating")
+        await placeOrder(cartId)
         return
       }
 
@@ -99,18 +100,13 @@ export default function PayUProcessor({ cartId }: Props) {
       console.error("[PayU] Order creation failed:", message)
 
       // Check if the error is because order was already created
+      // In this case, the user might need to check their email or go to orders page
       if (message.includes("already been placed") || message.includes("completed")) {
-        try {
-          const cart = (await retrieveCart(cartId, "id,completed_at,order")) as CartWithCompletion | null
-          if (cart?.order) {
-            console.log("[PayU] Order exists, redirecting to confirmation:", cart.order.id)
-            setState("redirecting")
-            router.push(`/order/${cart.order.id}/confirmed`)
-            return
-          }
-        } catch (cartError) {
-          console.error("[PayU] Could not retrieve cart:", cartError)
-        }
+        setError("Your order has already been placed. Please check your email for confirmation.")
+        setTimeout(() => {
+          router.push("/")
+        }, 5000)
+        return
       }
 
       setError("Failed to create your order. Please contact support.")
