@@ -131,6 +131,7 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
 
     // Build payment params for hash generation (excluding URL-only params)
     // udf1 stores the Medusa payment session ID so the webhook can find the correct session
+    // udf2 stores the cart ID so the callback can redirect to the correct page
     const hashParams = {
       key: this.options_.merchantKey,
       txnid: transactionId,
@@ -139,6 +140,7 @@ class PayUProviderService extends AbstractPaymentProvider<PayUOptions> {
       firstname: firstName,
       email: email,
       udf1: paymentSessionId,
+      udf2: cartId,
     }
 
     // Generate hash using official PayU format
