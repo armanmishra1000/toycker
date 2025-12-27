@@ -9,20 +9,25 @@ export function SubmitButton({
   variant = "primary",
   className,
   "data-testid": dataTestId,
+  pending,
 }: {
   children: React.ReactNode
   variant?: "primary" | "secondary" | "transparent" | "danger" | null
   className?: string
   "data-testid"?: string
+  pending?: boolean
 }) {
-  const { pending } = useFormStatus()
+  const { pending: formStatusPending } = useFormStatus()
+
+  // Use pending prop if provided, otherwise fall back to useFormStatus
+  const isLoading = pending !== undefined ? pending : formStatusPending
 
   return (
     <Button
       size="large"
       className={className}
       type="submit"
-      isLoading={pending}
+      isLoading={isLoading}
       variant={variant || "primary"}
       data-testid={dataTestId}
     >

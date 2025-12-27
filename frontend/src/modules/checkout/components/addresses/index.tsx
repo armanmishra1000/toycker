@@ -52,7 +52,7 @@ const Addresses = ({
     router.push(pathname + "?step=address")
   }
 
-  const [message, formAction] = useActionState(setAddresses, null)
+  const [message, formAction, isPending] = useActionState(setAddresses, null)
 
   return (
     <div className="bg-white">
@@ -98,7 +98,11 @@ const Addresses = ({
                 <BillingAddress cart={cart} />
               </div>
             )}
-            <SubmitButton className="mt-6" data-testid="submit-address-button">
+            <SubmitButton
+              className="mt-6"
+              data-testid="submit-address-button"
+              pending={isPending}
+            >
               Continue to Payment
             </SubmitButton>
             <ErrorMessage error={message} data-testid="address-error-message" />
