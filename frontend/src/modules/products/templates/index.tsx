@@ -3,6 +3,7 @@ import React, { Suspense } from "react"
 import ImageGallery from "@modules/products/components/image-gallery"
 import ProductActions from "@modules/products/components/product-actions"
 import ProductTabs from "@modules/products/components/product-tabs"
+import YouTubeVideo from "@modules/products/components/youtube-video"
 import RelatedProducts from "@modules/products/components/related-products"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import Breadcrumbs from "@modules/common/components/breadcrumbs"
@@ -39,25 +40,26 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       >
         <Breadcrumbs className="mb-6" items={getProductBreadcrumbs(product)} />
         <div className="flex flex-col gap-10 xl:flex-row xl:items-start">
-          <div className="w-full xl:w-3/5">
+          <div className="w-full xl:w-3/5 xl:sticky xl:top-24 xl:self-start xl:z-10">
             <ImageGallery images={images} />
           </div>
           <div className="w-full xl:w-2/5">
             <Suspense
               fallback={<ProductActions disabled={true} product={product} />}
             >
-              <ProductActionsWrapper
-                id={product.id}
-                region={region}
-              />
+              <ProductActionsWrapper id={product.id} region={region} />
             </Suspense>
             <div className="mt-6">
               <OrderInformation />
+              {typeof product.metadata?.youtube_video === "string" && (
+                <YouTubeVideo videoUrl={product.metadata.youtube_video} />
+              )}
             </div>
           </div>
         </div>
         <div className="mt-8 space-y-5">
           <ProductTabs product={product} />
+
           <CustomerReviews />
         </div>
       </div>
